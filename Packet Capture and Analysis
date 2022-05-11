@@ -1,0 +1,106 @@
+Packet Capture and Analysis:
+===========================
+Basics:
+	Why do Packet Capture and Analysis matter?
+		1. Useful in scenario of a cyber attack, using tcpdump and awk/sed, we can find from which ip the attack was happening
+		2. When we wanna capture traffic over an interface(Sniffing)
+	Packet Capture files: 
+		Extensions:
+			.pcap
+			.pcapng(pcap nextgen)
+Applications of Packet Capture and Analysis in CTFs:
+	1. To gain credentials in Clear text(in case of clear-text based protocols like FTP, etc) or Encrypted strings(in case of protocols like SSH, etc). For Example:
+		HTB::CAP
+	2. 
+Wireshark:(GUI)
+	Note:
+		Use Wireshark instead of Tcpdump for capturing packets.
+	Basics:		
+		Working:
+			Network -> Capture Filters -> Capture Engine -> Display Filters
+		Shortcuts:
+			shift + tab => to toggle between 3 differet windows
+			ctrl + f => find packet
+	Usage:
+		Capture Filters:
+			select the network interface
+			net 10.11.10.0/24 => to only capture traffic on the following address range
+			Capture Filters tells wireshark about what traffic to catch and what to pass
+		Display Filters:
+			Display Filters manage the display of packets
+			ip.src==<ip> => filter by source ip
+			ip.dst==<ip> => filter by destination ip
+			ip.addr==<ip> => 
+			<protocol name> => filter by protocol name
+			http.request.method=='get' => filter by http method
+			tcp.port == <port> => filter by port number
+			conditions:
+				== or eq => equal to
+				|| => or
+				&& => and
+				!= => not equal to
+			examples:
+				ip.src == ip1 and ip.dst != ip2
+				tcp.port eq 25 or icmp
+		TCP Stream:
+			The reassembled TCP stream is much easier to read
+			right click on any packet -> follow -> TCP stream
+			Display Filters:
+				tcp.stream?
+		UDP Stream:
+			Do it even exist?
+		Using Wireshark from CLI:
+			wireshark file_name.pcap => Opens up file_name.pcap in wireshark
+Tcpdump:(CLI)
+	Note:
+		Use Tcpdump instead of Wireshark for reading PCAP files.
+	Basics:
+	Usage:	
+		tcpdump -i <interface> => capture all packets through given interface
+		tcpdump -i eth0 <protocol> => capture packets only of the specified protocol
+		tcpdump -i eth0 port 20
+		tcpdump -i eth0 port 20 and dst host 192.168.0.128
+		Reading in ASCII and HEX:
+			it helps to understand traffic
+			tcmpdump -nX -r file.pcap
+		Advanced Header Filtering:
+			tcpdump 'header[byte #] == value'
+			TCP flag based filtering:
+				Basics:
+					Read 'TCP Flags' in networking sheet
+					tcp[13] => means 14th byte of tcp packet	as array indexing starts at 0
+				tcpdump 'tcp[13] = 24' => ACK and PSH
+		Flags:
+			-i => specify interface
+			-A => show packets in ASCII
+			-X => show packets in both HEX and ASCII
+			-l => live capture
+			-s => specify size of packets(default => 65536 bytes)
+			-c <n> => capture only "n" packets
+			-w file_name => write packets in file_name
+			-r file_name => read packets from a file_name	
+			-n => it will convert ip address to DNS names (website)
+			-tttt => show packets with proper readable TIMESTAMP
+			-v, -vv, -vvv => verbose levels
+			port <no> => show packets passing through specified port
+			dst host <ip/port> => show packets which have the specified DESTINATION ip/port
+			src host <ip/port> => shows packets which have the specified SOURCE ip/port
+			host <ip> => either source or detsination ip
+			net 1.2.3.0/24 => show packets filtered by network
+			Keywords:
+				and
+				not
+				or
+			Protocols Supported:
+				fddi
+				tr
+				wlan
+				ip
+				ip6
+				arp
+				rarp
+				decnet
+				tcp
+				udp
+Note:
+	To grab Credentials from pcap files: Read Password Cracking and Cryptography sheet
