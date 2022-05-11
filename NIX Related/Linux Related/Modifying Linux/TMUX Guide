@@ -1,0 +1,116 @@
+TMUX Guide:
+==========
+Basics:
+	Installation:
+		apt-get install tmux
+	status bar:
+		shows currently opened windows on the left
+		shows system information like date and time on the right
+		can be customized 
+	Hierarchy is that Tmux could have multiple sessions, a session could have multiple windows, a window could have multiple panes.
+		Session:
+			Sessions are for an overall theme, such as work, or experimentation, or sysadmin.
+			a session is a terminal screen divided into multiple panes
+		Windows:
+			Windows are for projects within the session
+			Windows in tmux can be compared to creating new virtual desktops
+		Panes:
+			Panes are for views within your current project. 
+	Commands:
+		All commands in tmux are triggered by a prefix key followed by a command key
+		Default prefix key => ctrl+b
+	tmux.conf:(~/.tmux.conf)
+		add these lines in tmux.conf:
+			Changing Prefix key from C-b to C-a:
+				Note: C means ctrl	
+					# remap prefix from 'C-b' to 'C-a'
+					unbind C-b
+					set-option -g prefix C-a
+					bind-key C-a send-prefix
+			Changing Pane Splitting commands:
+				| and - for splitting panes:
+					# split panes using | and -
+					bind | split-window -h
+					bind - split-window -v
+					unbind '"'
+					unbind %
+			Fast pane Switching:
+				Note:
+					M => meta which means 'Alt'
+				# switch panes using Alt-arrow without prefix
+				bind -n M-Left select-pane -L
+				bind -n M-Right select-pane -R
+				bind -n M-Up select-pane -U
+				bind -n M-Down select-pane -D
+			Enabling Mouse Mode:
+				set -g mouse on
+			To stop renaming windows automatically:
+				set-option -g allow-rename off
+			Changing colors:
+				# loud or quiet?
+				set -g visual-activity off
+				set -g visual-bell off
+				set -g visual-silence off
+				setw -g monitor-activity off
+				set -g bell-action none
+
+				#  modes
+				setw -g clock-mode-colour colour5
+				setw -g mode-style 'fg=colour1 bg=colour18 bold'
+
+				# panes
+				set -g pane-border-style 'fg=colour19 bg=colour0'
+				set -g pane-active-border-style 'bg=colour0 fg=colour9'
+
+				# statusbar
+				set -g status-position bottom
+				set -g status-justify left
+				set -g status-style 'bg=colour18 fg=colour137 dim'
+				set -g status-left ''
+				set -g status-right '#[fg=colour233,bg=colour19] %d/%m #[fg=colour233,bg=colour8] %H:%M:%S '
+				set -g status-right-length 50
+				set -g status-left-length 20
+
+				setw -g window-status-current-style 'fg=colour1 bg=colour19 bold'
+				setw -g window-status-current-format ' #I#[fg=colour249]:#[fg=colour255]#W#[fg=colour249]#F '
+
+				setw -g window-status-style 'fg=colour9 bg=colour18'
+				setw -g window-status-format ' #I#[fg=colour237]:#[fg=colour250]#W#[fg=colour244]#F '
+
+				setw -g window-status-bell-style 'fg=colour255 bg=colour1 bold'
+
+				# messages
+				set -g message-style 'fg=colour232 bg=colour16 bold'
+usage:
+	tmux => starts a session
+	r => relod tmux.conf
+	Tmux Console:
+		in console, we can run all the Tmux commands available for the local terminal without tmux prefix
+		: => logging in to console
+	Pane commands:
+		Note: The commands below are used with prefix key	
+		% => Splitting Panes into left and right
+		" => Splitting Panes into top and bottom
+		<arrow key> => Switching to a different pane
+		ctrl+d => close a pane
+		exit => close a pane
+	Windows Commands:
+		Note: The commands below are used with prefix key
+		c => creating a new window
+		p => To switch to the previous window
+		n => To switch to the next window
+		<number> => To switch to where the window having <number> in status bar
+		, => rename the current window
+	Session Handling Commands:
+		Note: The commands below are used with prefix key
+		d => To detach current session
+		D => To have tmux give you a choice which of your sessions you want to detach
+		tmux ls => list sessions
+		tmux attach -t 0 => attach to session '0'
+		tmux new -s session_name => creating a new named session
+		tmux rename-session -t initial_name final_name => rename session
+		$ => rename current session
+		tmux kill-session –t <name> => kill a session
+
+
+

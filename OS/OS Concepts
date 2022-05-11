@@ -1,0 +1,80 @@
+OS Concepts:
+===========
+Basics:
+	Terms:
+		OS:(Operating System)
+	OS Development History & Time-Line:
+		UNIX Based OS:
+			Read Linux Internals Sheet
+	OS Types:
+OSAL:(OS Abstraction Layer)(aka OS Abstraction Levels)
+	Basics:
+		Terms:
+			Abstraction:
+				Abstraction refers to ignoring the internal structure and working of a piece of code and focusing on the functionality of that code instead.
+	Layers:(Hierarchy goes from A to C)
+		A. Hardware:
+			Read Hardware Sheet
+		B. Kernel:
+			Basics:
+				Kernel is the core of OS. It resides in memory and act as a mediator between hardware and any running program.
+				Terms:
+					Kernel Mode:
+						Kernel runs in Kernel Mode. This mode allows unrestricted access to the processor and main memory.
+					Kernel Space:
+						Memory area that only the kernel can access is known as Kernel Space.
+			Components:(4)
+				1. Process Management:
+					Basics:
+						Terms:
+							Time Slice:
+								A unit of time used by CPU to perform a computation.
+							Multi-Tasking:
+								It refers to being able to run multiple processes together. OS do so by pausing a process after running it for a 'time slice' and then running another process, and then resuming the first process.
+					Context Switching:
+				2. Memory Management:
+					Basics:
+						Terms:
+				3. Device Drivers and Management:
+					Device Drivers:(aka Drivers)
+						Basics:
+							Driver is a computer program that allows OS to operate or control a particular type of device that is attached to a computer
+						Types:
+				4. System Calls:(SYSCalls)
+					Basics:
+						A system call is a procedure that provides the interface between a process and the operating system. It is the way by which a computer program requests a service from the kernel of the operating system.
+					Linux SYSCalls:
+						Read Linux Internals Sheet.
+					Windows SYSCalls:
+						Read Windows Internals Sheet.
+			Interface:
+				Basics:
+					An interface is a shared boundary across which two or more separate components of a computer system exchange information. This boundary can be between software, computer hardware, peripheral devices, humans, and combinations of these.
+				Types:(3)
+					Hardware Interface:
+					Software Interface:
+					User Interface:
+		C. User Process:
+			Basics:
+				User Process are programs that the kernel manages.
+				Terms:
+					User Mode:
+						User Processes run in User Mode. This mode has restricted access to the processor and main memory.
+					User Space:(aka Userland)
+						Memory area that the user processes can access is known as User Space.
+					Owner:
+						Every user-space has a user owner and the processes in that user-space are said to run as the owner.
+				Note:
+					"User" in "User Process" has no particular meaning. It doesnt if a user directly iteracts with a program or not.
+OS API:(OS Application Programming Interface)
+	Basics:
+	Linux API:
+		Read Linux Internals Sheet.
+	Windows API:
+		Read Windows Internals Sheet.
+OS ABI:(OS Application Binary Interface)
+	Basics:
+	Linux ABI:
+		Read Linux Internals Sheet.
+	Windows ABI:
+		Read Windows Internals Sheet.

@@ -1,0 +1,25 @@
+Programming Basics:
+==================
+Basics:
+	This sheet is basically about common concepts shared among different languages.
+String Representations:
+	Basics:
+		Encoding:
+			Encoding refers to converting characters into bytes.
+		Decoding:
+			Encoding refers to converting bytes into characters.
+	Encoding Schemas:
+		ASCII:
+			ASCII has a huge short-coming, ie, it's numerical value can only define 256 characters originally, its not enough to represent characters such as accented characters, Chinese characters, etc.
+			ASCII is represented by 8 bits.
+		Unicode:
+			Unicode includes representations for punctuation marks, mathematical symbols, and dingbats, with substantial room for future expansion.
+			Therefore, Unicode was developed as it can represent upto 1,111,998 characters.
+			Types:
+				UTF+8:
+					Minimum length of bits to represent a character is 8.
+				UTF+16:
+					Minimum length of bits to represent a character is 16.
+
+
+				

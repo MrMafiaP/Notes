@@ -1,0 +1,195 @@
+OPSEC:(Operational Security)
+=====
+This refers to avoid being caught by intelligence agencies
+Ways Law Enforcement Busts Dark Web Users:
+	The Postal System:
+		Buying or Selling stuff such as drugs/device
+		Even after taking a lot of care to ensure that the products are not seized by the custom authorities, law enforcement officers may investigate where the package is being sent to or where it is being sent from.
+		Seller Mistake:
+			buying priority delivery stamps in bulk
+			depositing large numbers of packages at US post offices while wearing latex gloves
+	Digging Through Seized Data:
+		A. An arrest of a vendor or seizure of a marketplace can provide a large amount of data in which investigators find leads they then can use to bust other dark web users.
+			Operation onymous:
+				An International Law Enforcement Operation targeting dark web markets and other services operating on the TOR network, marketplaces such as Silk Road 2.0, Hydra and Cloud 9
+				This operation provided information that led to up to 17 arrests in different countries.
+		B. Users of the dark web markets may leave digital footprints in open forums or public documents that eventually disclose their identities to investigators.
+	Undercover Operations:
+		Law enforcement can pose as vendors, buyers or even administrators of marketplaces without the knowledge of other users.
+	Hacking:
+		Authorities have tried to circumvent TOR by attacking the endpoint which is usually the computers being used by the individuals visiting the dark web sites.
+		NEVER VISIT CCCCCCCCPPPPPPPPPPPPPP
+Becoming Anonymous:
+	Dont USE MOZILLA for normal activities
+	Network Anonymity:
+		1. Using Custom OS:
+			Tails
+			Whonix
+		2. Tor Settings:
+			1. Search bar -> about:config:
+				Disable "Javascript.enabled:true" to "Javascript.enabled:false"
+				toolkit.telemetry.previousBuildID double click Set it to: 0
+				media.autoplay.enabled double click Set it to: false
+				media.encoder.webm.enabled double click Set it to: false
+				media.fragmented-mp4.enabled double click Set it to: false
+				media.ogg.enabled double click Set it to: false
+				media.gstreamer.enabled double click Set it to: false
+				media.opus.enabled double click Set it to: false
+				media.wave.enabled double click Set it to: false
+				media.webm.enabled double click Set it to: false
+				media.webvtt.enabled double click Set it to: false
+				network.proxy.socks_remote_dns. double click Set it to: true.
+				browser.cache.memory.enable double click Set it to: false
+				browser.cache.disk.capacity double click Set it to: 0
+				browser.cache.disk.enable double click Set it to: false
+				browser.cache.disk.max_entry_size double click Set it to: 0
+				browser.cache.disk.smart_size.enabled double click Set it to: false
+				browser.cache.disk.smart_size.first_run double click Set it to: false
+				browser.cache.offline.capacity double click Set it to: 0
+				browser.cache.offline.enable double click Set it to: false
+				noscript.forbidImpliesUntrust double click Set it to: true
+				noscript.global double click Set it to: true
+				privacy.clearOnShutdown.offlineApps double click Set it to: true
+				privacy.clearOnShutdown.passwords double click Set it to: true
+				extensions.torbutton.redir_url.1;0 double click Set it to: 0
+				extensions.torbutton.redir_url.2;0 double click Set it to: 0
+				extensions.torbutton.redir_url.3;0 double click Set it to: 0
+				extensions.torbutton.redir_url.4;0 double click Set it to: 0
+				extensions.torbutton.redir_url.5;0 double click Set it to: 0
+				gecko.buildID double click Set it to: 0
+				privacy.clearOnShutdown.siteSettings double click Set it to: true
+			2. Settings -> Security -> Safest
+			3. Visit https://whoer.net/#extended:
+				It should have this:
+					Javascript - disabled
+					Flash - disabled
+					Java - disabled
+					ActiveX - disabled
+					WebRTC - disabled
+			4. Install "NoScript Security Suite" plugin:
+				Use it to disable JS
+		3. Use VPN:
+		4. Use MACCHANGER:
+		5. Use Wi-Fi of someone else.
+	Communication:
+		Using PGP:(Pretty Good Privacy)
+			PGP guide to read:
+				http://dreadytofatroptsdj6io7l3xptbet6onoyno2yv7jicoxknyazubrad.onion/d/OpSec/wiki/?id=23318f36
+			To implement encryption for encrypting files/messages performing digital signing.
+			GUI:(kgpg)
+				sudo apt install kgpg
+				Terminal> kgpg => Key Management window will open.
+				To encrypt the message, go to:
+					File > Open Editor 
+					enter text
+					Options > Allow encryption with untrusted keys
+					Encrypt to the public key of your choice. This should be your recipient's key. 
+					After clicking OK and entering your password, the encrypted message should appear.
+				To decrypt a message:
+					File > Open Editor
+					paste the encrypted message in the box and click Decrypt.
+					enter your password, the message should dispay in plain text.
+			CLI:(GPG:(a.k.a. GnuPG))
+				Its an Open Source implementation of PGP from the GNU project.
+				sudo apt-get install gnupg2
+				To Generate a key:
+					gpg --full-gen-key
+					Note:
+						use an expiring 4096-bit key.
+				To import someone's public key:
+					save it as a .asc file
+					gpg --import name_of_pub_key_file.asc
+				Show public key:
+					gpg --armor --export key_id
+				Export public key:
+					gpg --armor --export key_id > pub_key.asc
+				Export secret key:
+					gpg --armor --export-secret-key key_id > secret_key.asc
+				Encrypt message:
+					gpg --encrypt --sign --armor -r key_id name_of_file
+				List keys:
+					gpg --list-keys
+				Decrypt message:
+					gpg -d name_of_file.asc > decrypted_filename
+				If you do not want a file name visible when the receiver decrypts your message:
+					gpg -esa -r key_id --set-filename new_filename.txt current_filename.txt
+				To output to a file:
+					gpg -esa -r key_id --set-filename new_filename.txt current_filename.txt > new_filename.txt.asc
+		Email:
+			Recommended email providers on Tor:
+			http://secmailw453j7piv.onion
+			http://eludemaillhqfkh5.onion
+			http://mail2tor2zyjdctd.onion
+			http://cockmailwwfvrtqj.onion
+	PhotoSEC:(Taking and posting the photo)
+		Use either:
+			1. A camera (wired, not Wi-fi based)
+			2. A phone camera which is "De-Networked"(SIM removed, wifi off, Location off, AUTOMATIC PHOTO BACKUPS DISABLED, "Emergency Location Service" off, "Google Location Sharing" off)
+		Have as little information in shot as possible (or crop it out later)
+		Use good lighting, the anonymizing will usually degrade the quality so this is pretty important for producing useful images
+		Camera sensors and lenses are profileable:
+			Using GIMP:(GNU Image Manipulation Program)
+				apply filters to blur(decrease blur to less than one pixel) and add random noise(HSV Noise filter with new random seeds)
+				resize/scale the image:
+					Image > Scale Image
+				save image(File > Export As) as abcdxyz.jpg or abcdxyz.png
+		Use "MAT (Metadata Anonymisation Toolkit)" with -d flag to get rid of metadata
+	Shredding Footprints:(if not using Tails OS or Whonix)
+		CCleaner:
+			Go-to Options > Settings -> select "Complex Overwrite (7 passes)" and "secure file deletion"
+			Tick all the boxes are ticked in both Windows and Application tab.
+		Note:
+			Do this BEFORE and AFTER accessing tor.	
+Buying/Selling Additional Tips:
+	1. Crypto:
+		Buy crypto using paypal from either of sites:
+			https://www.bitstamp.net
+			https://www.coinbase.com
+			https://coinmama.com
+			https://www.kraken.com
+			BTC wallet:
+				https://blockchain.info
+		it will give away our identity, but, we will wash it out as:
+			Converting your BTC into XMR, sending that XMR to another XMR address, and then converting back into BTC again will cut the connection to you making your crypto completely anonymous to spend on whatever your heart desires
+			why xmr?
+				Monero (XMR) was designed specifically with privacy in mind as is not traceable as of today.
+				Read:
+					http://dreadytofatroptsdj6io7l3xptbet6onoyno2yv7jicoxknyazubrad.onion/post/1f8080b38207e7a338f1
+			You'll first need to create a Monero (XMR) wallet and the easiest way of doing this is to utilize the online wallet:
+				https://wallet.mymonero.com
+			Once you have a Monero wallet then you want to convert your BTC to XMR and back again by utilizing the following sites:
+				https://www.morphtoken.com
+				https://changenow.io
+				https://changelly.com
+				https://coinswitch.co
+				https://xmr.to/nojs
+				https://localmonero.co
+	2. Using VPS:(We need to buy it)
+		You should research VPS providers that accept Bitcoin or other "anonymous" forms of payment and find the cheapest one to try out. Once you've found one purchase a plan that is the shortest and cheapest with an installation of Ubuntu (or your flavor of Linux). Use fake details but keep note of all the details you've used to register with as you may need them again should you forget your password, logins, need to restart the server, etc. It's best to see which IP you're using while using Tor and research a company in that area to use the details when signing up for things. It'll help bypass some of their online fraud detections
+		For example, I'm using Tor and I would check what my IP is at https://whatismyip.com or a similar website. In this example my Tor exit IP is located in Mexico. Therefore, I would look for companies in Mexico and use their addresses when registering online to avoid any problems. Each VPS provider is different but why chance it. This way a connection from Mexico is registering on their website with a Mexican address. Use real addresses that are associated to the geographical area that your IP is at the time.
+		Once logged into your VPS always remember to keep it updated and install the appropriate upgrades needed. In general' these commands will keep your bash history from being spied on:
+			unset HISTFILE
+			echo 'set +o history' >> /etc/profile
+			echo 'set +o history' >> ~/.bashrc
+			export HISTFILE=/dev/null
+			unset HISTFILE = Doesn't keep track of bash history
+			echo 'set +o history' >> /etc/profile = Ensures there's no bash history stored
+			echo 'set +o history' >> ~/.bashrc = Ensures there's no bash history stored
+		To use VPS via Windows:
+			to connect to vps(linux):
+				we will need to pass traffic via tor
+				 	use Putty and configure it to use a proxy for 127.0.0.1 Port: 9050.	
+	3. Use DEADDROPS:
+		Instead of postal
+
+
+
+
+
+
+
+Mistakes of others:
+	http://dreadytofatroptsdj6io7l3xptbet6onoyno2yv7jicoxknyazubrad.onion/post/9ec1e55db8ac460d3ba1
+	http://dreadytofatroptsdj6io7l3xptbet6onoyno2yv7jicoxknyazubrad.onion/post/dd0e9ebd76a13095f65c
+	http://dreadytofatroptsdj6io7l3xptbet6onoyno2yv7jicoxknyazubrad.onion/post/f5aa14a38b3431598666
+	http://dreadytofatroptsdj6io7l3xptbet6onoyno2yv7jicoxknyazubrad.onion/post/5c3f6b61bada34ff587c	

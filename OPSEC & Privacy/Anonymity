@@ -1,0 +1,193 @@
+Anonymity:
+=========
+Basics:
+Proxy:(aka Proxy Server)
+	Basics:
+		Proxy actually means someone or something acting on behalf of someone else.
+		A proxy server is a server application that acts as an intermediary between a client and a server.
+		Working:
+			Proxy server acts as a gateway sitting between a local network and a large scale network, such as internet.
+			Structure:
+				Client <-> Proxy_Server <-> Server
+		Types:(2)
+			A. Based on Access:(2)
+				1. Open Proxy:
+					Open proxies are freely accessible to anyone. This makes open proxy an attractive choice for hackers as it lacks rules or regulations.
+				2. Closed Proxy:
+					Closed proxies requries any user to know the address and credentials to use them, therefore restricting the usage. Such proxies are used by companies to allow access to intranet.
+			B. Based on Structure:(2)
+				1. Forward Proxy:
+					Basics:
+						Forward proxy sends requests to forward proxy server, which sends them to source and when source replies, forward proxy redirects that reply to the user.
+						Forward proxy also makes use of caching for fast response.
+						Forward proxy provides anonimity to user.
+						Note:
+							"Proxy Server" or "Proxy" term is mostly used to refer to Forward Proxy.
+					Types:(2)
+						A. Residential Proxy:
+						B. Datacenter Proxy:
+				2. Reverse Proxy:
+					Basics:
+						Here, reverse proxy recieve requests from a user and forward these requests to a source, and collects response from source and then forwards that response to user, acting as if reply came from proxy instead of source.
+						User dont get to know that there is a backend server he is interacting with, as user only interacts with 
+						Reverse proxy is used to provide security to backend server.
+					Types:(2)
+						A. Regular Reverse Proxy:
+							This is the typical reverse proxy as defined in basics section above.
+						B. Load Balancer:
+		Implementations:
+			Application Proxies:
+				Basics:
+					Application proxies refer to proxies which operate at Application layer(layer 7) of OSI model.
+				Types:
+					HTTP Proxy:(aka Web Proxy)
+						Basics:
+							Web proxies operate over layer 
+							Web proxies are used to forward only HTTP traffic, ie, HTTP proxies are only compatible with HTTP protocol.
+						Types:(3)
+							1. High Anonymous Proxy:(aka Elite Proxies)
+								No IP change is visible. And no request fields/headers are changed.
+							2. Anonymous Proxy:
+								No IP change is visible.
+								Different request fields/headers are used, ie, HTTP_VIA/HTTP_X_FORWARDED_FOR, so it's possible to know that a proxy is being used by analyzing the traffic.
+							3. Transparent Proxy:(aka HTTP Relay Proxies)(aka Forced Proxy)(aka Inline Proxy)(aka Intercepting Proxy)
+								IP change and thus the real IP is visible in request fields. Transparent proxies lack any security and therefore should never be used for security testing or similar stuff. These proxies are used for network speed testing.
+							Note:
+								We can verify the type of proxy either via:
+									A. Tracking network traffic.
+									B. Using the following sites:
+										centralops.net/co/
+										all-nettools.com/
+			Session Proxies:
+				Basics:
+					Session proxies refer to proxies which operate at Session layer(layer 5) of OSI model.
+				Types:
+					SOCKS Proxy:
+						Read SOCKS Section of Active Information Gathering Sheet.
+			DNS Proxy:
+			CGI Proxy:
+				CGI => Common Gateway Interface
+			Suffix Proxy:
+			TOR Proxy:
+			I2P Proxy:
+	Creating Proxy:
+		SOCKS:(SSH -D)
+			Read SOCKS Section of Active Information Gathering Sheet.
+		HTTP:
+	Proxy Chaining:(aka Multi-Hop Proxy)
+		Basics:
+			Proxychaining refers to connecting two or more proxy servers to obtain the following structure:
+				User -> Proxy1 -> Proxy2 -> Proxy3 -> Proxy4 --> ProxyN --> Source
+			Advantages:
+				Better anonimity
+			Disadvantages:
+				Connection Speed
+			Applications:
+				TOR
+		Pivoting via Proxychaining:
+			Basics:
+				The concept here is that some server(target_server) which is inacessible from the internet, may be accessible via 'some proxy'. In most cases, the 'some proxy' is a server/machine/user in the same internal network as the target_server.
+		Tools:
+			Proxychains:(apt-get install proxychains)
+				Basics:
+					Proxychains is used to force TCP connection made by any program to go through proxies. Proxychains support SOCKS5, SOCKS4, and HTTP proxies.
+					Chain Modes:(3)
+						A. Strict Chain: 
+							All proxies in configuration file will be used and will be chained in sane order as the configuation file.
+						B. Random Chain:
+							Random or pre-specified number of proxies will be used and chained in random order.
+						C. Dynamic Chain:
+					Configuration Files:
+						/etc/proxychains.conf:
+							Basics:
+								Its used to store proxies.
+							Structure:
+								Chain Mode:
+									Just remove "#"(comment sign) from front of the desirable chain mode.
+								Proxy List:
+									Format:
+										type host port [username password]
+									Example:
+										socks5 192.168.67.78 1080 lamer secret
+										http 192.168.89.3 8080 justu hidden
+										socks4 192.168.1.49 1080
+				Usage:
+					proxychains <tool_name {tool_flags}> => Use proxies over the mentioned tool
+					proxychains firefox
+					proxychains nmap -sC -sV <ip>
+					Flags:
+						-f => Specify configuration file (optional)
+	Proxy Jumping:(SSH -J)
+		Basics:
+			Jump Server:(aka Jump Host)(aka Bastion Host)(aka SSH Bastion)
+		SSH -J
+VPN:
+	Basics:
+	VPN Chain:
+		www.cactusvpn.com/beginners-guide-to-vpn/double-vpn-chain/
+	How to pass all traffic on linux/windows via vpn
+	Tools:
+		OpenVPN:
+			Basics:
+				Installation:
+			Usage:
+				Flags:
+
+
+
+IP:
+	Changing IP:
+	Masking IP:
+	Doubt:
+		Do it change IPv4 or IPv6?
+MAC:
+	Changing MAC:
+	Masking MAC:
+	Tools:
+		Macchanger:
+			Basics:
+			Usage:
+				Flags:
+Geo-Location:
+	Changing Geo-Location:
+	Masking Geo-Location:
+
+
+
+
+
+
+
+
+
+
+
+Routing:
+
+	Garlic Routing:(aka Garlic Routing Protocol)
+		I2P:
+OS:
+	Tails:
+	Whonix:
+	Qubes:
+
+Crash course in Anonnimity:
+	http://dreadytofatroptsdj6io7l3xptbet6onoyno2yv7jicoxknyazubrad.onion/post/2228f010f448d21e07aa
+	https://www.whonix.org/wiki/Documentation
+	https://www.qubes-os.org/
+	https://ssd.eff.org/en/module-categories/basics
+	https://carder.uk/threads/the-ultimate-guide-for-anonymous-and-secure-internet-usage.99360/
+
+
+
+
+
+
+
+Unconfirmed:
+	NewNode Protocol:
+		Basics:
+		Tool:
+			Fireside:
+				Fireside uses the NewNode protocol, which automatically determines the best path for your data. If there is no Wi-Fi connection, NewNode will route your traffic through the network of connected devices. As long as one of the peered devices has access to a working mobile network, your device will also have access. Available on iOS and Android
+

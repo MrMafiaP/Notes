@@ -1,0 +1,3330 @@
+Linux Shell Commands:
+====================
+Basics:
+	Note:
+		Read Linux Internals for basics not covered here.
+	Terms:
+		Handle:
+			Anything that handles data.
+	Man Pages:
+		Basics:
+			Read Linux Internals Sheet.
+		Man:
+			Basics:
+				Man command is used to see man pages
+			Usage:
+				man <command_name>
+				Flags:
+					-k key_word => Show man pages for all commands having "key_word" in them.
+	Linux Identifiers:
+		User Identifiers:
+			UID:(User ID)
+			EUID:(Effective UID)
+				When we run a program as some other user, then UID of other user is called EUID.
+			FSUID:(File System UID)
+			SUID:(Saved UID)
+			RUID:(Real UID)
+		Group Identifiers:
+			GID:(Group ID)
+			EGID:(Effective GID)
+			SUID:(Saved GID)
+			RGID:(Real GID)
+		Process Identifiers:
+			PID:(Process ID)
+				PID is a 5 digit unique number that is issued to every new process by the system.
+				So, every proccess currenlty running in the entire system has a PID. After the termination, PID is returned to the system.
+			PPID:(Patent PID)
+			PGID:(Proccess Group ID)
+				The PGID can be thought of as a systemwide identifier.
+				When only one command is ran, PGID is same as PID. 
+				When more than one commands are ran at a time using a pipe/etc, then, every process(except the first process) has same PGID and diff PID, and for the first process, PGID is same as PID.
+			SID:(Session ID)
+				SID is PID of session leader.
+				SID is inherited by child processes.
+			Job ID:(aka Job Number)
+				Job Number is available only to background processes running under the current shell.
+				When more than one commands are ran at a time using a pipe/etc, several processes are started with their own unique PID but with same PGID and Job ID.
+	Terminal:
+		Read Device Management Section.
+	IO Basics:
+		FD:(File Descriptors)
+			Basics:
+				In *nix, FD is an 'integer' handle used to access an IO resource, such as a pipe/network socket/file/etc.
+			Types:
+				Standard Streams:(2)
+					1. Input Stream:
+						STDIN:(Standard Input)
+							Basics:
+								It refers to data fed into program
+								FD_Id => 0
+					2. Output Stream:
+						A. STDOUT:(Standard Output)
+							Basics:
+								It refers to the output gained from the program
+								FD_Id => 1
+						B. STDERR:(Standard Error)
+							Basics:
+								It refers to error messages from the program.
+								FD_Id => 2
+		Redirection:
+			Basics:
+			Redirectors:
+				Basics:
+					Redirectors are redirection operators used for redirection of stream from one handle to another handle.
+					The redirection happens from left to right.
+				Types:(2)
+					Note:
+						Both are valid:
+							A. [redirector] file_type.txt
+							B. [redirector]file_type.txt
+					1. Output Redirection:
+						A. Using '>':
+							Basics:
+								To add either STDOUT or STDERR inside a file.
+							Usage:
+								ls n> file.txt => Adds stream specified via 'n' to file.txt
+								ls > file_list.txt => Adds STDOUT to file_list.txt
+								ls 1> file_list.txt => Adds STDOUT to file_list.txt
+								ls /dir_not_found 2> err.txt => Adds STDERR to err.txt
+								ls /dir_not_found > out.txt 2> err.txt => Adds both STDOUT & STDERR to diff files.
+								Values of "n>":
+									> => STDOUT
+									1> => STDOUT
+									2> => STDERR
+								Practical Usage:
+									Sometimes, we run a command which may cause errors, so to not see those errors, we pass them to /dev/null:
+										bash script.sh 2>/dev/null
+						B. Using 'm>file.txt n>&m':
+							Basics:
+								When '>&' is used as an addition to '>' operator, its used to push the specified stream in the same file which is being sent some stream to via '>' operator.
+							Usage:
+								ls /abcd n>&m out.txt => Redirect the stream specified via 'n' to the same file where stream specified by 'm' is going.
+								ls >file.txt 2>&1
+								Values of "n>&m":
+									2>&1 => It means that point STDERR to wherever STDOUT is going. We should use "&>" instead of "2>&1" as its more clean.
+									1>&2 => It means that point STDOUT to wherever STDERR is going. We should use "&>" instead of "2>&1" as its more clean.
+									0>&1
+									0>&2
+								Note:
+									These both are not same:
+										1. command >file 2>&1
+										2. command 2>&1 >file
+											In this, out STDOUT will go to the file and STDERR if any, will get printed on the terminal.
+						C. Using '>&':
+							Basics:
+								When '>&' is used as the only redirector in the one-liner, then its used to add both STDOUT and STDERR to the same file. It works same as '&>'.
+							Usage:
+								ls >&file.txt
+						D. Using '&>':
+							Basics:
+								To add both STDOUT & STDERR to the same file. It works same as '>&'
+							Usage:
+								ls /dir_not_found &> out.txt => Adds both STDOUT & STDERR to same file.
+						E. Using '>|':
+							Basics:
+								To add either STDOUT or STDERR to a file only if that file doesnt exists. ">|" is better than ">" as, an existing file will get deleted because of redirection using ">".
+							Usage:
+								ls n>| file.txt => Adds stream specified via 'n' to file.txt only if file.txt doesnt exist.
+								Values of "n>|":
+									Read "Using '>'" Section above.
+						F. Using '>>':
+							Basics:
+								To append the stream inside a file.
+							Usage:
+								ls -la >> file_list.txt
+								Values of "n>>":
+						G. Using '&>>':
+							Basics:
+							Usage:
+						H. Using '>>&':
+							Basics:
+							Usage:
+					2. Input Redirection:
+						A. Using '<':
+							Basics:
+								To pass input from a file to a program.
+							Usage:
+								command < file.txt
+								Values of n>:
+									< => STDIN
+									0< => STDIN
+						B. Using '<<':
+							Basics:
+								To pass multi-line strings as input.
+							Usage:
+						C. Using '<<<':
+							Basics:
+								To pass single-line string as input.
+							Usage:
+		Piping:(|)
+			Basics:
+				Piping refers to the process of passing output from a command as input to another command.
+	Special Bash Variables:
+		1. $$
+			Displays PID of current process.
+		2. $?
+		3. $*
+		4. \$0
+		5. $1
+		Note:
+			They are useful and mostly used with echo to check something or in shell scripts.
+	Special Keys:
+		A. Ctrl + c:(aka Break Key)
+			Terminates Job/Process
+Text Management:
+	Basics:
+		Terms:
+		Text Formats:
+			Binary:
+			Octal:
+			Decimal:
+			HexaDecimal:
+			ASCII:
+			UTF:
+		Basic Utilties:
+			Echo:
+				Basics:
+					It prints its arguments to the standard output.
+				Usage:
+					echo arg1 agr2
+					echo hello world
+					Flags:
+						-n => Do not interpret '\n' or 'new line'
+						-e => to interpret escaped characters
+							\b => backspace
+								hello \bworld => helloworld
+							\n => new line
+							\t => tab
+							\<any special char> => <any special char>
+								\" => "
+			Uniq:
+				Basics:
+					Its used to select only unique enteries.
+					It can be used as standalone binary or along with other programs.
+				Usage:
+					cat file_name.txt | uniq -c => print number of occurences also
+					cat file_name.txt | uniq -d => print only duplicate enteries
+					Flags:
+						-c => 
+						-d => 
+			Sort:
+				Basics:
+					Sort is used to arrange lines of a text file in alphanumeric order.
+					It can be used as standalone binary or along with other programs.
+				Usage:
+					sort file.txt
+					Flags:
+						-r => reverse
+						-n => numerical sort
+						-f => case insensitive
+			WC:(Word Count)
+				Basics:
+				Usage:
+					wc file => wordcount
+					Flags:
+						-l => Line Count
+	FMT:
+		Basics:
+			FMT by default output all words of all lines in a single line and prints on stdout
+		Usage:
+			fmt file.txt
+			fmt -w 10 file.txt => output 10 chars per line
+			Flags:
+				-w x => output x chars per line
+	Tee:
+		Basics:
+			Tee is used to live write STDOUT from console to a file
+		Usage:
+			ffuf -u https://site.com/FUZZ -w wordlist.txt -s | tee ./output.txt
+				Q. "ffuf -u https://site.com/FUZZ -w wordlist.txt -s >> output.txt" will also write output, then why to use "tee":
+					Using ">>" will only write output, but wont show any ouput on the console, Whereas "tee" will both write output and also show it on the console.
+					The purpose of tee is to produce a one input, multiple output scenario - just like in a 'T' crossing.
+	Xargs:
+		Basics:
+			Xargs reads STDOUT from a command/file & then passes it as an argument to some other command. However, in absence of a command, its just echoes the ouput it copied to the screen.
+		Usage:
+			ls /di | xargs => Prints ouput in a single line instead of multiple lines
+			Flags:
+	ClipBoard:
+		XClip:
+			Basics:
+			Usage:
+				Flags:
+	Reading/Printing Files:
+		Cat:
+			Basics:
+			Usage:
+				cat < file_to_copy > file_name.txt in which to copy text => 
+				cat file_name.txt | uniq
+		Head:
+			Basics:
+			Usage:
+				head file.log => show 1st 10 lines of a file.log
+				head -20 file.log => show 1st 20 lines of a file.log
+				Flags:
+		Tail:
+			Basics:
+			Usage:
+				tail file.log
+				tail -20 file.log
+				Flags:
+					-f => follow => live files
+					-nx => show last nth lines
+		Less:
+			Basics:
+				Less is an enhanced version of more.
+			Usage:
+				less file.log
+				Note:
+					At bottom left of screen in which "less" has highlighted the path to the file, If we press forward slash (/) , less will let us search for terms in the file. For example
+						/hello will show us for lines having "hello" in them
+		More:
+			Basics:
+				Note:
+					Use "less" command instead of more whenever possible.
+			Usage:
+		NL:
+			Basics:
+			Usage:
+				nl file.txt => Print line number along with the text.
+	Join:
+		Basics:
+			Its used to join 2 files, for example, in bug_hunting/wordlists
+		Usage:
+			join file1 file2
+	Split:
+		Basics:
+			Split command in Linux is used to split large files into smaller files. It splits the files into 1000 lines per file(by default)
+		Usage:
+			split file.txt
+			split -l <x> file.txt
+			Flags:
+				-l <x> => split by x lines
+	Grep:
+		Basics:
+			Grep is used to find pattern(s) in each file and prints each line that matches the pattern.
+			More than one pattern can be specified via new-line chars.
+		Usage:
+			grep <flags> file_name.txt
+			grep "is" file.txt => it includes is/this/kiss/his/*is
+			grep -iw "is" file.txt => only "is"
+			grep -i hello file.txt => it will show hello/Hello/HEllo/hello/........
+			grep -c "is" file => counts the occurence of "is"
+			grep -v "abcd" => do not select abcd
+			grep -e -hello file.txt:
+				-e => Allows to use a ‘-‘ sign in the beginning of the pattern. If not mentioned the shell tries to execute the pattern as an option and returns an error.
+			Using Regex:
+				grep <flags> '<regex expression>' file_name.txt
+				grep -o '[^/]*\.megacorpone\.com' website.data => Prints only words that match with the regex pattern.
+					Understanding the regex applied:
+						^/ => to negate / => to not include /
+						[^/]* => to search for any number of characters(*), not including a forward-slash
+						\. => it means we are looking for '.'
+						meaning => anything.megacorpone.com
+				Note:
+					Read Regex Sheet to know about Regex.
+			Flags:
+				-i => --ignore-case => To be case insensitive.
+				-w:
+					Match only those lines that contain pattern as the whole word. It will not show lines having words of which pattern is a substring.
+				-c => --count => It prints number of matched line instead of normal output.
+				-v => Invert the matches. It shows those lines that donot match the pattern 
+				-o => Print only matched part of lines instead of whole lines.
+				-f patterns.txt => Used to specify file having patterns as one pattern per line.
+				-e => 
+				-E => --extended-regexp
+					Read below in eGrep section.
+				-F => --fixed-strings
+					Read below in fGrep section.
+				-r => --recursive
+					Read below in rGrep section.
+		Advanced Grep:
+			eGrep:(Extended grep)(grep -E)(grep --extended-regexp)
+				Basics:
+					egrep command used mainly due to the fact that it is faster than the grep command.
+				Usage:
+					Flags:
+			fGrep:(Fixed grep)(grep --fixed-strings)(grep -F)
+				Basics:
+					fgrep is useful when you need to search for strings which contain lots of regular expression metacharacters, such as "$", "^", etc. By specifying that your search string contains fixed characters, you don't need to escape each of them with a backslash.
+				Usage:
+					Flags:
+			rGrep:(Recursive grep)(grep --recursive)(grep -r)
+				Basics:
+					rgrep can recursively descend through directories as it greps for the specified pattern.
+				Usage:
+					Flags:
+	Comparing text files:
+		CMP:
+			Basics:
+			Usage:
+				Flags:
+		Comm:
+			Basics:
+			Usage:
+				comm file1.txt file2.txt:
+				Understanding output
+					Output has 3 columns:
+						1st => lines unique to 1st file
+						2nd => lines unique to 2nd file
+						3rd => lines common in both files
+		Diff:
+			Basics:
+			Usage:
+				diff <flag> a.txt b.txt
+				Flags:
+					-c => context format => expanded result
+					-u => unified format => short result
+						- => line appeared in 1st file only
+						+ => line appeared in 2nd file only
+		VimDiff:
+			Basics:
+			Usage:
+	Text Processing:
+		TR:
+			Basics:
+				Its used to perform search and replace operations.
+			Usage:
+				cat file.txt | tr '3' '5' > new_file.txt => replace all "3" with "5"
+				cat file.txt | tr '[A-Z]' '[a-z]' > new_file.txt => uppercase to lowercase
+		Cut:
+			Basics:
+			Usage:
+				cut -c 4 file.txt => show 4th element of each line
+				cut -f 2 -d "." file.txt => show 2nd field of each line. A field, here is seperated by a "."
+				Flags:
+					-c => 
+					-d => delimeter
+					-f x => shhw field no. x
+		Stream/Text Editors:
+			Ed:(Editor)
+			REd:(Restricted Editor)
+			SEd:(Stream Editor)
+				Basics:
+					Sed is a text stream editor which can perform insertion, deletion and substitution(find & replace) on STDIN & files.
+				Usage:
+					Sed run in two modes:
+						A. Program Mode:
+							Flags:
+						B. Tool Mode:
+							sed <flags> {Script} => Use STDIN for input
+							sed <flags> {Script} - => Use STDIN for input
+							sed <flags> {Script} input.txt => Use input.file for input
+							Script:
+								p=> print
+								d=> delete
+								s=> substitute(find & replace)
+							Flags:
+								-i => 
+		AWK:(aka GAWK(GNU/AWK))
+			Basics:
+				Awk is a scripting language rather than a tool & is designed for advanced text processing.
+				Programming Syntax & Working:
+					We provide awk with two things:
+						A. Input(STDIN or file) and awk processes it like this:
+							Awk divides input data into two parts:
+								1. Records:
+									Records are separated by a character called the record separator.
+									By default, the record separator is 'Newline character(\n)'.
+								2. Fields:
+									A record consits of fields which are separated by a character called the field separator.
+									By default, the field separator is '<whitespace>'.
+							Represenation of Records & Fields:
+								Syntax:
+									Fields are represnted as '$x':
+										First field => $1
+										Last field => $NF
+									A whole record can be represented as '$0'
+								Example:
+									Hello Hi Bye Hola Coke => (Whole Line) $0
+									  $1  $2  $3  $4   $5(or $NF)
+						B. Specific operations  to perform transformations on the input:
+							Awk Variables:
+								Its important for us to understand Awk Variables before we go ahead.
+								Pre-Defined Variables:
+									Types:(2)
+										1. Normal Variables:
+											$1 to $n => Fields
+											$0 => Record
+										2. Special Variables:(7)
+											A. $NF => The number of fields in the record
+											B. $NR => The number of the current record
+											C. $FILENAME => The name of the input file that is currently processed
+											D. $FS => Field separator
+											E. $RS => Record separator
+											F. $OFS => Output field separator
+											G. $ORS => Output record separator
+								Creating Variables:
+									n = <some_value>
+									Note:
+										No "$" symbol is needed here.
+								Using Variables:
+									Example:
+										n++
+							Operations consists of:
+								1. Rules:
+									Each rule has two parts:
+										A. Pattern:
+											Patterns are used to match the record. Patterns decide whether to perform an action on the record or not.
+											Types:
+												1. Special Patterns:
+													A. BEGIN:(Captial)
+														'BEGIN' keyword is used to create rule for performming actions before records are processed.
+														Practical Usage:
+															This pattern/rule is mostly used to provide value to special variables.
+															Example:
+																BEGIN { FS = "." }
+													B. END:(Captial)
+														'END' keyword is used to create rule for performming actions after records are processed.
+												2. Regex Patterns:
+													Sytax:
+														/regex_pattern/
+													Note:
+														Read Regex For Pentesting Sheet to read about regex patterns.
+												3. Relational Expression Patterns:
+													Relational Operators:
+														1. >
+														2. <
+														3. ~ => Contains
+														4. !~ => Do not contains
+														5. == => Equals to
+														6. != => Not equals to
+													Syntax:
+														$x <operator> Some_Value
+													Example:
+														$1 ~ /abcd/
+														$1 >200
+												4. Range Patterns:
+											Note:
+												In absence of 'Pattern' part of the rule, action is performed on every record of input file.
+										B. Action:
+											Action is enclosed in {} and consists of statements seperated by semi-colons.
+											Syntax:
+												{statement1;statement2}
+												Note:
+													In absence of 'action' part of the rule, the whole record is printed as it is.
+											Awk Statement Types:
+												Expressions:
+													Variable Assignment
+													Arithmetic Operations
+													Increment & Decrement Operations
+												Control Statements:
+													If:
+														Syntax:
+													For:
+														Syntax:
+													While:
+														Example:
+															BEGIN{
+															i = 1
+															while (i < 6){
+															print "hello", i;
+															++i
+															}
+															}
+													Switch:
+														Syntax:
+													Next:
+														 Stops processing the current record and moves to the next record in the input data.
+														 Syntax:
+													Exit:
+														Stops the execution of the whole program and exits.
+														Syntax:
+												Input Statements:
+												Output Statements:
+													1. Print:
+														Print records, fields, variables, and custom text.
+														Syntax:
+													2. Printf:
+														Awk's Printf is same as of C. Printf is better than print as it allows more control.
+														Syntax:
+									Multi-Rule Syntax:(2)								
+										A. Using newline:
+											pattern {action}
+											pattern {action}
+										B. Using semi-colon:
+											pattern {action}; pattern {action}
+								2. User-Defined Functions:
+							Awk operates on one record at a time until the end of input is reached.
+						C. Awk perform the operations on the input given to give STDOUT.
+			Usage:
+				Awk run in two modes:
+					A. Program mode:
+						Here, we write the awk program into a file.awk.
+						awk -f file.awk
+						Flags:
+							-f => Awk program code file
+					B. Tool Mode:
+						awk 'program' input.file
+						awk '$1 >200' file => print where 1st variable is more than 200
+						awk '$1 ~ /abcd/' file => print where 1st variable contains "abcd"
+						awk 'BEGIN { FS = "." }; $2 == 10 { print $1 }; END { print "File", FILENAME, "contains", NR, "lines." }' teams.txt
+						awk -F "::" '{print $2, $5}'
+						awk -v n="$USER" 'BEGIN { print n}'
+						Flags:
+							-F "X" => Field delimeter
+							-v var_name="$ENV_NAME" => Get value of some ENV into an awk variable.
+	Text Editors:
+		GUI:
+			Leafpad:
+			Gedit:
+		CLI:
+			Nano:
+				Basics:
+				Usage:
+					Shortcuts:
+						ctrl + o => save changes to a file
+						ctrl + k => cut current line
+						ctrl + u => paste line 
+						ctrl + w => search
+						ctrl + x => exit 
+			Vim:
+				Basics:
+				Usage:
+					/query_string => as soon as we open vim, we can use a forward slash (/) to find something which we wanna edit.
+					once found, we press "ENTER" to move cursor there.
+					i => press "i" to enable insert mode (edit mode)
+					once insterted, press "ESC"
+					:wq! => write and quit (save changes)
+					:q! => dont save changes
+					Better syntax based info:
+						i => to enter insert mode
+						Esc => exit from insert mode and enter command mode
+						command mode:
+							/query => to search for "query"
+							dd => delete current line
+							x => delete current character
+							yy => copy current line
+							p => paste clipboard contents
+							:w => write changes
+							:q! => quit without writing changes
+							:wq => duit and write changes
+			Vi:
+				Basics:
+				Usage:
+			ViPW:
+				Read System, Users & Groups Management Section.
+			ViSudo:
+				Read System, Users & Groups Management Section.
+		Edit:(Command)
+				Basics:
+				Usage:
+	OD:(Octal Dump)
+		Basics:
+		Usage:
+			Flags:
+	XXD:(aka hexviewer/hexdump)
+		Basics:
+		Usage:
+			Flags:
+File & Directory Management:
+	Basics:
+		Directory Basics:
+			Linux Directory Structure:
+				Read Linux Internals Sheet.
+			Special Symbols:
+				~/:
+					This represents HOME directory of the user.
+					Note:
+						Every user has a different home directory.
+				/:
+					This represents the root directory.(Not the directory named "root")
+				.:
+					This represents the current directory
+				..:
+					This is used to specify parent of the current directory.
+				*:(WildCard)
+					This is used to represent every file and directory contained inside a directory.
+		Hidden Files & Directories:
+			Basics:
+		ADS in Linux?
+	Permission & Ownership Management:
+		Note:
+			I feel that its important to have prior understanding of Management of Linux Users and Groups to develop a better understanding of Permissions & Ownership of a file/directory. So, i have shifted this section to Users & Groups Management section.
+			So, Read Users & Groups Management Section to read about Permission & Ownership Management.
+	Basic Operations:
+		Accesing files having space in their name:
+			Example => access control.txt
+				1. access\ control.txt
+				2. 'access control.txt'
+		CP:(Copy)
+			Usage:
+				cp file1 file2 => copy file1 to file2
+				cp file1 /abcd => copy file1 to /abcd
+				cp f1 f2 f3 /abcd => copy f1, f2 and f3 to /abcd
+				cp f1 . => copy f1 to current directory
+		MV:(Move)
+			Usage:
+				mv file1 fil2 => move file1 to file2
+		PWD:(Print Working Directory)
+			Usage:
+				pwd => Outputs the current working directory
+				Flags:
+					-P => 
+		CD:(Change Directory)
+			Usage:
+				cd => Change directory to home.
+				cd /abcd
+		Touch:
+			Basics:
+				Touch is used to create a new empty file.
+			Usage:
+				touch filename
+		MkDir:(Make Directory)
+			Basics:
+				MkDir is used to create a new empty directory.
+			Usage:
+				mkdir abcd => Creates /abcd
+		Deleting Files & Directories:
+			RM:(Remove)
+				Basics:
+					RM is used to delete files and both empty directories and directories containing files.
+				Usage:
+					rm file_name => Deletes file_name
+					rm -rf /abcd => deletes directory + files
+					Flags:
+						-r => Recursive delete
+						-f => 
+			RmDir:(Remove Directory)
+				Basics:
+					RmDir is used to delete only empty directories.
+				Usage:
+					rmdir dir_name
+		LS:(aka List)
+			Read Permission & Ownership Management Section to read about it.
+	Finding Files & Directories:
+		Describing & Finding Source of Binary files:
+			Which:
+				Basics:
+					Which searches through directories defined in $PATH variable for the specified binary.
+					Which is better than locate to find binaries as it only shows one occurence per binary.
+				Usage:
+					which binary_name:
+			Type:
+				Basics:
+				Usage:
+			Command:
+				Basics:
+				Usage:
+					Flags:
+						-v => 
+						-V => 
+		Locate:
+			Usage:
+				locate filename 
+			Note:
+				Use "updatedb" command before using "locate" command, to update location of files and directories.		
+
+		Whatis:
+			Usage:
+				whatis binary_name => gives info about some binary/tool along with its location and man page
+		Find:
+			Basics:
+				To find files and directories
+			Usage:
+				find /dir options
+				find ~ options => here "directory" is HOME
+				Flags:
+					-type f => files
+					-type d => directory
+					-name "*.bin" or -name *.bin
+						-name ".*" => hidden file
+					-iname => ignore case
+					-not -name "name" => other files than "name"
+					-user=username (owner of file)
+					-size n
+						n => exact n size
+						+n => more than n
+						-n => less than n 
+						suffix for n:
+							c => bytes
+							k => kb
+							M => mb
+					-empty => zero byte size files
+					-exec command {} \; => execute command
+					-perm
+						octal form:
+							read basics->file_permissions
+							-444 => users having 444 permission or more
+							/444 => users having 444 permission or less
+						symbolic form:
+							-o/u/g=x/w/r/s
+								s => suid
+					Time related:
+						-min => minutes (convert hours to minutes)
+						-time => days
+						prefix for min and times:
+							a => accessed
+							m => modified
+							c => status changed
+						-amin +30 => file accessed more than 30 mins ago
+						-mtime -7 => file accessed less than 7 days ago
+					Depth related:
+						root is '1', sub-dir is '2' and so-on
+						-maxdepth x => maximum depth 
+						-mindepth x =. minimum depth
+				find / -perm -4000 -print 2>/dev/null => to find all SUID files
+					NOTE:
+						2>/dev/null => Redirecting the error messages to /dev/null, it can be used in every command to dont show any errors
+	Link Management:
+		Basics:
+			A Link is a pointer pointing to a file or a directory. They are used to create shortcuts to a file. They are used to allow more than one file_name to refer to the same file.
+			A link becomes a file or a directory depending on what is pointing to.
+			Types:(2)
+				A. Symbolic Link:(aka SymLink)(aka Soft Link)
+					Symbolic Link is a type of file in linux that points to some other file.
+				B. Hard Link:
+					Unlike SymLinks, Hard links cannot be created for directories and files on a different filesystem or partition.
+		Creating Links:
+			LN:(Link)
+				Basics:
+					LN is used for creating links. By deafult, it creates hardlinks.
+				Usage:
+					ln <source_file> link_name => Creates Hardlink
+					ln -s /home/france.txt france.txt => Creates Symlink for a file
+					ln -s /home/folder_name new_folder => Creates Symlink for a directory
+					Flags:
+						-s => -symbolic => Create a soft link
+						-l => 
+		Deleting Links:
+			RM:
+				rm <path_to_symlink>
+			UnLink:
+				Basics:
+				Usage:
+					unlink <path_to_symlink> => Removes Symlink
+			Note:
+				If symlink is linking towards a directory, even then dont use '/' in the end in <path_to_symlink>
+	Downloading Files:
+		Axel:
+			Basics:
+				Its used for downloads over FTP/HTTP
+			Usage:
+				axel -a -n 20 -o filename link
+				Flags:
+					-a => show progess
+					-n x => use x number of connections
+		Wget:
+			Basics:
+				Its used for downloads over HTTP/HTTPS/FTP
+			Usage:
+				wget http://ip/file_name
+				wget -m ftp://username:password@ip
+				Flags:
+					-O new_filename => save with some other name
+					-b => to download in background
+					-m => 
+		cURL:
+			Read WebApp Pentesting For CTF Sheet to know about cURL.
+		Note:
+			As far as "Forensics" are concerned, we should use Wget instead of cURL to download files as cURL has a major issue of changing "Origin Date" header to current date in meta-data of a file.
+			To test this, we can download any webpage via both Wget and cURL and use exif on them.
+Archive Management:
+	Basics:
+	Archive Specific:
+		A. Tar Based:(aka Tarball)
+			Basics:
+			Types:(6)
+				1. .tar:
+					Basics:
+					Archive Operations:(Compression & De-Compression)
+						Using Tar:(Binary)
+							Basics:
+								Read Tar Tool Section below.
+							Usage:
+								tar -cvf abcd.tar file1 file2 => create abcd.tar
+								tar -xvf abcd => unzip abcd
+								Flags:
+									-c => create
+									-x => extract
+									-v => verbose
+									-f => write the following file
+				2. .tar.gz:
+					Basics:
+					Archive Operations:(Compression & De-Compression)
+						Using Tar:(Binary)
+							Basics:
+								Read Tar Tool Section below.
+							Usage:
+								tar -czf abcd.tar.gz file1 file2 => create abcd.tar.gz
+								tar -xzf abcd => unzip abcd
+								Flags:
+									Read Tar Tool Section below.
+				3. .tar.bz2:
+					Basics:
+					Archive Operations:(Compression & De-Compression)
+						Using Tar:(Binary)
+							Basics:
+								Read Tar Tool Section below.
+							Usage:
+				4. .tar.lzip:
+					Basics:
+					Archive Operations:(Compression & De-Compression)
+						Using Tar:
+							Basics:
+								Read Tar Tool Section below.
+							Usage:
+				5. .tar.lzop:
+					Basics:
+					Archive Operations:(Compression & De-Compression)
+						Using Tar:(Binary)
+							Basics:
+								Read Tar Tool Section below.
+							Usage:
+				6. .tar.zstd:
+					Basics:
+					Archive Operations:(Compression & De-Compression)
+						Using Tar:(Binary)
+							Basics:
+								Read Tar Tool Section below.
+							Usage:
+		B. .gz:
+			Basics:
+			Archive Operations:
+				Compression:
+					Using GZip:(Binary)
+						Basics:
+						Usage:
+							Flags:
+				De-Compression:
+					Using GunZip:(Binary)
+						Basics:
+						Usage:
+							gunzip abcd.gz => unzip abcd.gz
+							Flags:
+		C. .bz2:
+			Basics:
+			Archive Operations:
+				Compression:
+					Using BZip2:(Binary)
+						Basics:
+						Usage:
+							bzip2 file1 file2 => create .bz2
+							Flags:
+				De-Compression:
+					Using BunZip2:(Binary)
+						Basics:
+						Usage:
+							bunzip2 abcd.bz2 => extract abcd.bz2
+							Flags:
+		D. .rar:
+			Basics:
+			Archive Operations:
+				Compression:
+					Using Rar:(Binary)
+						Basics:
+						Usage:
+							Flags:
+				De-Compression:
+					Using Unrar:(Binary)
+						Basics:
+						Usage:
+							Flags:
+		E. .zip:
+			Basics:
+			Archive Operations:
+				Compression:
+					Using Zip:(Binary)
+						Basics:
+						Usage:
+							zip abcd => zip files
+							Flags:
+				De-Compression:
+					Using UnZip:(Binary)
+						Basics:
+						Usage:
+							unzip abcd.zip => unzip abcdssss
+							Flags:
+		F. .7z:
+			Basics:
+			Archive Operations:(Compression & De-Compression)
+				Using 7z:(Binary)
+					Basics:
+						Read 7z Tool Section below.
+					Usage:
+						7z x filename
+						Flags:
+							Read 7z Tool Section below.
+		G. .xz
+			Basics:
+			Archive Operations:
+				Compression:
+					Using Xz:(Binary)
+						Basics:
+							Read Xz Tool Section below.
+						Usage:
+							Flags:
+								Read Xz Tool Section below.
+				De-Compression:
+					Using Unxz:(xz --decompress)(Binary)
+						Basics:
+							Read Xz Tool Section below.
+						Usage:
+							Flags:
+								Read Xz Tool Section below.
+		H. .lzma:
+			Basics:
+			Archive Operations:
+				Compression:
+					Using Lzma:(xz --format=lzma)(Binary)
+						Basics:
+							Read Xz Tool Section below.
+						Usage:
+							Flags:
+								Read Xz Tool Section below.
+				De-Compression:
+					Using Unlzma:(xz --format=lzma --decompress)(Binary)
+						Basics:
+							Read Xz Tool Section below.
+						Usage:
+							Flags:
+								Read Xz Tool Section below.
+		I. .lzip:
+			Basics:
+			Archive Operations:(Compression & De-Compression)
+				Using Lzipz:(Binary)
+					Basics:
+					Usage:
+						Flags:
+		J. .lz4:
+			Basics:
+			Archive Operations:
+				Compression:
+					Using Lz4:(Binary)
+						Basics:
+						Usage:
+							Flags:
+				De-Compression:
+					Using Unlz4:(lz4 -d)(Binary)
+						Basics:
+						Usage:
+							Flags:
+		K. .lzop:
+			Basics:
+			Archive Operations:(Compression & De-Compression)
+				Using Lzop:(Binary)
+					Basics:
+					Usage:
+						Flags:
+		L. .zstd:
+			Basics:
+			Archive Operations:
+				Compression:
+					Using Zstd:(Binary)
+						Basics:
+						Usage:
+							Flags:
+				De-Compression:
+					Using Unzstd:(zstd -d)(Binary)
+						Basics:
+						Usage:
+							Flags:
+		M. .arj:
+			Basics:
+			Archive Operations:(Compression & De-Compression)
+				Using Arj:(Binary)
+					Basics:
+					Usage:
+						Flags:
+		N. .iso:
+	Tools:
+		7z:(apt-get install 7z)
+			Basics:
+				It can be used for operations on archives such as tar, 7zip, zip, xz, rar, gzip, bzip2, etc.
+			Usage:
+				7z <command> <switches> <archive_name> <files>
+				Flags:
+					Commands:
+						a => Add files into the archive
+						d => Delete files from the archive
+						l => List contents of the archive
+						rm => Rename files in the archive
+						e => Extract files without full path, ie, without maintaing directory hierarchy
+						x => Extract files with full path, ie, maintaing directory hierarchy
+					Switches:
+						-l => 
+		Tar:(Binary)
+			Basics:
+				It can be used to create/extract .tar/.tar.gz/.tar.bz2/.
+			Usage:
+				tar -cf abcd.tar file1 file2 => create abcd.tar
+				tar -xf abcd => unzip abcd
+				tar -czf abcd.tar.gz file1 file2 => create abcd.tar.gz
+				tar -xzf abcd.tar.gz => unzip abcd.tar.gz
+				tar -cjf abcd.tar.bz2 file1 file2 => create abcd.tar.gz
+				tar -xjf abcd.tar.bz2 => unzip abcd.tar.gz
+				Flags:
+					-c => --create => Create a new archive
+					-t => --list => List contents of the archive
+					-x => --extract => --get => Extract data from archive
+					-C => extract files to the specified directory
+					-z => --gzip => --gunzip => Filter(pass) the archive through gzip
+					-j => --bzip2 => Filter(pass) the archive through bzip2
+					-Z => --compress => --uncompress =>
+					-J => --xz
+					--lzip =>
+					--lzma =>
+					--lzop =>
+					--zstd =>
+					-r => --append => Append new files to the end of archive
+					-u => --update => Newer files are moved into archive at place of old files
+					--delete => Delete mentioned files from the archive
+					-f <file_name.ext> => --file <file_name.ext> => Use the following file
+		Xz:(Binary)
+			Basics:
+			Usage:
+				Flags:
+Users & Groups Management:
+	Basics:
+		Terms:
+		Users:
+			Basics:
+				Read Linux Internals Sheet.
+			User Identifiers:
+				Read Basics Section above.
+			SuperUsers:
+				Read Root Management Section below.
+		Groups:
+			Basics:
+				Read Linux Internals Sheet.
+			Group Identifiers:
+				Read Basics Section above.
+		Configuration Files:
+			/etc/group => Group info
+			Password Configuration Files:
+				/etc/passwd
+				/etc/shadow
+				Note:
+					Read Linux Privsec Sheet
+	User Management:
+		Creating Users:
+			UserAdd:
+				Basics:
+					UserAdd is used to create users.
+				Usage:
+					sudo useradd username => Creates a normal user
+					sudo useradd username sudo => Create a super user
+					Flags:
+						-m => Create a home directory for user.
+						-G <gid> => Add user to specified groups
+			AddUser:
+				Basics:
+					Only difference between adduser and useradd is that adduser sets up user folders, directories, and other necessary functions during user creation without need of any special flags, unlike UserAdd.
+				Usage:
+					sudo adduser user_name => Creates a normal user
+					sudo adduser username sudo => Create a super user
+					Flags:
+			Note:
+				Both UserAdd and AddUser requires "sudo" to run.
+		Deleting Users:
+			UserDel:
+				Basics:
+				Usage:
+			DelUser:
+				Basics:
+				Usage:
+					deluser user_name
+					deluser -r user_name => to delete all files related to user as well
+					Flags:
+						-r => 
+		Locking Users:
+		Disabling Users:
+		Editing User Attributes:
+			UserMod:
+				Basics:
+					usermod -l new_name old_name => Changes username of a user from old_name to new_name
+					usermod -d /new/dir user_name => Sets home dirctory of username to /new/dir
+					usermod -d /new/dir -m user_name => Sets home dirctory of username to /new/dir & shifts data
+					usermod -g group_name user_name => Change GID of a user
+					usermod -g 888 user_name => Change GID of a user
+					usermod -G group_name user_name => Adds user_name to group_name & removes previous memberships of user.
+					usermod -aG group_name user_name => Adds user_name to group_name as supplementary group.
+				Usage:
+					Flags:
+						-d => Change home directory of a user
+						-m => When its used along with -d, it shifts contents from home directory of a user to another directory
+						-u => Assign a new UID to the user (0-999)
+						-g => Change GID of a user
+						-G => Adds user to the listed groups & removes the previous group memberships of the user
+						-aG => Adds user to the listed groups & keeps the previous group memberships of the user intact 
+						-l => Change name of a user
+						-s => Change shell of a user.
+						-L => Lock the user account
+						-U => Unlock the user account
+			Password Management:
+				Passwd:
+					Basics:
+						Passwd is used to change password of a user.
+					Usage:
+						Empty Password for Root:
+							Read SuperUser & Root Management Section below.
+				ViPW:
+					Basics:
+						ViPW is used to edit /etc/passwd file.
+					Usage:
+		Checking User Information:
+			Whoami:
+				Basics:
+					Prints username of current session
+				Usage:
+			Who:
+				Basics:
+					Displays all users logged on the system
+				Usage:
+					Flags:
+						-r => Show runlevel
+			ID:
+				Basics:
+				Usage:
+					id => Shows UID, GID and groups of current user
+					id <username> => Shows UID, GID and groups of the specified user
+					Understanding output:
+						uid=<uid>(user_name) gid=<gid_of_primary_group>(primary_groupname) groups=<gid_of_supp_group>(supp_groupname),{another groups}
+				Note:
+					Read Basics Section above to read about identifiers.
+	Group Management:
+		Groups:(Binary)
+			Basics:
+			Usage:
+				groups
+				groups user_name
+	SuperUser & Root Management:
+		Basics:
+			Root:(User)
+				Read Linux Internals Sheet.
+			Sudo:(Group)
+				Read Linux Internals Sheet.
+			Superuser:(aka Sudoer)
+				Read Linux Internals Sheet.
+		Root Management:
+			Changing Root Password:
+				Having "null" password for 'Root':
+		Creating SuperUser:
+			AddUser:
+				sudo adduser username sudo
+			UserAdd:
+				sudo useradd username sudo
+		Making an existing user a SuperUser:
+			UserMod:
+				sudo usermod -aG sudo user_name => Adds user_name to "sudo" group
+		ViSudo:
+			Basics:
+				ViSudo is used to edit /etc/sudoers file
+			Usage:
+	Running commands/shell as another user/root:
+		SU:(Switch User)(aka substitute User)
+			Basics:
+				It starts another shell instance with privileges of the given user. 
+			Usage:
+				su => Gets a shell as root.
+				su <user1234> => Gets a shell as user1234
+				Flags:
+					-c => --command=<command> => 
+					-s => --shell=<shell> => 
+					-u => 
+					- => -l => --login =>
+			Note:
+				'su' vs 'su -':
+					'su' gives root shell, and uses root's ~/.bashrc
+					'su - ' gives root shell, but uses current user's ~/.bashrc
+			Note:
+				I have kept 'SU' in this section as some use-cases of SU overlap with those of SUDO.
+		SUDO:(Super User(SU) DO)(Binary)
+			Basics:
+				Sudo binary allows a user to operate with root or given user/group privileges, ie execute a command(which may lead to getting a shell as explained in usage section).
+				Sudo is different than SU as Sudo only allows to run some specific commands whereas SU gives a whole new shell as the specified user only.
+				Note:
+					Only those users who are a member of "Sudo" or "Wheel" group can run this binary.
+			Usage:
+				sudo -l => Prints list of commands current user can run as the root.
+				sudo -l -U <user_name> => Prints list of commands current user can run as the given user.
+				Running commands:
+					sudo <command> => Runs the specified command as root
+					sudo -u <user_name> <command> => Runs the specified command as given user
+					Note:
+						I had confusion in this one-line "sudo -u <user_name> -i /bin/bash", it works as:
+							"sudo -u <username> -i" <command or file>
+							So, sudo first gets a shell as specified user, and then executes the file, which in this case is '/bin/bash'.
+							Note:
+								"-i" dont take any command or file as input, it only takes user_name as input, and in absence of it, 'root' is used as user_name.
+				Getting shell:
+					sudo -u <user_name> -i
+					sudo -u <user_name> <name of shell>:
+						sudo -u <user_name> sh
+						sudo -u <user_name> /bin/bash
+						Note:
+							Read Shell Section for more info
+					Getting shell as Root:
+						sudo -i => Gives root shell by logging in as root. Its same as "sudo su"
+						sudo su
+						sudo <name of shell>:(or sudo -u root <name of shell>)
+							sudo sh
+							sudo /bin/bash
+							Note:
+								Read Shell Section for more info
+				Flags:
+					-V => --version => Sudo's version
+					-l => --list => List all allowed and forbidden commands current user can run as the root(or the specified user(by -U))
+					-U => --other-user=<user_name> => Its used with -l to specify user whose privileges are to be listed.
+					-i => --login => It provides shell as root or the specified user
+					-s => Its same as '-i', however it uses current user's ~/.bashrc instead of specified user's.
+					-u => --user=<user_name> => It makes sudo to run command as the specified user.
+				Note:
+					'sudo -s' vs 'sudo -i':
+						sudo -i uses root's ~/.bashrc
+						sudo -s uses current user's ~/.bashrc
+	Permission & Ownership Management:
+		Basics:
+			Permissions are also known as Modes.
+			Permission Groups:(aka Permission Attributes)
+				Attributes:(3)
+					1. Owner Permissions:(u)
+						These permissions determine what actions the owner of the file can perform on the file.
+					2. Group Owner Permissions:(aka Group Permissions)(g)
+						These permissions determine what actions a user, who is a memeber of the group to which the file belongs to,  can perform on the file.
+					3. Other Permissions:(o)
+						These permissions determine what actions any user other than Owner or file's group member, can perform on the file.
+					4. All Users Permission:(a)
+						These permissions determine what actions any valid user can perform on the file.
+			Permission Notations:
+				Basics:
+					Its important to understand all these notations as they are used in both output and to give input to commands such as chmod, find etc.
+				Types:(2)
+					A. Symbolic Notation:
+						Basics:
+							Symbols:
+								For Permissions:
+									1. r => Read
+									2. w => Write
+									3. x => Execute
+								For Special Permissions:
+									1. s => SUID/SGID Bit
+									2. t => Sticky Bit
+									3. S => SUID/SGID Bit with an error
+								For Attributes:(4)
+									1. u => Owner
+									2. g => Group Owner
+									3. o => Other Users
+									4. a => All Users
+								Other Symbols:
+									1. d => Directory
+									2. l => File or Directory is a symbolic link to some other file
+									3. b => File is actually a block device
+									4. c => File is actually a character device
+									5. p => File is actually a pipe device
+									6. s => File is actually a socket device
+									7. - => '-' is used at a specific placholder to imply that permission at the placeholder specified is denied.
+										Read "Understanding output of ls -l" Section to undertsand it.
+						Syntax:
+							Permission_group<operator>Permissions
+							Where:
+								Permissions => r/w/x
+								Permission_Group:
+									A. u => Owner
+									B. g => Group Owner
+									G. o => Other Users
+								Operator:
+									A. =
+										Sets the specified permissions to the specified permissions group
+									B. +
+										Adds the specified permissions to the specified permissions group
+									C. -
+										Removes the specified permissions from the specified permissions group
+					B. Numeric Notation:
+						Basics:
+						Numerical conversion table:
+							octal     0   6    4     0 
+							binary   000 110  100   000
+							symbolic sst rwx  rwx   rwx
+							meaning	 spl user group other users
+						Examples:
+							Q. find octal for only SUID file
+								S-- --- --- ---
+								100 000 000 000
+								octal for 100(binary) => 4
+								answer => 4000
+							Q. find octal for file readable by everyone
+								r--r--r--
+								100100100
+								octal for 100(binary) => 4
+								answer => 444 (or 0444)
+			Permission Types & their meanings:
+				A. For Files:
+					1. r:(Read)
+						Read permission allows a 'permission group' to read a file.
+					2. w:(Write)
+						Read permission allows a 'permission group' to write into a file.
+					3. Executable Permissions:
+						Basics:
+						Types:
+							A. x:(Execute)
+							B. s:(SUID(Set User ID) Bit)
+								When the SUID bit is set on an executable file, any user executing the file will execute that file with same permissions as the owner of that file.
+								When it is set, 'x' of "Owner Permissions" group becomes 's'.
+							C. s:(SGID(Set Group ID) Bit)
+								When the SGID bit is set on an executable file, any user executing the file will execute that file with same permissions as the group owner of that file.
+								When it is set, 'x' of "Group Owner Permissions" group becomes 's'.
+							D. t:(Sticky Bit)
+								A sticky-bit has no effect on permissions of a file.
+								When it is set, 'x' of "Other Users Permissions" group becomes 't'.
+				B. For Directories:
+					0. d:(Directory)
+						This permission is actually not a permission. This just specifies that the specified entity is a directory.
+					1. r:(Read)
+					2. w:(Write)
+					3. Executable Permissions:
+						Basics:
+						Types:
+							A. x:(Execute)
+							B. s:(SUID(Set User ID) Bit)
+								When it is set, 'x' of "Owner Permissions" group becomes 's'.
+							C. s:(SGID(Set Group ID) Bit)
+								When SGID bit is set to a directory, all sub directories and files inside this directory will have same group owner permissions as the main directory (not the group ownership of the user that created the files and directories).
+								When it is set, 'x' of "Group Owner Permissions" group becomes 's'.
+							D. t:(Sticky Bit)
+								When sticky bit is set on a directory, all the files in the directory can only be deleted or renamed by the file owners only or the root.
+								When it is set, 'x' of "Other Users Permissions" group becomes 't'.
+				Note:
+					Sometimes, we get SUID/SGID permission bit set as 'S' instead of 's'. It happens when we set SUID/SGID bit to a file which didnt had the 'x' bit before. In other words, its an error that occurs when a user sets SUID/SGID on a non-executable file, ie, a file having no 'execute' permission set before the change to SUID/SGID.
+		Listing Permissions/Ownership/Groups:
+			LS:
+				Basics:
+					Its used to list contents of a directory
+				Usage:
+					ls => list contents of current directory
+					ls /dir1234 => list contents of /dir1234
+					ls -lt => list by last modified
+					ls -ltr => list by last modified reverse order
+					ls -la => It show both hidden and unhidden files with permissions
+					Flags:
+						-l => Detalied view
+						-f => Mention file type info
+						-t => 
+						-r => 
+						-a =>
+				Understanding output of ls -l(or -ltr or similiar flags):
+					<Permissions> <number?> <Owner_name> <Group_name> <size> <last_modified> <file_name>
+					Understanding Columns in the output:
+						A. Permissions:
+							Syntax consists of 4 sections which have symbols in them to represent permission. 
+								<-><---><---><--->
+								<Section1><Section2><Section3><Section4>
+							Sections:
+								Section1:
+									Values:
+										- => It is a file.
+										d => It is a directory.
+								Section2:
+									Section2 defines permission for Owner of the file/folder.
+									It has 3 sub-sections:(<r><w><x>)
+										Sub-Section1:(Read)
+											Values:
+												- => Owner cannot read from the file.
+												r => Owner can read from the file.
+										Sub-Section2:(Write)
+											Values:
+												- => Owner cannot write to the file.
+												w => Owner can write to the file.
+										Sub-Section3:(Execute)
+											Values:
+												- => Owner cannot execute the file.
+												x => Owner can execute the file.
+												s => SUID file.
+								Section3:
+									Section3 defines permission for members of group having same group_id as that of the file/folder.
+									It has 3 sub-sections:(<r><w><x>)
+										Sub-Section1:(Read)
+											Values:
+												- => Users represented by this section cannot read from the file.
+												r => Users represented by this section can read from the file.
+										Sub-Section2:(Write)
+											Values:
+												- => Users represented by this section cannot write to the file.
+												w => Users represented by this section can write to the file.
+										Sub-Section3:(Execute)
+											Values:
+												- => Users represented by this section cannot execute the file.
+												x => Users represented by this section can execute the file.
+												s => SGID file.
+								Section4:
+									Section4 defines permission for all the other users.
+									It has 3 sub-sections:(<r><w><x>)
+										Sub-Section1:(Read)
+											Values:
+												- => Users represented by this section cannot read from the file.
+												r => Users represented by this section can read from the file.
+										Sub-Section2:(Write)
+											Values:
+												- => Users represented by this section annot write to the file.
+												w => Users represented by this section can write to the file.
+										Sub-Section3:(Execute)
+											Values:
+												- => Users represented by this section cannot execute the file.
+												x => Users represented by this section can execute the file.
+												t => Sticky bit is set.
+		Changing Permissions/Ownership/Groups:
+			Chmod:(Change Mode)
+				Basics:
+					Chmod is used to change permissions of a file.
+				Usage:
+					chmod <Permission> file_name
+					Flags:
+						Permissions:
+							Chmod can use 2 diff notations to define permissions.
+							Notations:
+								1. Symbolic Notation:
+									Syntax:
+										chmod Permission_Group<operatoe>Permissions file_name
+											Where:
+												Permissions => r/w/x
+												Permission_Group:
+													A. u => Owner
+													B. g => Group Owner
+													G. o => Other Users
+												Operator:
+													A. =
+														Sets the specified permissions to the specified permissions group
+													B. +
+														Adds the specified permissions to the specified permissions group
+													C. -
+														Removes the specified permissions from the specified permissions group
+									Example:
+										chmod u+r file_name
+										chmod u=rwx,g=rx,o=r myfile
+									Note:
+										Read Basics to understand more about this notation.
+								2. Numerical Notation:
+									Syntax:
+										chmod <Octal_Value_of_Permissions> file_name
+									Example:
+										chmod 777 file_name
+									Note:
+										Read Basics to understand more about this notation.
+			Chown:(Change Owner)
+				Basics:
+					Chown is used to change Owner of a file.
+				Usage:
+					chown user_name:user_name file_name => make user_name both owner and group owner of file_name
+					chown user_name:group_name file_name => make user_name owner of file_name and group_name group owner of file_name
+					Flags:
+						-R => recursive => used with directories
+			Chgrp:(Change Group Owner)
+				Basics:
+					Chgrp is used to change Group_ID of a file.
+				Usage:
+					chgrp group_name file_name => make group_name group owner of file_name
+					Flags:
+						-R => recursive => used with directories
+			Chroot:(Change Root)
+				Basics:
+					Is used to change the root directory(not /root). Every process/command in Linux has a current working directory called root directory. It changes the root directory for currently running processes as well as its child processes.
+				Usage:
+					Flags:
+Network Management:
+	Basics:
+		Read Linux Internals Sheet.
+	Interface Management:
+		IfConfig:
+			Basics:
+				Its used to show network interfaces.
+			Usage:
+				ifconfig <interface_name> <flags>
+			Note:
+				Ifconfig is a deprecated commands in Linux that has not been maintained for many years. Use 'ip' instead of IfConfig.
+		IwConfig:
+			Basics:
+				Its used to show wireless network interfaces.
+			Usage:
+				iwconfig <interface_name> <flags>
+				Flags:
+		IhConfig:
+			Basics:
+				Its used to show bluetooth interfaces.
+			Usage:
+				Flags:
+		IP:
+			Basics:
+				Its used to display & manipulate network devices and their configuration.
+			Usage:
+				ip <flags> {object} <command>
+				Objects:
+					Addr:(address or a or addr)
+						Basics:
+							Its used to show info related to network interfaces.
+						Usage:
+							ip a => Shows all IP addresses associated on all the network interfaces. Same as ifconfig command.
+							Commands:
+								Show:
+									ip a show interface_name => Shows info related to specified interface only.
+								Add:
+									ip a add <ip> dev <interface_name>
+									ip a add <subnet> dev <interface_name>
+								Del:
+									ip a del <ip> dev <interface_name>
+									ip a del <subnet> dev <interface_name>
+					Addrlabel:
+					Link:(link or l)
+						Basics:
+							Its used to show link layter information by fetching characteristics of all the link layer devices currently available on the system.
+						Usage:
+							ip l => Shows link layer information.
+							Commands:
+								Set:
+									ip l set <interface_name> up => Bring the interface up
+									ip l set <interface_name> down => Bring the interface down					
+					Route:(route or r)
+						Basics:
+							Its used for displaying & changing routing table.
+						Usage:
+							ip r
+							Commands:
+								List:
+									ip r list
+								Add:
+									ip r add <subnet> via <gateway_ip> => Add a route to subent via gateway's ip
+									ip r add <subnet> dev <interface_name> => Add a route to subnet that can be reached on specified interface
+								Del:
+									ip r del default => Delete default route tables.
+					Rule:
+					Neigh:(neigh)
+						It is used for ARP table.
+					Neighbour?
+					Ntable:
+					Tunnel:
+					Tuntap:
+					Maddr:
+					Mroute:
+					Mrule:
+					Monitor:
+					Xfrm:
+					Netns:
+					L2TP:
+					TCP_Metrics:
+					Token:
+					Macsec:
+					VRF:
+					MpTCP:
+					Ioam:
+				Flags:
+					-s => Show stats
+					-0 =>
+					-4 => Display only IPv4 Address.
+					-6 => Display only IPv6 Address.
+					-B =>
+					-M =>
+					-f => 
+		IW:
+			Basics:
+				Its used to display & manipulate wireless devices and their configuration.
+			Usage:
+				iw <flags> {object} <command>
+				Objects:(3)
+					A. Dev:
+						Basics:
+						Usage:
+							iw dev => List all wireless interfaces.
+							iw dev <interface_name>
+							Commands:
+								Info:
+									iw dev <interface_name> info => Show info for the specified interface
+								Del:
+									iw dev <interface_name> del => Remove the virtual interface
+								Interface Add:
+									iw dev <interface_name> interface add <name> type => Add a new interface
+								AP:
+									iw dev <interface_name> ap start 
+									iw dev <interface_name> ap stop
+								Auth:
+									iw dev <interface_name> auth <ssid> <bssid> => To authenticate with the given network
+								Connect:
+									Different from Auth?
+								Disconnect:
+									iw dev <interface_name> disconnect => Disconnect from current network
+								CQM:
+								FTM:
+								IBSS:
+								Switch:
+								Link:
+								Mesh:
+								MGMT:
+								Mpath:
+								MPP:
+								OCB:
+								CAC:
+								REG:
+								Roc:
+								Scan:
+								Set:
+								Get:
+								Station:
+								Vendor:	
+					B. Phy:
+						Basics:
+						Usage:
+							iw phy <hardware_name>
+							iw phy#<hardware_index>
+							Commands:
+								Info:
+									iw phy <hardware_name> info => Show capabilities of the specified device
+								Interface Add:
+									iw phy <interface_name> interface add <name> type => Add a new interface
+								Coalesce:
+									iw phy <hardware_name> coalesce show => Show coalesce status
+									iw phy <hardware_name> coalesce disable => Disable coalesce
+									iw phy <hardware_name> coalesce enable <config_file> => Enable coalesce
+								Hwsim:
+								Channels:
+									iw phy <hardware_name> channels => Show available channels for the device
+								Set:
+								Get:
+								Wowlan:
+					C. Reg:
+						Basics:
+							Reg is used to define a regulatory agent.
+						Usage:
+							Commands:
+								Reload:
+									iw reg reload => Reload kernel's regulatory DB.
+								Get:
+								Set:
+				Flags:
+	Internet Management:
+		DHClient:(DHCP Client)
+			Basics:
+				It uses DHCP or BOOTP to configure a network interface.
+				Note:
+					Its name is 'dhclient', not 'dhcpclient'.
+				Note:
+					Read Networking Sheet to understand about DHCP.
+			Usage:
+				Flags:
+	Netstat:
+		Basics:
+		Usage:
+			Flags:
+				-a => 
+				-n => 
+				-t => 
+				-p => 
+				-o => 
+	Route:
+		Basics:
+			Its used to print routing tables.
+		Usage:
+			Flags:
+				-n => 
+	Ping:
+		Basics:
+		Usage:
+			Flags:
+				-c x => Send only x number of packets.
+	Arp:
+		Basics:
+		Usage:
+			Flags:
+	VPN Management:
+	TOR Management:
+	Firewall Management:
+		IPtables:
+			Basics:
+				Tables:(4)
+					1. Filter:
+					2. NAT:
+					3. Mangle:
+					4. Raw:
+			Usage:
+				iptables -L => show active rules
+				iptables -t <table_name> --list => to see the rules
+				iptables --flush => delete all the rules
+				iptables -t <table_name> --list => to see the rules
+				iptables --flush => delete all the rules
+				iptables -P INPUT DROP => change policy of INPUT chain to DROP
+				iptables -P INPUT ACCEPT => change policy of INPUT chain to ACCEPT
+				iptables -A INPUT -s ip -j DROP -i eth0 -p tcp	
+				Flags:
+					-P => policy name (INPUT|OUTPUT|FORWARD)
+					-A => append a new rule
+					-I => add a rule in starting
+					-D => delete a rule
+					-F => delete all rules
+					-s => source ip
+					-d => destination ip
+					-j => action (accept/drop/queue/return)
+					-i => INPUT interface
+					-o => OUTPUT interface
+					--dport => destinationport (INPUT)
+					--sport => sourceport (OUTPUT)
+					-p => protocol (tcp|udp|icmp)
+			Note:
+				All changes takes place for current session only.
+				To make changes permanent:
+					sudo /sbin/iptables-save
+Process, Job & Signal Management:
+	Basics:
+		Terms:
+			Background:
+			Foreground:
+		Process Identifiers:
+			Read Basics Section above.
+		Threads, Processes, Process Groups & Sessions in terms of hierarchy:(4 Levels)
+			Level-0: Thread
+				Basics:
+					Thread is a path of execution within a process.
+				Types:(2)
+					A. Kernel Thread:
+					B. User Thread:
+			Level-1: Process
+				Basics:
+					A Process consists of one or more threads and refers to an instance provided by the system when a command/program is executed by one or more threads. This instance consist of all services/resources that may be required by process under execution.
+					In layman, terms anything that runs is a process. So a service is a process too.
+				Process Table:
+				Classifications:(5)
+					1. Based on how a process is running:(2)
+						A. Foreground Process:
+							Every process runs in foreground by default.
+						B. Background Process:
+							Basics:
+								A background process runs in background and do not recieve any input unless the program/command running the process requires any input.
+								"&" is used after a command/program name to run in it in background.
+									Example:
+										firefox &
+							Special Type of Background Process:
+								Daemon Process:(aka Daemons)
+									Daemons are system-related background non-interactive processes that has no controlling terminal.
+					2. Based on Hierarchy:(4)
+						A. init Process:(aka Intialization)(aka Parent of all processes)
+							Read System & Service Management Section.
+						B. Parent Process:
+							A process that creates a new process(process_b) is called a parent process of process_b.
+						C. Child Process:
+							A process created by another process(process_a) is called child process of process_a.
+						D. Fork:
+							Fork is any process that spawns another processes while remaining active.
+					3. Based on Termination of a process:(2)
+						A. Zombie Process:(aka Z Process)(aka Z-State Process)(aka Defunt Process)
+							A process that has completed its execution(ie, its dead now), but still has an entery in the process table.
+						B. Orphan Process:
+							When a parent process is killed before it's child process, then the child process is called an Orphan Process.
+							Init process adopts orphan proccesses and therefore PPID of such processes is PID of init process, ie '1'.
+					4. Other Types:(1)
+						A. Jobs:
+							Basics:
+								A Job is a process that the shell manages. Every job has a Job ID along with a PID.
+							Types:(3)
+								A. Foreground Jobs:
+									Same as Foreground Processes.
+								B. Background Jobs:
+									Same as Background Processes.
+								C. Stopped Jobs:
+									A stopped job is a job that is terminated.
+					5. Based on permissions:(2)
+						A. Privileged Process:
+							A privileged process can do everything with root privileges.
+						B. Unprivileged Process:
+							An unprivileged process is restricted to user privileges.
+			Level-2: Process Group
+				Process Group is a collection of processes. It can be used to send same signal to all processes at once.
+				Processes inside a process group have same PGID.
+			Level-3: Session
+				Session is a collection of "process groups established for job control purposes". Every session member has a SID.
+				At most one process group in a session can be a foreground process group.
+		Signals:
+			Basics:
+				Signals are standardized messages sent to a running program to trigger specific behavior, such as quitting or error handling.
+				They are a form of IPC implementation for *nix OS.
+				Naming Syntax:
+					Signal names are written like this => SIG_<actual name of signal>
+			Types:(64)
+				Important Signals:(7)
+					A. SIGHUP:(1)
+					B. SIGINT:(2)
+						Its issued if the user sends an interrupt signal (Ctrl + C).
+					C. SIGQUIT:(3)
+						Its issued if the user sends a quit signal (Ctrl + D).
+					D. SIGFPE:(8)
+						Its issued if an illegal mathematical operation is attempted.
+					E. SIGKILL:(9)
+						If a process gets this signal it must quit immediately and will not perform any clean-up operations.
+					F. SIGALRM:(14)
+						Its an alarm clock signal and is used by Timers.
+					G. SIGTERM:(15)
+						Its "Software Termination" signal.
+				Note:
+					I am showing signals in this format: "signal_name:(signal_id)"
+	Basic Overview of how processes actually work:
+		When a command is executed via shell, a process starts for the command, the shell runs that process in its own process group as a seperate job and assigns it a Job ID.
+		System also assigns a PGID and a PID to the process and process group containing that process.
+	Process Management:
+		Process Monitoring:
+			PS:(Process Status)
+				Basics:
+				Usage:
+					ps -aux => Show all processes
+					ps <pid> => Shows info related to the attached PID only
+					Flags:
+						-A => Show all processes.
+						-a => 
+						-e => Same as -A
+						-x => Show info about processes running without terminals
+						-u<x> => Username to run command as
+						-U => Extended Info
+						-f => Full
+						-j => 
+						-H => 
+						-m => 
+						-M => 
+						-s => 
+						-L => 
+						-o => 
+						-Z => 
+						Note:
+							"ps -aux" is different from "ps aux".
+							ps -aux prints all processes owned by a user named x, as well as printing all processes that would be selected by the -a option.
+					Understanding Output Fields:
+						PID:
+							Read Basics Section to read about PID.
+						UID:
+							Read Permission & Ownership Management Section to read about UID.
+						C:
+							CPU utlization of process
+						STIME:(Start Time)
+							Start time of the process.
+						TIME:
+							CPU Time taken by the process.
+						CMD:
+							Command that started this process.
+						TTY:
+							Read Terminal Management Section.
+			PIDstat:
+				Basics:
+				Usage:
+					Flags:
+			Echo:
+				echo $$ => Prints PID of current parent process.
+			PSTree:
+				Basics:
+					It display running processes as a tree.
+				Usage:
+					pstree
+					pstree <pid>
+					pstree <username>
+					Flags:
+						-n => To sort output by PID
+						-p => To show PID of each process too in output.
+						-u => To show owner of each process
+						-h => To highlight current process and its ancestors.
+						-h => To highlight this process and its ancestors.
+			PGrep:(Process Grep)
+				Basics:
+					It searches for passed string in currently running processes and returns PIDs associtated with the search string.
+				Usage:
+					pgrep firefox
+			Top:
+				Basics:
+					It shows all the running processes within the working environment of linux in real-time.
+				Usage:
+					top
+					Flags:
+						-b => 
+						-nx => 
+			ATop:(Advanced Top)(GUI)
+			LSOF:(List Open Files)
+				Basics:
+					Its used to find out which files are oprn by which files.
+				Usage:
+					lsof => Displays the explained output
+					Flags:
+						-R => Show PPID along with basic output.
+						-p <x> => Files opened by proccess having PID <x>
+						-p ^<x> => Files opened by all proccesses execpt process having PID <x>
+						-u <username> => Display files opened by processes exected by the specified user only
+						-u ^<username> => Display files opened by processes exected by any user other than the specified user
+						-i => Network filter
+							-i => Shows the list of all network connections ‘LISTENING & ESTABLISHED’.
+							-i TCP:port_no
+							-i TCP:port_a-port_b => Range of [Port_a, Port_b]
+							-i 4 => Only IPv4
+							-i 6 => Only IPv6
+					Understanding output:
+						Columns:
+							Command:
+							PID:
+							User:
+							FD:(File Descriptor)
+								Values:
+									CWD => Current working directory
+									RTD => Root directory
+									TXT => Program text(.code & .data)
+									MEM => Memory file
+									MMAP => Memory-mapped file
+									n<x>:
+										Where:
+											n => number
+											x:
+												r => Read
+												w => Write
+												u => Read & write
+							Type:
+								Values:
+									DIR => Directory
+									REG => Regular file
+									CHR => Character special file
+									FIFO => First In First Out
+							Device:
+							Size/OFF:
+							Node:
+							Name:
+		Terminating Processes:(or Terminating Jobs)
+			Read Terminating Jobs Section.
+		Suspending Processes:(or Suspending Jobs)
+			Read Suspending Jobs Section.
+	Job Control & Management:
+		Jobs:
+			Basics:
+				Its used to see index of suspended files.
+			Usage:
+				jobs => List all the jobs
+				Flags:
+					-r => Show only running jobs
+					-s => Show only suspended jobs
+					-1 => Show PID of jobs
+		BG:
+			Basics:
+				Brings the job to background.
+			Usage:
+				bg % <job_id> => Places the job with job_id in the background.
+		FG:
+			Basics:
+				Brings the job to foreground.
+			Usage:
+				fg % <job_id> => Places the job with job_id in the foreground.
+		Wait:
+			Basics:
+			Usage:
+		Suspending Jobs:(or Suspending Processes)
+			Foreground Jobs:
+				Ctrl + z:
+					It stops the currently running "foreground" job and places it in background as a stopped job
+			Background Jobs:
+				Stop:
+					Basics:
+						Stop is used for suspending jobs only.
+					Usage:
+						stop %job_id
+		Terminating Jobs:(or Terminating Processes)
+			Foreground Jobs:
+				Ctrl + c:(aka Break Key)
+			Background Jobs:
+				Kill:
+					Read Signal Management Section
+	Signal Management:
+		Kill:
+			Basics:
+				Kill is used for sending any signal to a process. Using some specific signals, we can also terminate a process.
+			Usage:
+				kill <pid> => Sends SIGTERM signal if no signal is specified.
+				kill -<actual name of signal> <pid>
+				kill -<signal_id> <pid> => Sends specified signal to the specified process.
+				kill -s <signal_id> <pid> => Sends specified signal to the specified process.
+				Flags:
+					-l => List all signals supported by linux.(its not -<one>)
+					-s <signal_id> => Send the specified signal to the specified process
+				Note:
+					Actual name of signal is Signal_name - "SIG"
+		Killall:
+			Basics:
+			Usage:
+				Flags:
+Service Management:
+	Basics:
+		A service is a program which responds to requests from other programs over some IPC mechanism. A service is what a server provides.
+	Systemctl:
+		systemctl enable|stop|start|status <service_name>
+		Note:
+			Read Systemctl sub-section under Systemd Management Section above to read about Systemctl.
+	Service:
+		Basics:
+		Usage:
+			service <service_name> start|stop|restart
+System Management:
+	Basics:
+		Kernel:
+			Read Linux Internals Sheet.
+	Kernel Management:
+		Dmesg:
+			Basics:
+			Usage:
+	System Details:
+		Uname:
+			Basics:
+			Usage:
+				uname -a => system details
+				Flags:
+					-a => 
+		Hostname Management:
+			Hostname:
+				Basics:
+					Its used to show hostname
+				Usage:
+					hostname
+			Editing hostname:
+				leafpad /etc/hostname => edit hostname
+				leafpad /etc/hosts => edit hostname
+				reboot
+		Time Management:
+			Date:
+				Basics:
+					Its used to display/change date and time of the system.
+				Usage:
+					date => shows date & time
+					Flags:
+						-u => show time in UTC format
+			Time:
+				Basics:
+					Its used to execute a command and prints a summary of real-time, user CPU time and system CPU time spent by executing a command when it terminates.
+				Usage:
+					time <flags> <command>
+					time sleep 3 => command is 'sleep 3'
+			Uptime:
+				Basics:
+					It is used to find out how long the system is active (running).
+				Usage:
+					uptime
+					uptime -p 
+					Flags:
+						-p => Show output in a pretty format
+			Sleep:
+				Basics:
+					Its used to create a dummy job to help in delaying the execution of a program.
+					It basically pauses the execution for the specified amount of time.
+				Usage:
+					sleep <number>{suffix}
+					Suffix:
+						s => Seconds
+						m => Minutes
+						h => Hours
+						d => Days
+	Reboot:
+		Basics:
+		Usage:
+			Flags:
+	Shutdown:
+		Basics:
+		Usage:
+			Flags:
+				-h => 
+				-r => 
+Shell & Terminal Management:
+	Basics:
+		Shell:
+			Shell is the primary interface running on the terminal. Read Shell Management Section for more info.
+		Terminal Emulators:
+			It refers to a program that emulates the physical terminal.
+		Terminal:
+			Basics:
+				A Terminal is basically something that provides user interface for text-based IO.
+				Now-a-days, we use VTY(Virtual Terminal) provided by Terminal Emulator, this VTY runs via a 'TTY Device File' to provide the terminal to us.
+				Terminal, Virtual Terminal & TTY terms are used inter-changeably.
+			Types:(3)
+				A. TTY:(TeleTypeWriter)(aka TeleType)(aka Terminal Device)
+					Basics:
+						TTY is a device file that is emulated a kernel program and is used to provide the terminal. 
+						Since TTY runs in kernel-land, TTYs can access the hardware. In other words, TTY is the more privileged version of PTY.
+						Location:
+							/dev/tty
+							/dev/tty*
+					Types:(6)
+				B. PTY:(Pseudo Terminal Device)
+					Basics:
+						PTY is a device file that is emulated by a user program and is used to provide the terminal. 
+						Since PTY runs in user-land, PTYs can not access the hardware. In other words, PTY is the less privileged version of TTY.
+				C. PTS:(Pseudo Terminal Slave)
+					Basics:
+						TTYs provided via "Terminal Emulators" are called PTS. Terminal Emulators are programs such as Xterm, Screen, etc.
+						Location:
+							/dev/pts/*
+			Terminal ENVs:
+				$TERM:
+				$XTERM:
+			Terminal Modes:
+				Basics:
+					Terminal Mode refers to 
+				Modes:(2)
+					A. Raw Terminal:
+					B. Cooked Terminal:
+		Controlling Terminal:
+		Console:
+			Basics:
+				Console is used to refer to the primary terminal directly connected to the machine.
+			Location:
+				Confusion:
+					/dev/console
+					or
+					/dev/tty
+		Note:
+			Read Device Management Section for 'Device file' basics.
+			Read Shell Section of Linux Internals for basics.
+			Read Process, Signal and Job Management Section before understanding this section as some commands like Export require understanding of how child process works.
+	Environment Management:
+		Shell Functions:(aka Bash Functions)
+			Basics:
+				Shell function is basically a set of commands that can be called many times.
+				It can be defined inside terminal or inside a shell script.
+			Defining a Function:
+				Method-1:
+					Multi-Line Syntax:
+						Read Linux Shell Scripting and One-Liners Sheet.
+					Single-Line Syntax:
+						function_name () { commands; }
+				Method-2:
+					Multi-Line Syntax:
+						Read Linux Shell Scripting and One-Liners Sheet.
+					Single-Line Syntax:
+						function function_name { commands; }
+			Calling a Function:
+		Variable Management:
+			Terms:
+				Session:
+				Current Session:
+				Environment:
+			Types:(2)
+				A. Shell Vairables:
+					Alias Management:
+						Basics:
+							Alias is like a shortcut for a command.
+							Alias is a string that links to a command and is executable.
+						Alias:
+							Basics:
+								Alias Command is used to list and create aliases.
+							Usage:
+								alias => Prints existing alias.
+								alias alias_name = '{command}' => Creates a new alias.
+								alias alias_name = 'cat file.txt| grep -i name | sort -u'
+								Creating Permanent Alias:
+									To make an alias permanent, we need to define it inside the "~/.zshrc" or "~/.bashrc" file
+						UnAlias:
+							Basics:
+							Usage:
+								unalias alias_name => Remove alias
+				B. Environment Variables:(aka ENVs)
+					Basics:
+						ENVs allow to customize working and behaviour of the system. They are accessible system-wide and are inherited by all spawned child Processes and shells.
+						Types:(2)
+							1. Local Variable:
+								It cannot be used in any script/prog/Process running in environment bound by a session.
+							2. Global Variable:
+								It can be used in any script/prog/Process running in environment bound by a session.
+						Important environment variables:
+							PATH:
+								It tells terminal about where to look for binaries for commands that a user enters in the console (such as cd/ls)
+								echo $PATH:
+									/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+							USER => Current user
+							SHELL => Location of current shell
+							TERM => 
+							Enviroment Variables related to history:
+								HISTSIZE => controls the number of commands stored in memory for the current session
+								HISTFILESIZE => controls how many commands are kept in the history file
+								HISTCONTROL => controls whether or not to remove duplicate commands
+					Operations:
+						Creating ENVs:
+							Basics:
+								Formats:(3)
+									A. ENV_NAME=Value
+									B. ENV_NAME="Value"
+									C. ENV_NAME=Value1:Value2
+								Rules:
+									1. No space around the "="
+									2. Name of key is in UPPERCASE only.
+							Global ENVs:
+								Ways:(2)
+									A. export ENV_NAME=value
+										Note:
+											Read Export section to read about Export.
+									B. set ENV_NAME=value
+										Note:
+											Read Set section to read about Set.
+							Local ENVs:
+								Terminal> ENV_NAME=value
+							Note:
+								Creating ENVs is also known as setting environment variables.
+						Accessing ENVs:
+							Syntax:
+								$ENV_NAME
+						Editing ENVs:
+							Formats:(3)
+								ENV_NAME=new_value
+								ENV_NAME='new_value'
+								ENV_NAME=$ENV_NAME:{NEW_CONTENT} => Appending value
+								ENV_NAME={NEW_CONTENT1}:{NEW_CONTENT2} => Changing value
+						Printing ENVs:
+							A. echo $ENV_NAME
+							B. env => Print all global environment variables
+								Note:
+									Read Env section to read about Env.
+							C. set => Print all global environment variables.
+								Note:
+									Read Set section to read about Set.
+							D. PrintEnv:
+								Basics:
+									Its used to print all or specified global environment variables.
+								Usage:
+									printenv => Prints all global environment variables
+									printenv variable_name
+									printenv var1 var2
+									printenv HOME
+									printenv HOME PWD
+						Erasing ENVs:
+							A. export ENV_NAME=  => This will set empty value to ENV_NAME, thus making it useless.
+								Note:
+									Read Export section to read about Export.
+							B. Unset ENV_NAME => This will completely erase existence of ENV.
+								Note:
+									Read Unset section to read about Unset.
+					Tools:
+						Env:
+							Basics:
+							Usage:
+								env => Print all global environment variables
+								env -i /bin/sh => it creates a new env in a shell
+								env -u variable_name => to remove variable in a ENV file
+								Flags:
+									-i => 
+									-u => 
+						Export:
+							Basics:
+								Export is a builtin command used to mark ENVs & shell functions to be exported to all newly forked child processes and thus it allows a child process to inherit all marked ENVs.
+								Export can also be used to create new ENVs to be exported to all child processes.
+								Use-Case Example:
+									Situation without using Export:
+										Shell> a = hello; bash; echo $a;
+										Output => <null>
+										Explanation:
+											Variable a is a local variable of shell and is not passed on to child processes initated by the shell.
+									Situation with using Export:
+										Shell> a = hello; export a; bash; echo $a;
+										Output => hello
+										Explanation:
+											Variable a is a local variable of shell which is made available to be exported using Export command and thus gets passed by on the shell to its child processes.
+								Uses:
+									To create a new env 
+							Usage:
+								export => Display all ENVs in the whole system which are marked to export to all new child processes.
+								export -p => Display all ENVs in the current shell which are marked to export to all new child processes.
+								export var_name => Marks var_name to be exported to all new child processes.
+								export var_name=value => Export creates a new ENV var_name and marks it to be exported to all new child processes.
+								export -f func_name => Marks a shell function func_name to be exported to all new child processes.
+								export -n var_name => Remove var_name from being exported.
+								Flags:
+									-p => To display all ENVs in the current shell which are marked to export to all new child processes.
+									-f func_name => To mark a shell function to be exported to all new child processes.
+									-n var_name/func_name => To remove a previously marked ENV/Shell function from being exported to all new child processes.
+								Practical Usage:
+									Exporting $PATH:
+										export PATH=$PATH:/usr/local/abcd/efgh
+									Erasing ENVs:(Not actual deletion)
+										export ENV_NAME=  => This will set empty value to ENV_NAME, thus making it useless.
+							Note:
+								Read Process, Signal and Job Management Section for better understanding of Export.
+						Set:
+							Basics:
+								It allows to display and set both shell and env variables and shows functions.
+							Usage:
+								set => Print all global environment variables.
+								Creating ENVs:
+									Read Creating ENVs Section.
+								Flags:
+									-x => To turn on debugging
+									+x => To turn off debugging
+						Unset:
+							Basics:
+							Usage:
+								Flags:
+	Shell Management:
+		Shell Configuration Management:
+			Basics:
+				Configuration Files:
+					Basics:
+						Read Shell Section of Linux Internals for basics.
+					Resource File:
+						Basics:
+						Location:
+							Bash:
+								~/.bashrc
+							ZSH:
+								~/.zshrc
+							Fish:
+								~/.config/fish/config.fish
+			Load:
+				Basics:
+				Usage:
+			Source:
+				Basics:
+				Usage:
+		Shell History:
+			Basics:
+				History File:
+					Location:
+						ZSH:
+							~/.zsh_history
+						Bash:
+							~/.bash_history
+			History:(Binary)
+				Basics:
+				Usage:
+					history => shows history of Commands
+					Flags:
+			Repeating commands from history file:
+				!! => repeat last command
+				!1 => repeat the 1st command in history file
+		Shell Binaries:
+			Bash:
+				Basics:
+					Read Linux Internals Sheet to know about Bash Shell.
+				Usage:
+					bash => Launches a new child process of bash shell inside shell.
+					bash -c 'command_to_run'
+					cat commands_to_run.txt | bash
+					Flags:
+						-c => Command
+						-i => 
+			SH:
+				Basics:
+					Read Linux Internals Sheet to know about SH Shell.
+				Usage:
+					cat commands_to_run.txt | sh
+					Flags:
+						-c => 
+		CHSH:(Change Shell)
+			Basics:
+			Usage:
+				Flags:
+	Terminal Management:
+		TTY Management:
+			Shortcuts:
+				CTRL + ALT + F1 => Lockscreen
+				CTRL + ALT + F2 => Desktop Environment
+				CTRL + ALT + F3 => TTY3
+				CTRL + ALT + F4 => TTY4
+				CTRL + ALT + F5 => TT5
+				CTRL + ALT + F6 => TTY6
+			TTY:
+				Basics:
+				Usage:
+					tty => Prints name of terminal current user is connected to.
+					Flags:
+						-s => --silent => Do nothing, just returns with an exit status.
+						--quiet => 
+			STTY:
+				Basics:
+				Usage:
+					stty echo
+					stty -echo
+					stty raw
+					Flags:
+						-a => -all => Display all settings for current terminal in human-readable format.
+						-g => Display all settings for current terminal in STTY-readable format.
+						-echo => 
+						-F => 
+			CHVT:(Change Foreground Virtual Terminal)
+				Basics:
+				Usage:
+					Flags:
+		Terminal Shortcuts:
+		Terminal Art:
+			Color Art:
+				Lolcat:(gem install lolcat)
+					Basics:
+						It shows everything in color
+					Usage:
+						<any command> | lolcat
+			Text:
+				Neofetch:(apt-get install neofetch)
+					Basics:
+						It displays system infomation
+					Usage:
+						neofetch
+				Fortune:(apt-get install fortune)
+					Basics:
+						This tool print random intelligent strings.
+					Usage:
+						fortune
+			ASCII Art:
+				Cowsay:(apt-get install cowsay)
+					Basics:
+						It makes a cow/dragon-like art saying 'text'
+					Usage:
+						cowsay "text"
+						<command> | cowsay
+						Flags:
+							-f <cowfile> => Art to use
+								Cowfile:
+									dragon => Dragon
+									eyes => Eyes
+									tux => Penguin
+									skeleton => Cow's skeleton's
+				Figlet:(apt install figlet)
+					Basics:
+						It writes "text" in |\/_
+					Usage:
+						figlet "text"
+						<command> | figlet
+	Package Management:
+		*nix Package Management:
+			Types:
+				A. .deb Based Linux OS:
+					Basics:
+					Package Managers:
+						1. APT:(Advanced Package Tool)
+							A. Apt-get:
+								Basics:
+									Its not "APT(Advanced Package Tool)", its a tool used to interact with APT
+									Terms:
+										Repositories:(aka Repo)
+								Tools:
+									apt-get:
+										Basics:
+											Modes:
+												Install
+												Remove:
+												Purge:
+										Usage:
+											apt-get install pkg_name => install that package
+											apt-get remove pkg_name => uninstall that package
+											apt-get purge pkg_name => uninstall the package along with its necessary packages
+											Flags:
+									apt-cache:
+										Basics:
+											Modes:
+												Search:
+										Usage:
+											apt-cache search pkg_name => it will show all packages installed/not having <text> in their description
+											Flags:
+									apt-config:
+										Basics:
+										Usage:
+											Flags:
+									apt-add-repository:
+										Basics:
+										Usage:
+											Flags:
+							B. APT:(Binary)
+								Basics:
+									Its not "APT(Advanced Packaging Tool)", its a tool used to interact with APT
+									apt consists of most common used command options from apt-get and apt-cache.
+								Usage:
+							C. Aptitude:
+								Basics:
+									Its not "APT(Advanced Packaging Tool)", its a tool used to interact with APT
+								Usage:
+						2. Dpkg:
+							Basics:
+								Its used to manage .deb packages.
+							Usage:
+								Flags:
+				B. .RPM Based Linux OS:
+					Basics:
+					Package Managers:
+						1. YUM:(Yellow-Dog Updater Modified)
+							Basics:
+							Usage:
+						2. DNF:(Dandified YUM)
+							Basics:
+							Usage:
+						3. PM:
+							Basics:
+							Usage:
+						4. PMS:(Package Management System)
+							Basics:
+							Usage:
+						5. RPM:(RPM Package Manager)
+							Basics:
+							Usage:
+						6. Apt-Rpm:
+							Basics:
+							Usage:
+				D. FreeBSD Based:
+					Basics:
+					Package Managers:
+						Pkg:
+							Basics:
+							Usage:
+						Portsnap:
+				E. Arch Based:
+					Basics:
+					Package Managers:
+						PacMan:(Package Manager)
+							Basics:
+							Tools:
+								MakePkg:
+									Basics:
+									Usage:
+								Pacman:(Binary)
+									Basics:
+									Usage:
+										Flags:
+								VerCmp:
+									Basics:
+									Usage:
+								PacTree:
+									Basics:
+									Usage:
+								PacCache:
+									Basics:
+									Usage:
+										Flags:
+				F. SUSE Based:
+					Basics:
+					Package Managers:
+						Zypper:
+							Basics:
+							Usage:
+								Flags:
+						RPM-Based:
+							Read ".RPM Based Linux OS" Section
+			Coverting Packages:
+				Alien:(apt-get install alien dpkg-dev debhelper build-essential)
+					Basics:
+						Alien is used to convert packages from one format to another.
+					Usage:
+						alien packagename.rpm => to convert .rpm to .deb packages
+						Flags:
+							-d => --to-deb => Convert file to deb (Default option)
+							-p => --to-pkg =>
+							-r => --to-rpm =>
+							-l => --to-lsb =>
+							-t => --to-tgz =>
+		AppImage Package Management:
+			Basics:
+			AppImageLauncher:(Binary)
+				Basics:
+					Installation:
+						Download installer.deb from https://github.com/TheAssassin/AppImageLauncher/releases
+						dpkg -i installer.deb
+				Usage:
+					sudo AppImageLauncher file.AppImage
+		SNAP Package Management:
+			Basics:
+			Snap:(Binary)
+				Basics:
+					Its used to manage .snap packages
+				Usage:(sudo apt install snapd)
+					sudo snap install pkg_name
+		Pyhton2 Package Management:
+			Pip2:
+				Read Python2 For Pentesting Sheet.
+		Pyhton3 Package Management:
+			Pip3:
+				Read Python3 For Pentesting Sheet.
+		Ruby Package Management:
+			Gem:
+				Read Ruby For Pentesting Sheet.
+		Perl Package Management:
+			Cpan:
+				Read Perl For Pentesting Sheet.
+Development Management:
+	Scripts:
+		Python2 Scripts:
+		Python3 Scripts:
+		Ruby Scripts:
+		Perl Scripts:
+		Go Scripts:
+		SH Scripts:
+			Read Linux Shell Scripting and One-Liners Sheet.
+	Compilers:
+		Make:
+			Basics:
+			Usage:
+		C:
+			CC:
+				Read C For Pentesting Sheets.
+			GCC:
+				Read C For Pentesting Sheets.
+			Clang:
+				Read C For Pentesting Sheets.
+		C++:
+			G++:
+				Read C++ For Pentesting Sheet.
+		Java:
+			JavaC:
+				Read C++ For Pentesting Sheet.
+Virtualization Management:
+	Linux as a VM:
+		Sharing a disk drive in kali VM:
+			https://unix.stackexchange.com/questions/594080/where-to-find-the-shared-folder-in-kali-linux 
+	Linux as the Host:
+Scheduled Task Management:
+	Cron:
+		Basics:
+			Cron:(aka Cron Daemon)
+				Cron is a system daemon which starts at boot time.
+				Cron is responsible for jobs called cron jobs and a list of all these files is contained in crontab file.
+			Cron Jobs:(aka Cron Schedule)
+				Cron job is a specific set of instructions specifying day, time and command to execute.
+			Cron Entries:
+			CronTab:(Cron Table)
+				Its a text file that contains the schedule of cron entries to be run and at specified times.
+				Location:
+					User CronTab:
+						/var/spool/cron/crontabs
+						/var/spool/cron/crontab/{user} => user specific cron jobs are saved here
+					System CronTab:(Readable by everyone)
+						/etc/crontab
+						/etc/cron.d
+						/etc/cron
+				Crontab syntax:
+					Syntax:
+						For User:
+							* * * * * <command to be executed>
+							- - - - -
+							| | | | |
+							| | | | ----- Weekday (0 - 7) (Sunday is 0 or 7, Monday is 1...)
+							| | | ------- Month (1 - 12)
+							| | --------- Day (1 - 31)
+							| ----------- Hour (0 - 23)
+							------------- Minute (0 - 59)
+								Example:
+									30 21 * * * cd /Users/miachel/scripts/security; ./scan.sh => run scan.sh at 9.30 pm
+						For System:
+							* * * * * <User with whose privilege to run the cronjob> <command to be executed>
+							- - - - -
+							| | | | |
+							| | | | ----- Weekday (0 - 7) (Sunday is 0 or 7, Monday is 1...)
+							| | | ------- Month (1 - 12)
+							| | --------- Day (1 - 31)
+							| ----------- Hour (0 - 23)
+							------------- Minute (0 - 59)
+					Important Values:
+						* => It means always. So, 1 1 * * * <command> means, run <command> at 1:01 am every day for every month.
+		Cron Management:
+			Crontab:(Binary)
+				Basics:
+					It allows to view, edit crontab file.
+				Usage:
+					crontab
+						Flags:
+							-e => edit crontab file
+							-l => display crontab file
+							-r => display current user's crontab file
+							-u <username> => edit crontab file of <username>. This flag requires sudo privileges.
+	SystemD Timers:
+		Read "SystemD Management" Sub-Section of "Init System Management" Section to read about 'SystemD Timer Units'.
+Capabilities Management:
+	Basics:
+		Need of Capabilities:
+			A process that require root privileges and is an insecure process can land the system in hands of a hacker. So, to bypass the shortcoming of only having 'privileged' & 'unprivileged' processes, Capabilites were introuduced.
+			Capabilities allow a normal user to run a process with only the required privileges of root.
+		Capabilities:
+			Linux capabilities provide a subset of root privileges to an unprivileged process by dividing the root privileges into smaller and distinctive units called capabilities. Each of these units can then be independently be granted to processes.
+			However, we can capabilities to both a process & the file which causes to process or 'threads' to exist when executed.
+		Capabilities Set:
+		Types:
+	Viewing Capabilities:
+		Capsh:
+			Basics:
+			Usage:
+				capsh --print => List all capabilities of current user
+				Flags:
+					--print =>
+		Getcap:
+			Basics:
+			Usage:
+				getcap -r / 2>/dev/null => See capabilies of every file in the whole system
+				getcap -r /dir
+				getcap file_name
+				Flags:
+					-r => recursive
+	Editing Capabilities:
+		Setcap:
+			Basics:
+				Its used for setting Capabilities.
+			Usage:
+				setcap cap_setuid+ep /home/abcd.py => assign cap_setuid to abcd.py
+				setcap -r /home/abcd.py => remove all capabilities from abcd.py
+				Flags:
+					-r => remove
+					+ep => Effective and Permitted => its used when we add a capability
+Program Analysis:
+	Basics:
+	Strings:
+		Basics:
+			Strings is used to extract printable characters from a file.
+		Usage:
+			strings -n 6 -e s file.ext
+			Flags:
+				-n x => Print sequence of atleast x chars long
+				-e x => Print in "x" encoding:
+					s => Single 7 bit
+					S => single 8 bit
+					b => 16 bit bigendian
+					l => 16 bit littleendian
+					B => 32 bit bigendian
+					L => 32 bit littleendian
+	Strace:(System Call Tracer)
+		Basics:
+			Its used to trace syscalls and signals.
+			Note:
+				Read SysCall Management Section to read about SysCalls.
+				Read Process, Job & Signal Management Section to read about Signals.
+		Usage:
+			Modes:(2)
+				A. Tracing an already running program:
+					strace -p <pid>
+				B. Starting a program & tracing it alongside:
+					strace <prog_name> => Runs program along with strace & strace lists out all the syscalls made by the prog during its execution
+					strace nc -nvlp <ip> 8800 => We can pass args along with a prog if needed.
+			Flags:
+				-p => PID
+				-c => Creates summary of total time, calls & errors for each syscall made by a program
+				-i => Displays EIP at time of each syscall nade by the program
+				-u <user_name> => Run the program as the specified user
+				-t => Prefix each line of output with time of day
+				-tt => Prefix each line of output with time of day & include microseconds
+				-T => Shows time spent per syscall
+				-e <filter>=<value>=> Its used for filtering
+					Filters:(7)
+						A. Trace:
+							Values:(7)
+								1. SysCall_name:
+									-e trace=syscall_name => To trace a specific call
+								2. File:
+									-e trace=file => 
+								3. Process:
+									-e trace=process => Trace all process-management related syscalls.
+								4. Network:
+									-e trace=network => Trace all network related syscalls.
+								5. Signal:
+									-e trace=signal => Trace all signal related syscalls.
+								6. IPC:
+									-e trace=ipc => Trace all IPC related syscalls.
+								7. DESC:
+									-e trace=desc => Trace all File Descriptor related syscalls.
+						B. Abberv:
+						C. Verbose:
+						D. Raw:
+						E. Signal:
+						F. Read:
+						G. Write:
+				-o out.txt => Save output to a file
+	Ltrace:(Library Call Tracer)
+		Basics:
+			Its used to trace dynamic library calls made from a program to a SO file.
+			Note:
+				Read Linux Internals Sheet to read about Library Calls.
+		Usage:
+			Flags:
+				-p => PID
+				-c => Creates summary of total time, calls & errors for each library call made by a program
+				-i => Displays EIP at time of each library call nade by the program
+				-u <user_name> => Run the program as the specified user
+				-t => Prefix each line of output with time of day
+				-tt => Prefix each line of output with time of day & include microseconds
+				-T => Shows time spent per library call
+				-l => 
+				-o out.txt => Save output to a file
+Device Management:
+	Basics:
+		Read Linux Internals Sheet.
+	Device-Based Management:
+		Terminal Management:
+			Read Shell Management Section.
+		Disk Management:(/dev/sd*)
+			Basics:			
+				Terms:
+					Partitions:
+						Partitions refer to sub-divisons of the disk.
+				Naming Convention:
+					For HardDisks:
+						Hardisks are represnted in *nix as /dev/sda, /dev/sdb and so on.						
+					For Partitions:
+						Partitions are represnted in *nix as /dev/sda1, /dev/sda2 and so on for the harddrive /dev/sda.
+					Note:
+						"sd" portion of name stands for "SCSI Disk".
+				Note:
+					Read Linux Internals Sheet to know more.
+			Disk Info:
+				LSSCSI:
+					Basics:
+						LSSCSI is used to list SCSI/SATA drives and CD/DVD drives.
+					Usage:
+						lsscsi => It shows the basic output.
+						Flags:
+							-s => --size => Show size of disk
+							-l => --long => Shows additional info.
+							-c => --classic => Same output as /proc/scsi/scsi
+						Undertsanding Basic Output:
+							4 Columns:([] <> <> <>)
+								A. Column1:
+									It shows address of device. It consists of 4 parts:([a:b:c:d])
+										1. SCSI_Host:
+										2. Channel:
+										3. Target_Number:
+										4. LUN:
+								B. Column2:
+									It shows device type.
+								C. Column3:
+									Column 3 is actually a collection of 3 columns which have vendor information.
+								D. Column4:
+									It shows device location in /dev 
+				DF:
+					Basics:
+						Display disk usage of all filesystems attached to the system.
+					Usage:
+						df => Display all file systems and their disk usage
+						Flags:
+							-h => Display all file systems and their disk usage in human-readable format
+				DD:(aka Disk Destroyer)
+					Basics:
+						Its used to copy files/drives & convert files perfectly in a byte-to-byte manner.
+					Usage:
+						dd if=/dev/sda of=/dev/sdb => Copies data from /dev/sda to /dev/sdb
+						dd if=/dev/sda of=/home/file.img => Copies data from /dev/sda to /home/file.img. Its also called creating image.
+						dd if=/home/file.img of=/dev/sda => Copies data from /home/file.img to /dev/sda. Its also called restoring image.
+						Wiping Drives:
+							dd if=/dev/zero of=/dev/sda => Writes millions of 0's to /dev/sda
+							dd if=/dev/urandom of=/dev/sda => Writes millions of random chars to /dev/sda
+						Flags:
+							if=<> => Input/Source file/disk/drive to copy data from
+							of=<> => Output file/disk/drive to save data
+							bs=<> => Size of block, ie, number of bytes to copy at a single time. By default, block size is 512 bytes.
+							ibs=x => Input block size. Read only 'x' bytes from input file at a single time.
+							obs=x => Output block size. Read only 'x' bytes to output file at a single time.
+							count=x => Copy only 'x' number of blocks.
+							skip=x => Skip reading first 'x' bytes from input file/stream
+							seek=x
+							conv=<value>
+								Values:
+									noerror => Continue execution even after encountering a read errror.
+									notrunc => Do not truncate(meaning?) output file
+									sync => Its used only with noerror. It instructs dd to pad every input block with NULs
+			Partition Management:
+				FDisk:
+					Basics:
+						It supports both MBR & GPT.
+					Usage:
+				Parted:(Partition Editor)
+					Basics:
+						It supports both MBR & GPT.
+					Usage:
+						Flags:
+							-l => List Partitions
+				GParted:(GUI Parted)
+					Basics:
+						It is the GUI version of Parted.
+			File System Management:
+				MKFS:(Make File System)
+					Basics:
+					Usage:
+						Flags:
+							-t => Type of file system
+		Mount Management:(/mnt/*)
+			Basics:
+				Terms:
+					Share:
+				Mounting:
+					Mouting is the prcoess of attaching a filesystem to a running system.
+				Unmount:(or Unmounting)
+					Unmouting is the prcoess of removing the mounted filesystem from a running system.
+			Mounting Shares and Drives:
+				Mount:
+					Basics:
+					Usage:
+						mount => shows all the mounts
+						Mouting Drives:
+							mount /dev/usb0 /mnt/1234 => mount /dev/usb0
+								/dev/usb0 is usb and /mnt/1234 is mount directory
+						Mounting Network Shares:
+							Mounting Linux Shares:
+								mount //ip/sharename /mnt/abcd
+							Mounting Windows Shares:
+								mount -t cifs //ip/sharename /mnt/abcd => shares which are accessible by anonymous user
+								mount -t cifs -o 'username=abcd%pass' //ip/sharename /mnt => shares which require authenciation
+								mount -t cifs -o username=user1234,password=pass1234 //ip/sharename /mnt => shares which require authenciation
+						Flags:
+							-t <type> => Type of filesystem
+								Type:
+									cifs => windows protcol for mounting shares
+									ext4
+									vfat
+							-o val1, val2 => --options => Supplies additional options needed for mounting.
+								Values:
+									exec => Enable execution of programs on the mount
+									noexec => Disable execution of programs on the mount
+									suid => Enable SUID program on the mount
+									nosuid => Disable SUID program on the mount
+									ro => Mount the filesystem in read-only mode
+									rw => Mount the filesystem in read-write mode
+							-r => Open the mount in read-only mode
+
+						Note:
+							First create a directory inside /mnt to mount the share in.
+								Example:
+									mkdir /mnt/mount
+			Unmounting Shares & Drives::
+				Umount:
+					Basics:
+					Usage:
+						umount /mnt => to unmount
+						umount -f /mnt =>forceful unmount (its done when device is busy)
+						Flags:
+							-f => 
+					Note:
+						Spelling is "umount" not "unmount".
+			DF:
+				Note:
+					Read Disk Management Section to read about df.
+		GPU Management:
+			Basics:
+				Read Linux Internals Sheet.
+		CPU Management:
+			Basics:
+				Read Linux Internals Sheet.			
+			IOstat:
+				Basics:
+					It displays CPU & IO stats for devices.
+				Usage:
+					iostat => 
+					Flags:
+					Understanding output:
+						Part-1: CPU Utilization Report
+							6 Columns:
+						Part-2: Device Utilization Report
+							Many Columns:
+		Memory Management:
+			Basics:
+				Read Linux Internals Sheet.
+			Swap Management:
+			RAM Management:
+				Free:
+					Basics:
+						Free provides info about total amount of physical & swap memory along with currenly free & used memory.
+					Usage:
+						free => Shows free & used memory for both ram & swap.
+						Flags:
+							-h => Shows output in human-readable format
+							-s x => --seconds => Runs the command every x seconds. Its used in monitoring.
+							-c x => Its used with -s flag. It indicates "count" of times to run the command.
+			Virtual Memory Management:
+				VMstat:(Virtual Memory statistics)
+					Basics:
+					Usage:
+						vmstat <flags> 
+						vmstat => 
+						Flags:
+							-t => Shows timestamp in output
+							-a => Shows active & inactive memory
+							-f => Shows number of forks since boot.
+						Understanding output:
+							5 Columns:
+								A. Procs:
+									2 Columns:
+										1. R:
+											Number of runnable processes.
+										2. B:
+											Number of processes in uninterruptible sleep.
+								B. Memory:
+									6 Columns:
+										1. SWPD:
+											Amount of virtual memory used.
+										2. FREE:
+											Amount of idle memory.
+										3. BUFF:
+											Amount of memory used as buffers.
+										4. Cache:
+											Amount of memory used as cache.
+										5. inact:(Optional)
+											Amount of inactive memory.
+										6. active:(Optional)
+											Amount of active memory.
+								C. Swap:
+									2 Columns:
+										1. SI:
+											Amount of memory swapped in from disk.
+										2. SO:
+											Amount of memory swapped to a block device.
+								D. IO:
+									2 Columns:
+										1. BI:
+											Blocks received from a block device.
+										2. BO:
+											Blocks sent to a block device.
+								E. System:
+									2 Columns:
+										1. IN:
+											Number of interrupts per second, including the clock.
+										2. CS:
+											Number of context switcher per second.
+								F. CPU:
+									5 Columns:
+										1. US:(User Time)
+											Time spent running non-kernel code.
+										2. SY:(System Time)
+											Time spent running kernel code.
+										3. ID:(Idle)
+											Time spent as idle.
+										4. WA:
+											Time spent waiting for IO.
+										5. ST:
+											Time stolen from a virtual machine.
+		Network Management:
+			Read Network Management Section.
+Init System Management:
+	Basics:
+		System States:
+		Init Process:(aka Intialization)(aka Parent of all processes)(aka Ancestor of all processes)
+			Init is a daemon processthat is called the Parent of all processess as it is the first process to be intialized by kernel during the boot process.
+			Init runs throughout the entire lifetime of all programs in the system.
+			Mostly init has PID '1'.
+		Init Implementations:(aka Init Systems)
+			Basics:
+			Types:
+				System V:
+				UpStart:
+				Systemd:
+					Read SystemD Management Section.
+	SystemD Management:
+		Basics:
+			SystemD is a powerful software suite that can manage many aspects of a linux server (linux server refers to a system that run services).
+			It can manage services, mounted devices, system states and much more.
+			SystemD Units:
+				Basics:
+					A unit is the primary object in SystemD. A unit refers to a resource, and this resource is defined in the unit files.
+				Unit Types:(12)
+					1. Service Units:(.service)
+						A service unit describes how to manage a service. 
+						A service unit file will include how to start or stop the service, under which circumstances it should be automatically started, and the dependency and ordering information for related software.
+					2. Socket Units:(.socket)
+						A socket unit file describes a network or IPC socket, or a FIFO buffer that systemd uses for socket-based activation.
+						A socket unit always have an associated .service file that will be started when activity is seen on the socket that this unit defines.
+					3. Target Units:(aka RunLevels)(.target)
+						A target unit is used to provide synchronization amongst unit files during boot-up.
+						It can also be used as a medium to extend scope by specifying their targets to other targets.
+					4. Mount Units:(.mount)
+						A mount unit defines a mountpoint on the system to be managed by systemd.
+						A mount file is named after the mount path, with slashes changed to dashes. Mount entries within /etc/fstab can have units created automatically.
+					5. Automount Units:(.amount)
+						This provides automount capabilities.
+					6. Device Units:(.device)
+						This unit describes devices that need exposure to systemd by udev and sysfs filesystem. Not all devices have .device files.
+						Unit files of this type end with 
+					7. Timer Units:(.timer)
+						A timer unit defines a timer that will be managed by systemd, similar to a cron job for delayed or scheduled activation.
+						A matching unit will be started when the timer is reached, ie, It schedules the activation of other units.
+					8. Swap Units:(.swap)
+						A swap unit describes swap space on the system.
+					9. Path Units:(.path)
+						A path unit defines a path that can be used for path-based activation.
+						By default, a .service unit of the same base name will be started when the path reaches the specified state.
+					10. Slice Units:(.slice)
+						A slice unit is associated with cgroup nodes, allowing resources to be restricted or assigned to any processes associated with the slice.
+					11. Scope Units:(.scope)
+						A scope unit is created automatically by systemd from information received from its bus interfaces.
+						These are used to manage sets of system processes that are created externally.
+					12. Snapshot Units:(.snapshot)
+						A snapshot unit is created automatically by the "systemctl snapshot" command.
+						It allows to reconstruct the current state of the system after making changes. Snapshots do not survive across sessions and are used to roll back temporary states.
+				Unit Files:
+					Basics:
+						Unit files are configuration files for Units.
+					Location:
+						Vendor-specified Configuration:
+							/lib/systemd/system/
+						User-specified Configuration:
+							/etc/systemd/system/
+					Structure:
+						Section & their Directives:
+							Sections:
+								Types:(2)
+									1. General Sections:(2)
+										A. [Unit]:(Compulsory)
+											Basics:
+												First [section] in most unit files is '[Unit]'.
+												Its used to define metadata and relationship of the unit with other units.
+											Directives:(10)
+												1. Description:
+													Its used to describe the name and basic functionality of the unit.
+												2. Documentation:
+													It provides location for a list of URIs for documentation which can be either internally available man pages or web accessible URLs.
+													"systemctl status" command will expose this information, allowing for easy discoverability.
+												3. Requires:
+													It lists any units upon which this unit essentially depends.
+												4. Wants:
+													It is similar to "Requires" directive, but less strict.
+													Systemd will attempt to start any units listed here when this unit is activated. If these units are not found or fail to start, the current unit will continue to function.
+												5. BindsTo:
+													It is similar to "Requires" directive, but also causes the current unit to stop when the associated unit terminates.
+												6. Before:
+													The units listed in this directive will not be started until the current unit is marked as started if they are activated at the same time.
+												7. After:
+													The units listed in this directive will be started before starting the current unit.
+												8. Conflicts:
+													This can be used to list units that cannot be run at the same time as the current unit.
+												9. Condition<x>:
+													There are a number of directives that start with Condition which allow the administrator to test certain conditions prior to starting the unit. 
+												10. Assert<x>:
+													Its similar to "Condition", but it checks for different aspects of the running environment to decide whether the unit should activate.
+										B. [Install]:(Optional)
+											Basics:
+												It is used to define the behavior of a unit if it is enabled. It is only present in those units that need to be enabled. Being enabled means starting automatically at boot.
+											Directives:
+												1. WantedBy:
+													Its the most common way to specify how a unit should be enabled. This directive allows you to specify a dependency relationship in a similar way to the "Wants" directive does in the [Unit] section.
+													When a unit with this directive is enabled, a directory will be created within /etc/systemd/system named after the specified unit with .wants appended to the end. Within this, a symbolic link to the current unit will be created, creating the dependency.
+												2. RequiredBy:
+													Its similar to "WantedBy" directive, but instead specifies a required dependency that will cause the activation to fail if not met.
+													When enabled, a unit with this directive will create a directory ending with .requires.
+												3. Alias:
+													It allows the unit to be enabled under another name as well.
+												4. Also:
+													It allows units to be enabled or disabled as a set. Supporting units that should always be available when this unit is active can be listed here. They will be managed as a group for installation tasks.
+												5. DefaultInstance:
+													For template units which can produce unit instances with unpredictable names, this can be used as a fallback value for the name if an appropriate name is not provided.
+									2. Unit-specific Sections:(8)
+										A. [Service]:
+											Basics:
+											Directives:
+										B. [Socket]:
+											Basics:
+											Directives:
+										C. [Mount]:
+											Basics:
+											Directives:
+										D. [Automount]:
+											Basics:
+											Directives:
+										E. [Swap]:
+											Basics:
+											Directives:
+										F. [Path]:
+											Basics:
+											Directives:
+										G. [Timer]:
+											Basics:
+											Directives:
+										H. [Slice]:
+											Basics:
+											Directives:
+						Syntax:
+							[Section]
+							Directive1=Value
+							Directive2=Value
+				Template Unit Files:
+					Basics:
+						Template unit files provide flexibility in configuring units by allowing certain parts of the file to utilize dynamic information that will be available at runtime.
+					Naming:
+					Specifiers:
+						Basics:
+						Common Specifiers:
+							%n:
+								To insert unit name of the unit.
+							%N:
+								This is the same as the above, but any escaping, such as those present in file path patterns, will be reversed.
+							%p:
+								To insert the portion of the unit name that comes before the @ symbol.
+							%P:
+								This is the same as above, but with any escaping reversed.
+							%i:
+								This references the instance name, which is the identifier following the @ in the instance unit. This is one of the most commonly used specifiers because it will be guaranteed to be dynamic. The use of this identifier encourages the use of configuration significant identifiers. For example, the port that the service will be run at can be used as the instance identifier and the template can use this specifier to set up the port specification.
+							%I:
+								This specifier is the same as the above, but with any escaping reversed.
+							%f:
+								This will be replaced with the unescaped instance name or the prefix name, prepended with a /.
+							%c:
+								This will indicate the control group of the unit, with the standard parent hierarchy of /sys/fs/cgroup/ssytemd/ removed.
+							%u:
+								To insert username of the user configured to run the unit.
+							%U:
+								To insert UID of the user configured to run the unit.
+							%H:
+								To insert host name.
+							%%:
+								To insert a literal percentage sign.
+			SystemD Components:
+				Basics:
+				Types:
+					JournalD:
+						Basics:
+							Terms:
+								Journal:
+									It refers to a system that collects and manages both kernel & userland logs.
+							In linux, journal is provided by JournalD Daemon.
+							To access logs of journalD, journalctl utility is used.
+						Configuration File:
+							Locaion:
+								/etc/systemd/journald.conf
+		Systemd Utlities:
+			Systemctl:
+				Basics:
+					It is used for managing Units.
+				Usage:
+					systemctl => Shows every entity of every unit available in the system along with details
+					systemctl list-units => Shows every active unit along with details
+					systemctl list-units-files
+					systemctl list-units-files --unit=<unit_type>
+					systemctl list-jobs => List current jobs
+					systemctl daemon-reload => reloads all unit configs
+					systemctl reload <unit_name> => reloads unit config for specified unit only
+					systemctl <operation> <unit_name>
+						Operations:(10)
+							1. start:
+							2. stop:
+							3. restart:
+								To restart the unit by first stopping it and then starting it.
+							4. reload:
+								To reload the unit without interuppting it.
+							5. enable:
+								To auto-start an unit at boot.
+							6. disable:
+								To stop auto-start of an unit at boot.
+							7. status:
+								To show status of the unit.
+							8. isolate:
+							9. mask:
+								To make the service completely unstartable both manually and automatically.
+							10. unmask:
+								To reverse the effects of 'mask'.
+					For System:
+						systemctl halt
+						systemctl poweroff
+						systemctl reboot
+						systemctl resuce => To boot into rescue mode
+						systemctl snapshot
+					Flags:
+						--type=<x> => Type of unit
+						-all => Show all units
+					Undestanding Output of Systemctl:
+						4 Columns:
+							1. UNIT => The systemd unit name
+							2. LOAD => Whether the unit’s config has been parsed by systemd or not.
+							3. ACTIVE => Whether the unit is active.
+							4. SUB => Shows more info about the unit.
+							5. DESCRIPTION => Description of the unit.
+			Journalctl:
+				Basics:
+					It is used to access logs collected by JournalD Daemon.
+				Usage:
+					Flags:
+						-b => To show entries from current boot only
+						-k => To show only kernel messages
+						-u <unit_name> => --unit=<unit_name> => To show journal enteries for the specified unit.
+						--utc => To display timestaps in UTC format.
+						--disk-usage => To show size of current journal
+			Loginctl:
+				Basics:
+				Usage:
+			Timedatectl:
+				Basics:
+				Usage:
+					timedatectl list-timezones
+					timedatectl set-timezone zone
+					timedatectl status
+					Flags:
+			Systemd-Analyze:
+			Systemd-CgTop:
+			Systemd-Cgls:
+			Systemd-Notify:
+SysCall Management:(System Calls)
+	Basics:
+		Read Linux Internals Sheet.
+	Strace:
+		Read Program Analysis Section.

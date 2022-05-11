@@ -1,0 +1,39 @@
+History & Development Time-Line of *nix:
+=======================================
+Organizations Involved:
+	GNU:
+	POSIX:(Portable Operating System Interface)
+		Basics:
+			POSIX is a family of standards released in 1988 specified by IEEE Computer Society for maintaining compatibility between Unix-Like OS, Microsoft Windows, DOS and OS/2 respectively.
+OS History:
+	MULTICS:(Multiplexed Information and Computing Service)
+		MULTICS is a Time-Sharing OS based on concept of SLS(Single Level Storage) developed in 1964 as a cooperative project led by MIT along with GE and Bell Labs at Cambridge, Massachusetts.
+	UNIX:(Uniplexed Information and Computing Service)
+		Basics:
+		Time-Line:
+			UNIX was developed by AT&T in 1969 at Bell Labs.
+			AT&T licensed UNIX to other parties in 1970s which lead to production of BSD, Xenix, Solaris, HP-UX and AIX.
+			AT&T sold UNIX to Novell in 1990s. Novell then sold UNIX to SCO in 1995 and Novell owns UNIX copyrights to this date.
+			However, UNIX trademark passed on to "The Open Group" in 1996 which allowed use of UNIX by anyone as long as the OS comply with SUS(Single Unix Specification)
+		Versions:
+	UNIX Derivatives:
+		PWB/UNIX:(aka PWB)(aka Programmer's Workbench)
+		BSD:(Berkeley Software Distribution)(aka Berkley Standard Distribution)
+			Basics:
+				BSD is a discontinued OS developed by University of California, Berkley.
+			BSD Derivatives:
+				OpenBSD:
+				FreeBSD:
+				NetBSD:
+				DragonFly BSD:
+				MINIX:(Minial Unix)
+					It was developed by Andrew Tanenbaum as a minimal Unix-like OS in 1987.
+		Xenix:
+		Solaris:(aka SunOS)
+	Linux:(aka GNU/Linux)
+		Basics:
+			Linux was developed by Linus Torvalds as an alternative of MINIX.
+			Linux Kernel is completely different from Unix kernel.
+		Distros:
+			Read Linux Internals Sheet
+	macOS:

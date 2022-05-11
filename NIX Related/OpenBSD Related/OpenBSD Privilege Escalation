@@ -1,0 +1,7 @@
+OpenBSD Privilege Escalation:
+============================
+doas:
+	its like sudo
+	cat /etc/doas.conf
+		Example:
+			permit nopass zweilos as root cmd vim => same as NOPASSWD: vim

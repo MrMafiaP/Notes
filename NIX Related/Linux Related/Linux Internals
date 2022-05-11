@@ -1,0 +1,418 @@
+Linux Internals:
+===============
+Basics:
+	Terms:
+	Linux History:
+		Read History & Development Time-Line of nix Sheet.
+	Linux Distros:
+		RPM-Based:
+			CentOS Based:
+			Fedora Based:
+			openSUSE Based:
+			apt-rpm Based:
+		DEB-Based:
+			Debian Based:
+				Ubuntu Based:
+			MEPIS Based:
+			Knoppix Based:
+		Pacman-Based:
+		Linux for Android:
+		Linux IoT:(Embedded Linux)
+	Linux Identifiers:
+		Basics:
+		Types:
+			User Identifiers:
+				Types:
+					UID:(User ID)
+					EUID:(Effective UID)
+					FSUID:(File System UID)
+					SUID:(Saved UID)
+					RUID:(Real UID)
+				Note:
+					Read Linux Shell Commands Sheet for details.
+			Group Identifiers:
+				Types:
+					GID:(Group ID)
+					EGID:(Effective GID)
+					SUID:(Saved GID)
+					RGID:(Real GID)
+				Note:
+					Read Linux Shell Commands Sheet for details.
+			Process Identifiers:
+				Types:
+					PID:(Process ID)
+					PPID:(Patent PID)
+					PGID:(Proccess Group ID)
+					SID:(Session ID)
+					Job ID:(aka Job Number)
+				Note:
+					Read Linux Shell Commands Sheet for details.
+	Linux Charsets:
+Linux Architecture:
+	Abstraction Layers:(aka Abstraction Levels)
+		Read OS Concepts Sheet to know more.
+	Classification:
+		Based on Processor Type:
+			Basics:
+			Types:(3)
+				A. 32-Bit CPU:
+				B. 64-Bit CPU:
+				C. ARM CPU:
+Linux Devices:
+	Basics:
+		Terms:
+			Block:
+				A block refers to set of bytes of fixed size. For example, a block of 1024 bytes.
+		Devices:
+			Types:
+				Block Device:
+					Programs access data from a block device in fixed chunks.
+				Character Device:
+					Character devices work with I/O data streams only. Printers directly connected to the system are a character device.
+				Pipe Device:
+				Socket Device:
+					Socket deices are used for IPCs.
+			Device Files:(aka Device Nodes)
+				Basics:
+					In *nix, every hardware device is treated as a file, called a device file. It allows to access the device so that end users do not need to get technical details about hardware. It acts like an interface for a device driver to allow programs to interact with the device via I/O syscalls.
+				Types:
+					Character Files:
+						They are used for Character Devices.
+					Block Files:
+						They are used for Block Devices.
+	Linux Networks:
+	Linux Disk & Data Storage:
+		Basics:
+			Terms:
+				Drive:
+			Disks:
+				Basics:
+					Naming Convention:
+						Hardisks are represnted in *nix as /dev/sda, /dev/sdb and so on.
+						Note:
+							"sd" portion of name stands for "SCSI Disk".
+					Configuration Files:
+						/proc/sc
+			Partitions:
+				Basics:
+					Partitions are sub-divisons of the disk.
+					Naming Convention:
+						Partitions are represnted in *nix as /dev/sda1, /dev/sda2 and so on for the harddrive /dev/sda.
+							Note:
+								"sd" portion of name stands for "SCSI Disk".
+			Partition Table:(aka Disk Label)
+				Basics:
+				Types:
+					A. MBR:(Master Boot Record)
+					B. GPT:(Globally Unique Identifier Partition Table)
+			LMV:(Logical Volume Manager)
+		Disk Format:
+		Linux Supported File Systems:
+			Basics:
+			Supported File Systems:
+				A. Ext File System:(Extended File System)
+					Basics:
+					Types:(4)
+						1. Ext:
+						2. Ext2:(Second Extended File System)
+						3. Ext3:(Third Extended File System)
+						4. Ext4:(Fourth Extended File System)
+				B. JFS File System:
+				C. ReiserFS File System:
+				D. XFS File System:
+				E. Btrfs:(B-tree File System)
+				F. Swap File System:
+		Linux Directory Structure:(Hierarchical View)
+			Level-0: / => Root Directory
+			Level-1 and Beyond:
+				Directories:
+					/boot
+						Basics:
+							It contains the files needed to boot the system
+						Sub-Directories:
+						Files:
+							/vmlinuxz => Kernel File
+					/bin => Essential User Binaries
+					/sbin => System Administration Binaries
+						Basics:
+						Sub-Directories:
+					/usr => User Binaries & Read-Only Data
+						Basics:
+						Sub-Directories:
+							bin/
+							sbin/
+							local/
+							include/
+							lib/
+							man/
+							share/
+							log/
+							tmp/
+					/lib => Essential Shared Libraries
+						Basics:
+						Sub-Directories:
+					/etc
+						Basics:
+						Sub-Directories:
+					/var => Variable Data Files
+						Basics:
+						Sub-Directories:
+					/dev => Device Files
+						Basics:
+						Sub-Directories:
+							null/
+					/cdrom => Historical mount point for CD-ROMs
+					/mnt => Temporary Mount Points
+					/media => Removable Media
+					/opt => Optional Packages
+					/proc => Kernel & Process files
+					/run
+					/srv => Service Data
+					/sys
+					/home => Home Directory
+						Basics:
+						Sub-Hierarchy:
+					/root => Root Directory
+					/tmp => Temporary Files
+						Basics:
+						Sub-Hierarchy:
+					/lost+found => Recovered Files
+				Files:
+					/vmlinuxz => Kernel File
+	Linux Memory:
+		Swap:
+		Virtual Memory:
+	Linux CPU:
+	Linux GPU:
+Linux Kernel:
+	Basics:
+	Features:
+		CGroups:(Control Groups)
+	Kernel Panic:
+Linux Boot:
+	Basics:
+		BIOS:(Basic I/O System)
+			Basics:
+				BIOS is responsible for performing integrity checks upon turning on of computer. 
+				In Linux, BIOS searches for MBR, upon finding it, BIOS loads the MBR & then executes the BootLoader program.
+		BootLoader:
+			Basics:	
+			Common BootLoaders:
+				GRUB:(GRand Unified Bootloader)(aka GNU Grub)
+					Basics:
+						Versions:(2)
+							GRUB:(aka Legacy GRUB)
+								Note:
+									This version of GRUB is outdated.
+							GRUBv2:
+						Location:
+							/boot/grub
+							/boot/grub2
+						Config Files:
+							/boot/grub/grub.cfg
+							/boot/grub2/grub.cfg
+					GRUB Shell:
+				LILO:
+				SYSLINUX:
+				CoreBoot:
+		Linux Startup:
+			Basics:
+			Steps:
+	Boot Process:(Steps)
+		Step-1: BIOS Intialization
+		Step-2: BootLoader
+		Step-3: Kernel Loading
+		Step-4: Startup Process
+Linux Shell:
+	Shell:
+		Basics:
+			Terms:
+				Terminal:
+					Read "Shell & Terminal Management" Section of Linux Shell Commands Sheet.
+				RC:(aka RUNCOM)(aka Run Commands)
+					Its a program that was created at Runcom facility at MIT in 1965 by Louis Pouzin.
+				Macro-Proccessor:
+					It refers to functionality where text and symbols are expanded to create larger expressions.
+			A shell is a Macro-Proccessor that execute commands, both as a command interpreter and a programming language.
+		Shell Types:(3)
+			A. Legacy Shells:(3)
+				1. Multics Shell:
+					It was developed by Glenda Schroeder for MULTICS OS modeled after RUNCOM program.
+				2. Thompson Shell:
+					It was developed by Ken Thompson and distributed with Unix versions 1-6 from 1971 to 1975. It is now outdated.
+				3. Mashey Shell:(aka PWB Shell)
+					It was developed by John Mashey for PWB/UNIX modeled after Thompson Shell in 1975-1977.
+			B. Bourne Shell & Derivatives:
+				Bourne Shell:(aka SH)
+					Basics:
+						It was developed by Stephen Bourne at Bell Labs for Unix version 7 in 1979.
+						Program filename of Bourne shell is "sh" and is located at /bin/sh.
+				Derivatives:
+					1. ASH & Derivatives:
+						ASH:(Almquist Shell)(aka A Shell)
+							Basics:
+								ASH was developed by Kenneth Almquist in late 1989.
+						Derivatives:
+							DASH:(Debian Almquist Shell)
+								Basics:
+									DASH was developed by Herbert Xu in 1997 as a clone of ASH for Debian Linux. DASH is still the default shell for Debian.
+									DASH is default shell for Ubuntu.
+					2. KSH:(Korn Shell)
+						Basics:
+							KSH was developed by David Korn at Bell Labs in 1983.
+					3. BASH:(Bourne-Again Shell)
+						Basics:
+							BASH was developed by Brian Fox for GNU Project in 1989 as a replacement for Bourne Shell. Its the default login shell for most Linux OS and is also available for Windows 10 via WSL and was default shell for macOS prior to release of macOS Catalina. 
+							Some ideas of BASH were adopted from KSH.
+							Its located at /bin/bash
+						Configuration Files:
+							.bashrc:
+								responsible for maintaining shell environmentexport command is used to make env variables 
+							.bash_history => commands history file
+					4. ZSH:(Z Shell)
+						Basics:
+							ZSH is an extended Bourne Shell including some features of BASH, KSH and TCSH developed by Paul Falstad in 1990.
+							It is the default shell for Kali Linux since 2020.4 release and for macOS since Catalina.
+						Configuration Files:
+							.zshrc:
+					5. POSIX Shell:(aka IEEE POSIX Shell)(aka SH)
+						Basics:
+						Note:
+							POSIX Shell is known as SH, But its not the same as Bourne Shell, which is also known as SH.
+			C. CSH & Derivatives:
+				CSH:(C Shell)
+					Basics:
+						CSH was developed by Bill Joy at University of California, Berkley in 1978 and is modeled after C programming language.
+						Location => /bin/csh
+				Derivatives:
+					TCSH:(TENEX/TOPS C Shell)
+						Basics:
+							TCSH is improved version of CSH developed by Ken Greer in 1983.
+				Clone:
+					Hamilton C Shell:
+						Basics:
+							Its a clone of CSH and was developed by Nicole Hamilton for Microsoft Windows at Hamilton Laboratories.
+			Fish Shell?
+	Shell Commands:
+		Basics:
+			Terms:
+		Command Types:
+			Built-In Commands:(aka Builtins)
+				Basics:
+					Builins are commands that are implemented internally by the shell itself, rather than by an executable program somewhere in the file system as some commands such as pwd or cd are hard to implement using seperate commands together.
+			Shell Commands:
+				Read Linux Shell Commands Sheet.
+	Shell Scripts:
+		Read Linux Shell Scripting and One-Liners Sheet.
+Linux Users:
+	Basics:
+		User is an entity that can run processed and own files. Every user has a username. However, the kernel identifies the user via UID. By default, a user is not allowed to interefer with user-space of some other user, however, root user is an exception to this.
+		Terms:
+			UID:(User ID)
+				Read Linux Identifiers Section to read about it.
+			User-Space:
+				Read OS Concepts Sheet.
+	Special Users:
+		Root:(aka Primary SuperUser)
+			Root user is administrator in a linux system. Root is the main superuser account in linix which has all the permissions and privilegs.
+			Root is a virtual account, so it means that it dont really exist, however, we can get a shell as root.
+			UID => 0
+			PID => 1
+		Sudoers:(aka SuperUsers)
+			A superuser is a user who is a part of "sudo" group.
+Linux Groups:
+	Basics:
+		Group is a set of users having a common set of permissions.
+	Default Groups:
+		Sudo:(SuperUsers Group)
+			Configuration Files:
+				/etc/sudoers:
+					This file contains list of commands for every user that they can run as the root.
+			GID => 0
+Linux Process:
+	Read Linux Shell Commands Sheet.
+Linux Security Model:
+	Basics:
+		Terms:
+		Access Control Model:
+	Components:
+	File & Directory Permissions:
+		Read Linux Shell Commands Sheet.
+	Password Files:
+		Read Linux Shell Commands Sheet.
+Linux Services:
+Any Recylebin? how are files deleted in it?
+MAN Pages:
+	Basics:
+	Sections:(8)
+		1. User Commands:
+		2. Kernel SysCalls:
+		3. Higher-level Unix programming library documentation:
+		4. Device interface & Driver information:
+		5. File descriptions:
+		6. Games:
+		7. File formats, conventions and encodings:
+		8. System commands and servers:
+Linux File Formats:
+	SH:(Shell Script)
+	ELF:
+	SO:(Shared Object)
+		Basics:
+			Shared Object(.so) file is a library file which is linked to the executable/binary during runtime.
+	PKG:
+	DEB:
+	Wheel:
+Understanding Linux Protocols in Depth:
+Function Calls:
+	Basics:
+	Types:
+		A. System Calls:(aka SysCalls)
+			Basics:
+				SysCalls are basically a programmatic procedure to interact with the os, via which a program makes a request to system's kernel to avail a service from the kernel.
+				SysCalls are accessed via some program via API.
+				Note:
+					Read Linux API Section to read about Linux API.
+			Types:
+				Based on the function of syscall:(5)
+					A. Process Control:
+						Basics:
+							These syscalls are used to perform process creation\termination\etc.
+						SysCalls:
+							fork()
+							exit()
+							exec()
+					B. File Management:
+						Basics:
+						SysCalls:
+							open()
+							read()
+							close()
+					C. Device Management:
+						Basics:
+
+						SysCalls:
+							ioctl()
+					D. Information Maintainance:
+						Basics:
+						SysCalls:
+							getpid()
+							alarm()
+							sleep()
+					E. Communicaton:
+						Basics:
+						SysCalls:
+							pipe()
+							shmget()
+							mmap()
+		B. Library Calls:
+			Basics:
+				Library calls are calls to function defined in a library file.
+				To make a library call, library should be imported first.
+Linux ABI:
+	Basics:
+		Read OS Concepts Sheet for basics.
+Linux API:
+	Basics:
+		API is used to allow user programs to access SysCalls.
+		Note:
+			Read Function Calls Section to read about SysCalls.
