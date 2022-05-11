@@ -11,4 +11,7 @@ Peace out!
 
 
 #FAQ
+
 Whoami? idk? Angel? Satan? God? idk.
+
+Best way to read my notes? Use SublimeText(they paid me for endorsements lmao)
