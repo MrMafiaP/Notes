@@ -1,0 +1,120 @@
+Sysinternal Tools:
+=================
+Basics:
+Tools:
+	Accesschk.exe:(CLI)
+		Basics:
+			Accesschk.exe helps to know what kind of accesses specific users or groups have to resources including files, directories, Registry keys, global objects and Windows services
+		Usage:
+			Folder Permissions
+				accesschk.exe /accepteula -udqv "C:\Program Files" => see permissions for a specified folder for the current user
+				accesschk.exe /accepteula -uwdqsv "Authenticated Users" * => Find folders which are writable by users of "Authenticated Users" group
+			File Permissions
+				accesschk.exe /accepteula -uqv "c:\Program Files\...\file.exe" => see permissions for a specified file for the current user
+				accesschk.exe /accepteula -uwqsv Users "c:\*.*" => find files which are writable by users of "Users" group
+				accesschk.exe /accepteula -uwqsv michael "c:\*.*" => find files which are writable by "michael" user
+			Registry Permissions
+				accesschk.exe /accepteula -uvwqk registry_key_value => see if the sepicifed registery key is writable
+				accesschk.exe /accepteula -uvwqk HKLM\System\CurrentControlSet\Services\svc_name => see if the sepicifed registery key is writable
+			Service Permissions
+				accesschk.exe /accepteula -ucqv michael svc_name => see permissions for a specified service for "michael" user
+				accesschk.exe /accepteula -uwcqv Everyone * => Find services writable by users of "Everyone" group
+			Flags:
+				/accepteula => This will accept agreements to use the executable
+				-c => Name a windows service, or use * for all
+				-d => Only process directories
+				-k => Name a registry key e.g., hklm/software
+				-s => Recurse
+				-q => Omit banner
+				-u => Suppress errors
+				-w => Show objects with write access
+				-v => Verbose
+					-quv combo is used everywhere
+			Understanding output:
+				For Services:
+					SERVICE_ALL_ACCESS => Can do anything.
+					SERVICE_CHANGE_CONFIG => Can reconfigure the service binary.
+					WRITE DAC => Can reconfigure permissions, leading to SERVICE_CHANGE_CONFIG.
+					WRITE_OWNER => Can become owner, reconfigure permissions.
+					GENERIC_WRITE => Inherits SERVICE_CHANGE_CONFIG
+					GENERIC_ALL => Inherits SERVICE_CHANGE_CONFIG
+	Autoruns.exe:(GUI)
+		Basics:
+			This utility shows you what programs are configured to run during system bootup or login, and when you start various built-in Windows applications like Internet Explorer, Explorer and media players. These programs and drivers include ones in your startup folder, Run, RunOnce, and other Registry keys. Autoruns reports Explorer shell extensions, toolbars, browser helper objects, Winlogon notifications, auto-start services, and much more. Autoruns goes way beyond other autostart utilities.
+		Usage:
+			To view the properties of an executable configured to run automatically, select it and use the Properties menu item or toolbar button.
+	Autorunsc.exe:(CLI)
+		Basics:
+			Autorunsc.exe is the command-line version of Autoruns.
+		Usage:
+			autorunsc.exe <flags> username => show contents only related to the "username"
+			autorunsc.exe <flags> * => show contents related to any users
+			Flags:
+				-a <x> => show selected autorun
+					x:
+						* => All
+						b => Boot execute
+						d => Appinit DLLs
+						e => Explorer addons
+						g => Sidebar gadgets
+						h => Image hijacks
+						i => Internet Explorer addons
+						k => Known DLLs
+						l => Logon startups(default)
+						m => WMI enteries
+						n => Winsock protocol and network providers
+						o => Codecs
+						p => Printer monitor DLLs
+						r => LSA security providers
+						s => Autostart services and non-disabled drivers
+						t => Scheduled tasks
+						w => Winlogon entries
+				-c => Print output as CSV
+				-x => Print output as XML
+				-t => Show timestamp
+	Procmon.exe:(aka Process Monitor)(GUI)
+		Basics:
+			Process Monitor is an advanced monitoring tool for Windows that shows real-time file system, Registry and process/thread activity.
+			It combines two legacy Sysinternals utilities, Filemon and Regmon.
+			It has rich and non-destructive filtering.
+			Process Monitor can be used as a core utility in your system troubleshooting and malware hunting toolkit.
+			Used in:
+				Enumerarion for DLL Exploitation
+		Usage:
+			The best way to become familiar with Process Monitor's features is to read through the help file and then visit each of its menu items and options on a live system.
+	Procdump.exe:(CLI)
+		Basics:
+			Procdump.exe is used for monitoring an application for CPU spikes and generating crash dumps during a spike that an administrator or developer can use to determine the cause of the spike. 
+		Usage:
+			Flags:
+	Psexec.exe:(CLI)
+		Basics:
+		Usage:
+			Flags:
+				-u => username
+	Sysmon:(aka System Monitor)(GUI)
+		Basics:
+			Sysmon is a Windows system service and device driver that, once installed on a system, remains resident across system reboots to monitor and log system activity to the Windows event log. It provides detailed information about process creations, network connections, and changes to file creation time.
+		Usage:
+			Sysmon is installed/updated and uninstalled over CLI:
+				sysmon64.exe -i -accepteula => Install
+				sysmon64.exe -c -accepteula => Update
+				sysmon64.exe -u -accepteula => Uninstall
+				Flags:
+					-accepteula => 
+					-i => 
+					-c => 
+					-u => 
+	TCPView:(GUI)
+		Basics:
+			TCPView is a Windows program that will show you detailed listings of all TCP and UDP endpoints on your system, including the local and remote addresses and state of TCP connections. On Windows Server 2008, Vista, and XP, TCPView also reports the name of the process that owns the endpoint. TCPView provides a more informative and conveniently presented subset of the Netstat program that ships with Windows.
+			Note:
+				The TCPView download includes Tcpvcon, a command-line version with the same functionality.
+	TCPVcon:(CLI)
+		Basics:
+			Its Installed along with TCPView and is the CLI version of TCPView.
+		Usage:
+			Flags:
+				-a => Show all endpoints
+				-c => Print output as CSV
+				-n => Dont resolve address

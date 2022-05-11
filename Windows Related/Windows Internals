@@ -1,0 +1,1382 @@
+Windows Internals:
+=================
+Basics:
+	Terms:
+		Object:
+			Read AD 101 Sheet to know about Objects. 
+	Identifiers:
+		Basics:
+		Types:
+			SID:(Security Identifier)
+				SID is a unique value of variable length that is used to identify an object in Windows operating systems.
+				Format:
+					<Domain_SID>-<RID>
+				Example:
+					S-1-5-21-4254423774-1266059056-3197185112-1001
+						Domain SID => S-1-5-21-4254423774-1266059056-3197185112
+						RID => 1001
+			RID:(Relative Identifier)
+				RID is a number of variable length that is assigned to objects when they are created. RID is last part of a SID.
+				RID Sets:
+					A. 500-1000:
+						For system created users and groups.
+					B. 1000-10000:
+						For Domain created users and groups.
+				Known RID:
+					500 => Administrator
+					501 => Guest
+					502 => KRBTGT
+			OID:(Object Identifier)
+				OID is a 64-bit number that uniquely identifies an object.
+			UUID:(Universally Unique Identifier)
+				An UUID is used to represent a resource available on the remote procedure call (RPC) servers
+				We can always 'Google' the UUIDs to know which program they belong to 
+			GUID:(Global Unique Identifier)
+				GUID is UUID for a Group Object.
+			CLSID:(Class Identifier)
+				CLSID is a Global Unique Identifier (GUID). Windows stores a CLSID for each installed class in a program. When you need to run a class, you need the correct CLSID, so Windows knows where to go and find the program.
+			IPID:(Interface Pointer Identifier)
+			IFID:(Interface ID)
+			OpNum:(Operation Number)
+				Its a numeric identifier used to identify a specific RPC method or a method in an interface.
+	Microsoft Charsets:
+		ANSI:(American National Standards Institute)
+			It is a 8-bit character set used to represent up to 256 characters (0-255) using your keyboard.
+			The first 128 characters (0-127) correspond to the letters and symbols on a standard U.S. keyboard(ASCII).
+			The second 128 characters (128-255) represent special characters, such as letters in international alphabets, accents, currency symbols, and fractions.
+		ASCII:(American Standard Code for Information Interchange)
+			Its a 7-bit character set used to represent letters and symbols found on a standard U.S. keyboard.
+			The ASCII character set is the same as the first 128 characters (0-127) in the ANSI character set.
+		UTF-16:(16-bit Unicode Transformation Format)(aka Wide Char)
+			Microsoft uses 16-bit Unicode:
+				Note:
+					Read Programming Basics Sheet to read about Unicode.
+Windows File System & Structure:
+	Basics:
+		Disks:
+		Partitions:
+		Pattition Table:
+	Disk Format:
+	Windows Supported File Systems:
+		Basics:
+		Supported File Systems:(3)
+			A. FAT:(File Allocation Table)
+				Basics:
+					Its a basic universal file system which is mainly used in USB devices, MicroSD cards, etc.
+					It has no security.
+				Types:	(3)
+					1. FAT16:(aka FAT)
+					2. FAT32:
+					3. exFAT:(Extended FAT)
+						File System developed for flash drives.
+			B. NTFS:(New Technology File System)
+				Basics:
+					NTFS is the default File System for Microsoft Systems.
+					It has features for auditing, security and compression.
+			C. ReFS:(Resilient File System)
+				Basics:
+					ReFS is the newest File System released from Windows Server 2012 with backward compatibility support for NTFS. It is not available for Windows OS.
+				Advantages:
+					Enhanced data verification and error correction.
+	Windows Directory Structure:(Hierarchical View)
+Windows Architecture:
+	Abstraction Layers:(aka Abstraction Levels)
+		Basics:
+			Read OS Concepts Sheet to know more.
+		Layers:(Hierarchy goes from A to C)
+			A. Hardware:
+				Read Hardware Sheet.
+			B. Kernel:
+			C. User Process:
+	Classification:
+		Based on Processor Type:
+			Basics:
+			Types:(3)
+				A. 32-Bit CPU:
+					32-Bit native programs and Dlls are stored in C:\Windows\System32
+				B. 64-Bit CPU:
+					64-Bit native programs and Dlls are stored in C:\Windows\System32
+					32-Bit native programs and Dlls are stored in C:\Windows\SysWOW46
+					WOW64:(Windows On Windows 64-bit)
+						It is a concept introduced by microsoft to allow 32-bit applications to run on a 64-bit windows.
+						To achieve this, windows uses 4 Dlls:
+							Ntdll.dll
+							Wow64.dll
+							Wow64Win.dll
+							Wow64Cpu.dll
+				C. ARM CPU:
+Linux Boot:
+	Basics:
+		BIOS:(Basic I/O System)
+			Basics:
+				BIOS is responsible for performing integrity checks upon turning on of computer.
+		BootLoader:
+			Basics:
+			Windows Bootloaders:
+				Legacy:
+				UEFI:(Unified Extensible Firmware Interface)
+	Types:
+		Secure Boot:
+		Trusted Boot:
+		Measured Boot:
+	Boot Process:(Steps)
+		Step-1: BIOS Intialization
+		Step-2: OS Loader
+		Step-3: OS Initalization
+		
+Windows IoT:(Windows Embedded)
+Windows Accounts:
+	Windows OS Accounts:
+		User Accounts:(3 Types)
+			A. Local Accounts:
+				Basics:
+					Local user accounts are stored locally on the server. These accounts can be assigned rights and permissions on a particular server, but on that server only
+				Types:(2)
+					A. Default Local User Accounts:(4)
+						1. Admin Account:
+							Every computer has an Administrator account with:
+								SID => S-1-5-domain-500
+								Display Name => Administrator\
+							The Administrator account is the first account that is created during the Windows installation
+						2. Guest Account:
+							The Guest account is disabled by default on installation. The Guest account lets occasional or one-time users, who do not have an account on the computer, temporarily sign in to the local server or client computer with limited user rights. By default, the Guest account has a blank password.
+						3. Helpassistant Account:
+							The HelpAssistant account is a default local account that is enabled when a Remote Assistance session is run. This account is automatically disabled when no Remote Assistance requests are pending.
+						4. DefaultAccount:(aka DSMA(Default System Managed Account))
+							DefaultAccount was introduced in Windows 10 version 1607 and Windows Server 2016
+					B. Default Local System Accounts:(3)
+						1. SYSTEM:(NT Authority/System)
+							SYSTEM account is an internal account that does not show up in User Manager, and it cannot be added to any groups
+							There are many services and processes in the Windows operating system that need the capability to sign in internally, such as during a Windows installation. The SYSTEM account was designed for that purpose. It is used by the operating system and by services that run under Windows.
+							By default, the SYSTEM account is granted Full Control permissions to all files on an NTFS volume.
+						2. NETWORK SERVICE:
+							A service that runs in the context of the NETWORK SERVICE account presents the computer's credentials to remote servers.
+						3. LOCAL SERVICE:
+							LOCAL SERVICE account as minimum privileges on the local computer and presents anonymous credentials on the network.
+			B. Service Accounts:
+				Basics:
+					A service account is a user account that is created explicitly to provide a security context for services running on Windows Server operating systems.
+			C. Security Accounts:
+				Basics:
+		Group Accounts:
+	Windows Server Accounts:
+		Read AD 101 Sheet to read about Windows Server Accounts.
+Windows Networks:
+	Types:
+		1. Workgroup:
+			A Workgroup has no Centralized Authentication & Administration.
+			Max of 20 computers allowed.
+			Low Security
+			Note:
+				Windows by default joins a workgroup when installed.
+		2. Domain:
+			A Workgroup has Centralized Authentication & Administration.
+			Unlimited number of computers allowed.
+			High Security
+			Note:
+				Read AD Sheet for this.
+Windows Memory & Process Management:
+	Basics:
+		Terms:
+			Process:
+				Types:
+					Protected Process:
+			Thread:
+			Routine:
+			Sub-Routine:
+			Hook:
+				Instruction to redirect the code execution
+			Handle:
+				An object to basically initiate functioning and working with thread you are trying to gain access to
+Windows Security Model:
+	Basics:
+		Terms:
+			Securable Objects:
+				Read Basics to know about Securable Objects.
+		Access Control Model:
+			Basics:
+				Access Control Model allows to control ability of a process to access Securable Objects or to perform administrative system tasks.
+				Terms:
+					Access Control:
+						Access control refers to security features that control who can access resources in the operating system. Applications call access control functions to set who can access specific resources or control access to resources provided by the application.
+					Access Rights:
+						Access Rights controls access to Securable Objects.
+						They are assigned to an object's ACL.
+					Trustee:
+						Its a user/group account or a logon session to which an ACE applies.
+					Audit:
+					Privileges:
+						Basics:
+							A privilege is the right of an account to perform various system-related operations.
+							When a user logs on, the system produces an access token that contains a list of the user's privileges, including those granted to the user or to groups to which the user belongs.
+						To see Privileges:
+							whoami /priv
+			Components:
+				A. Tokens:
+					Types:
+						1. Access Tokens:
+							Access Token is an object granted to an user by LSASS Process when the system successfully authenticates that user.
+							It describes identity of user/process/thread, ie, it contains:
+								User's SID
+								SIDs for the groups of which the user is a member
+								SID of primary group
+								Logon SID
+								User's privileges
+								User's integrity level and other security releavant information and is used for authorization.
+							Every process/thread created by a user contains a copy of user's access token.
+							A process which tries to impersonate a client contains both primary token and impersonation token.
+							Types:
+								A. Delegation Token:(aka Authorization Token)(aka Primary Token)
+									These are used to present default security information.
+								B. Impersonation Token:(aka Imitation Token)
+									These are used to allow an user to perform an operation on behalf of another user.
+						2. Restricted Tokens:
+							Restricted Token is an object granted to an user to restrict its ability to access securable objects or perform privileged operations.
+				B. Security Descriptors:
+					When a securable object is created, the system assigns it a security descriptor.
+					Security Descriptor contains the security information that protects a Securable Object, ie, it contains:
+						Owner name
+						Group names
+						ACL:(Access Control List)
+							Basics:
+								ACE:(Access Control Entries)
+									Each ACE in an ACL identifies a trustee and specifies the Access Rights allowed, denied or audited for that trustee.
+									It contains:
+										SID of trustee
+										Access Rights allowed, denied or audited for that trustee
+										A flag which indicates type of ACE
+									Types:(6)
+										Types supported by Securable Objects:
+											1. Access-denied ACE:
+												Its used in DACL to deny access rights to a trustee.
+											2. Access-allowed ACE:
+												Its used in DACL to allow access rights to a trustee.
+											3. System-audit ACE:
+												Its used in SACL to generate an audit record when trustee attempts to exercise the specified access rights.
+										Types not supported by Securable Objects:(aka Object-specific ACEs)
+							ACL is a list of ACE. It may have zero or more ACEs.
+							Types:
+								1. DACL:(Discretionary ACL)
+									It identifies the trustees that are allowed or denied access to a securable object.
+									When a process tries to access a securable object, the system checks the ACEs in the object's DACL to determine whether to grant access to it.
+									If the object does not have a DACL, the system grants full access to everyone.
+									If the object's DACL has no ACEs, the system denies all attempts to access the object because the DACL does not allow any access rights.
+								2. SACL:(System ACL)
+									An ACE in a SACL can generate audit records when an access attempt fails, when it succeeds, or both.
+							Note:
+								To read about Reading and Modifying ACL => Read Windows Privesc Sheet
+		Integrity Level:
+			From Windows Vista, all protected objects are labeled with an integrity level. Its a number assigned to both Access Tokens and Resources
+			A process/user with a lower integrity level can’t write to an object with a higher integrity level.
+			Levels:
+				1. Untrusted:
+					processes that are logged on anonymously are automatically designated as Untrusted. Example: Chrome
+				2. Low:
+					The Low integrity level is the level used by default for interaction with the Internet. As long as Internet Explorer is run in its default state, Protected Mode, all files and processes associated with it are assigned the Low integrity level. a low integrity process is very restricted, it cannot write to the registry and it’s limited from writing to most locations in the current user’s profile.  Example: Internet Explorer or Microsoft Edge
+				3. Medium:
+					Most objects run with Medium Integrity level.
+				4. High:
+					Administrators wun with High integrity level. This ensures that Administrators are capable of interacting with and modifying objects assigned Medium or Low integrity levels, but can also act on other objects with a High integrity level, which standard users can not do.
+				5. System:
+					The Windows kernel and core services are granted the System integrity level.
+					System Services run with System integrity level
+				6. Installer:
+					The Installer integrity level is a special case and is the highest of all integrity levels. By virtue of being equal to or higher than all other WIC integrity levels, objects assigned the Installer integrity level are also able to uninstall all other objects.
+			To know the integrity level of a user(shell):
+				whoami /groups
+		UAC:(User Access Control)
+			UAC allows an administrator user to execute proccess as a non-administrator privileges to each process executed. This is achieved using default the low privileged token of the user.
+			Running CMD.exe from the Start menu without select ‘Run as administrator’ will give a shell without admin privileges, For Example:
+				You cannot for example write to C:\Windows\System32 as it will give Access is denied error.
+			For tasks which require privilege elevation, the administrator SID is used after the prompt on Secure Desktop has been clicked away
+			Secure Desktop:
+				The Secure Desktop’s primary difference from the User Desktop is that only trusted processes running as SYSTEM are allowed to run here
+			UAC Settings:
+				1. Always Notify:
+					This setting is the highest UAC setting. It will prompt the user when any program, including a built-in Windows program wants higher privileges.
+				2. Notify me only when programs try to make changes to my computer:
+					This is the default UAC setting. This setting does not prompt the user when some built-in Windows program want higher privileges. It will prompt the user when any other program wants higher privileges. This distinction is important and it plays into the UAC bypass attack that we will cover in a moment.
+				3. Notify me only when programs try to make changes to my computer:(do not dim my desktop)
+					This is the same as the default setting, except the user’s desktop does not dim when the UAC elevation prompt comes up. This setting exists for computers that lack the computing power to dim the desktop and show a dialog on top of it.	
+				4. Never notify:
+					This option takes us back to life before Windows Vista. On Windows 7, if a user is an administrator, all of their programs will run with high integrity. On Windows 8, programs run at the medium integrity level, but anything run by an Administrator that requests elevated rights gets them without a prompt.
+		SRM:(Security Reference Monitor)
+			It checks if a call from a specific process to access a specific resource is allowed or not using a series of steps:
+				1. Verifies the Integrity Level of process/user:
+					If Integrity Level of process/user < Integrity Level of resource => Access Denied
+					If Integrity Level of process/user >= Integrity Level of resource => Access Allowed
+				2. Checks owner of resource
+				3. Checks ACL of resource
+	Components of Windows Security Model:(3)
+		A. Resource:
+			File/Directory/Registery
+			Each resource has its own Security Descriptor.
+		B. User or Process(running on behalf of user) who wanna access the Resource:
+			Process/User uses an Access Token to access the resource
+		C. System Kernel:
+			It decides which Process/User can access which resource using SRM
+	Impersonation:
+		Basics:
+			Impersonation is the ability of a thread to execute using different security information than the process that owns the thread. 
+	File and Folder Permissions:
+		Basics:
+			Permissions for files and folders are only available in NTFS and ReFS file systems.
+		Permission Types:
+			1. Read:
+				Meaning for Folders:
+					Permits viewing and listing of files and subfolders
+				Meaning for Files:
+					Permits viewing or accessing of the file's contents
+			2. Read & Execute:
+				Meaning for Folders:
+					Permits viewing and listing of files and subfolders as well as executing of files; inherited by files and folders
+				Meaning for Files:
+					Permits viewing and accessing of the file's contents as well as executing of the file
+			3. Write:
+				Meaning for Folders:
+					Permits adding of files and subfolders
+				Meaning for Files:
+					Permits writing to a file
+			4. Modify:
+				Meaning for Folders:
+					Permits reading and writing of files and subfolders; allows deletion of the folder
+				Meaning for Files:
+					Permits reading and writing of the file; allows deletion of the file
+			5. Full Control:
+				Meaning for Folders:
+					Permits reading, writing, changing, and deleting of files and subfolders
+				Meaning for Files:
+					Permits reading, writing, changing and deleting of the file
+			6. List Folder Contents:
+				Meaning for Folders:
+					Permits viewing and listing of files and subfolders as well as executing of files; inherited by folders only
+				Meaning for Files:
+					N/A
+		Shared Folders:
+	Password Files:
+		LSA:(Local Security Authority)
+			Its a protected system process that authenticates and logs users on to the local computer. Domain credentials are used by the operating system and authenticated by the Local Security Authority.
+			LSA includes LSASS:(Local Security Authority Subsystem Service)
+				LSASS is a Protected Process in memory. 
+				LSASS was released in Windows Server 2012 and Windows 8.1
+				Credentials including Passwords, Hashes and Tickets are stored and handled by LSASS process.
+		NTDS.dit:(New Technologies Directory Services.Directory Information Tree)
+			ntds.dit is a database file that is hosted in a DC.
+			It is used to store AD data like information about user objects/groups/password hashes for all users in the domain.
+			Location of ntds.dit:
+				In a Domain Controller:
+					Default:
+						C:\Windows\NTDS\ntds.dit
+					Non-Default:
+						PS> reg query HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\NTDS\Parameters
+		SAM:(Security Accounts Manager)
+			Database having user accounts with hashed passwords
+			Hash Format:
+				username:userid:lan_manager_hash:NTLM_hash
+				NTLM Hash => MD4
+				LM Hash => DES Encryption
+			Location:
+				c:\windows\system32\config\SAM
+				HKLM\SAM
+			Note:
+				We cannot read SAM while OS is running
+			Note:
+				TO read more about NTLM, See NTLM Section
+		Windows Vault:(Credential Manager)	
+			stores credentials using which Windows log in the users automatically, which means that any Windows application that needs credentials to access a resource can make use of Windows Vault and use the credentials supplied instead of users entering the username and password all the time.
+		Windows Bitlocker:
+Windows TPM:
+Windows Group Policy:
+	Basics:
+		Group Policy is a windows feature that was released in Windows 7 and Windows Server 2003.
+		Terms:
+	GPE:(Group Policy Editor)
+		Basics:
+			To open it:
+				Run -> gpedit.msc
+				CMD> 
+				PS>
+	GPO:(Group Policy Object)
+		Read AD 101 Sheet for GPO.
+	CSE:(Client Side Extensions)
+		Read AD 101 Sheet for CSE.
+	GPP:(Group Policy Preferences)
+		Read AD 101 Sheet for GPP.
+Windows Services:
+Windows Drivers:
+Windows Registery:
+	Basics:
+		The registry is composed of keys and values.
+		Registery Key:
+			Registery key refers to a container that can itself consist of keys and values.
+			Hierarchy:
+				Root Key:
+					Windows has 6 main Root Keys in Windows Registery:
+						1. HKLM:(HKEY_LOCAL_MACHINE) system-related information and contains most keys
+						2. HKCU:(HKEY_CURRENT_USER)
+							Stores data associated with the currently logged-on user. This root key is mapped to the currently logged user’s key in HKEY_USERS
+						3. HKU:(HKEY_USERS)
+							Stores information about all users
+							Storesl the accounts on the machine
+						4. HKCC:(HKEY_PERFORMANCE_DATA)
+							Stores performance information
+						5. HKPD:(HKEY_CURRENT_CONFIG)
+							Stores some information about the current hardware profile
+						6. HKCR:(HKEY_CLASSES_ROOT)
+							Stores file association and COM(Component Object Model) object registration information
+		Important Registry keys:
+			HKLM\SYSTEM\CurrentControlSet\Services => all services exist here
+	Reading and Editing registeries:
+		Registery Editor:(gui)
+			Basics:
+				To open it:
+					Run -> regedit.msc
+					CMD>regedit
+					PS>regedit
+			Usage:
+				It shows Directory hive like structure for registeries
+		reg:(cli)
+			reg query:
+				to read Data inside keys
+				reg query HKLM\Software\Microsoft\Windows\CurrentVersion\Policies\System
+			reg add:
+				To edit registry key
+				reg add HKLM\SYSTEM\CurrentControlSet\services\svc_name /v ImagePath /t REG_EXPAND_SZ /d c:\path\shell.exe /f => Point the ImagePath to malicious executable
+					flags:(for reg add)
+						/v => add into the following key
+						ImagePath => a key of regsvc which stores path of drivers images file. it will store path of our executable file and run it.
+						/t => type
+						REG_EXPAND_SZ => it tells "ImagePath" will store a string in it
+						/d => data
+						c:\temp\x.exe => string stored in "REG_EXPAND_SZ"
+						/f => dont prompt anything, do it quietly.
+Windows Subsystems:
+	Basics:
+		Terms:
+			Subsystem:
+	WSL:(Windows Subsystem for Linux)
+	WSA:(Windows Subsystem for Android)
+Windows Files and Folders:
+	Windows Recycle Bin:
+	ADS:(Alternate Data Stream)
+Windows File Formats:
+	DLL:(Dynamic Link Library)(aka Dynamic Loaded Library)(aka Libraries)
+		Basics:
+			Terms:
+				Shared Library:(aka Shared Object)
+					It is a file(Library) that is used/shared by more than one program/executable at the same time.
+				Dynamic Linking:
+					It refers to finding and linking the library to the program just before it starts.
+			It is Microsoft's implementation of Shared Library.
+		Types:
+			A. DLL based on Load-Time Dynamic Linking:
+				DLL is loaded at the compilation time.
+			B. DLL based on Run-Time Dynamic Linking:
+				DLL is loaded at the run-time.
+		DLLs are created with other programming languages such as:
+			C
+			MASM:
+			FORTRAN:
+	MSI:
+	MSC:
+		Example:
+			gpedit.msc
+	EXE:
+	PE:(Portable Executable)
+		Basics:
+			Terms:
+				Windows Loader:
+				Stub:
+					A stub is a tiny program or a piece of code that runs by default when the execution of an application starts.
+				Image:(of an executable)
+				ImageBase:
+					It means the base address where the executable file is first loaded into the memory.
+				VA:(Virtual Address)
+					VAs are the memory addresses that are referenced by an application in the virtual memory.
+				RVA:(Relative VA)
+					Its the difference between two VAs and represents the highest one.
+					RVA is the relative VA with respect to the ImageBase.
+					We can calculate RVA with the help of the following formula:
+						RVA = VA – ImageBase
+				Offset:
+					It is actually the distance from the starting point either the start of the file or the start of a memory address.
+					The offset value is added to the base value to determine the actual value.
+			PE:
+				PE is a file format for executables, object file, DLLs and others used in 32-bit and 64-bit versions of Windows which contains data organized as a linear stream.
+				Win32 Loader read a PE program from disk and loads it into memory as a process.
+				It is microsoft version of COFF(Common Object File Format)
+		Structure:
+			File.exe has two parts:
+				A. Header:(4 Parts)
+					1. DOS Header:(aka DOS MZ Header)
+						Basics:
+							64 Bytes
+							It recognizes if the file is a valid PE file or not.
+						Fields:(2)
+							A. e_magic:(aka Magic Number)
+								It conatins the first two bytes of DOS Header and contains ASCII "MZ" which represent initials of 'Mark Zbikowski', one of the developers of MS-DOS.
+							B. e_lfanew:
+								It is a 4-byte offset to PE File Header.
+					2. DOS_Stub:
+						DOS_Stub prints out the message “This program cannot be run in DOS mode” when the program is not compatible with the Windows.
+					3. PE File Header:(aka PE Header)
+						Basics:
+							PE Header is a structure named IMAGE_NT_HEADER and contains info such as the location and size of code, etc.
+						Fields:(4)
+							A. SIGNATURE:
+								Basics:
+									4 bytes
+									Type => Dword
+								Value:
+									It starts at ASCII 'PE00' or 'PE..', ie HEX '50 45 00 00'
+							B. IMAGE_FILE_HEADER:(aka FileHeader)
+								Basics:
+									20 Bytes
+									It contains only the most basic information
+								Sub-Fields:(7)
+									1. Machine:
+										Basics:
+											Starting Byte => 1
+											Type => WORD
+									2. Number of sections:
+										Basics:
+											Starting Byte => 3
+											Type => WORD
+										It tells how many sections the file contains
+									3. Time Date stamp:
+										Basics:
+											Starting Byte => 5
+											Type => DWORD
+									4. Pointer to symbol table:
+										Basics:
+											Starting Byte => 9
+											Type => DWORD
+									5. Number of symbols:
+										Basics:
+											Starting Byte => 13
+											Type => DWORD
+									6. Size of optional header:
+										Basics:
+											Starting Byte => 17
+											Type => WORD
+									7. Characteristics:
+										Basics:
+											Starting Byte => 19
+											Type => WORD
+										It defines the type of your file. (EXE,DLL,etc)
+							C. IMAGE_OPTIONAL_HEADER:(aka Optionalheader)
+								Basics:
+									It contains critical information
+								Sub-Fields:(9)
+									1. Magic:
+										It tells whether an executable image is of 32-bit or 64-bit.
+									2. AddressOfEntryPoint:(aka Entrypoint)
+										Its the virtual address which points to start of the program
+										It holds RVA of Entry Point of module and is usually found in the .text section.
+										It is optional for DLLs and when no entry point is present, this member is zero.
+									3. BaseOfCode:
+										It holds RVA for begining of .code Section
+									4. BaseOfData:
+										It holds RVA for begining of .data Section
+									5. ImageBase:
+										Its the address where an executable file will be memory-mapped to a specific location in memory.
+										Its an address space which loaders prefer to load the program from that.
+										Value:
+											0x400000 => For Applications
+											0x10000000 => For DLLs
+									6. SectionAlignment:
+										It indicates the alignment of the sections of PE in the memory
+									7. FileAlignment:
+										It indicates the alignment of the sections of PE in the file.
+									8. SizeOfImage:
+										It indicates the memory size occupied by the PE file on runtime.
+									9. Subsystem:
+										It identifies the target subsystem for an executable file.
+										Values:
+											1 => NATIVE => Doesn’t require a subsystem
+											2 => WINDOWS_GUI => Runs in Windows GUI subsystem
+											3 => WINDOWS_CLI => Runs in Windows character subsystem
+											5 => OS2_CUI => Runs in OS/2 character subsystem
+											7 => POSIX_CUI => Runs in the Posix character subsystem
+								Note:
+									Do not go on name of this header. It is a mandatory and not an optional header.
+							D. DATADirectory:
+								Basics:
+									Size => 128 Bytes
+								DATADIRECTORY  is an array of IMAGE_DATA_DIRECTORY structure.
+								It indicates where to find the other important components of executable information in the file.
+								It is basically a pointer to the first IMAGE_DATA_DIRECTORY structure
+								The current PE file format defines 16 possible data structures, out of which 11 are currently used.
+					4. Section Header Table:(aka Section Table)
+						Basics:
+							It contains information about the sections of a file which are sorted by the RVAs rather than alphabetically.
+							It is an array of IMAGE_SECTION_HEADER structure.
+							Note:
+								Each section has its own section header.
+						Fields:(5)
+							1. SizeOfRawData:
+								It specifies the real size of the section in the file.
+							2. VirtualSize:
+								It indicates the size of the section in memory.
+							3. PointerToRawData:
+								Its the offset where the Raw Data section starts in the file.
+							4. VirtualAddress:
+								Its the RVA of the section in memory.
+							5. Characteristics:
+								It tells about the memory access rights for that section in memory denoted as flags (R/RW/RWE/etc).
+				B. Sections:
+					Common Sections:
+						.text:
+							It contains executable code of application.
+						.data:
+							It contains an initialized data of an application such as strings.
+						.rdata:(aka .idata)
+							It contains the imported functions/data(idata).
+							This table lists the WinAPI used by the executable, along with the names of their associated DLLs.
+							Using this, the Windows loader knows the API to find, in which system DLL, in order to retrieve its address.
+						.edata:
+							It contains exported functions/data(edata).
+							It lists down the various functions and their addresses that the DLL will exports to be used by other binary file.
+						.bss:
+							This section contains uninitialized data
+						.pdata:
+							It contains info on exception handling functions sections.
+						.reloc:
+							It contains relocation information.
+						.rsrc:
+							This is the common name for the resource-container section, which contains things like images used for the application’s UI.
+						.debug:
+							It contains debug information.
+Understanding Pipes:
+	Basics:
+		A pipe is a data channel that is unidirectional. Two pipes can be used to create a two-way data channel between two processes. This uses standard input and output methods. Pipes are used in all POSIX systems as well as Windows operating systems.
+		Terms:			
+	Types:
+		NP:(Named Pipes)
+			Basics:
+		Anonymous Pipes:
+			They enable related processes to transfer information to each other
+	https://versprite.com/blog/security-research/microsoft-windows-pipes-intro/
+Understanding IPC:(Inter Process Communication)
+	Basics:
+		Its an API that allows applications/processes that are NetBIOS enabled to communicate with each other and synchronize their actions over a network. The communication between these processes can be seen as a method of co-operation between them.
+		It can happen in 2 ways:
+			1. Shared Memory:
+				Shared memory is the memory that can be simultaneously accessed by multiple processes. This is done so that the processes can communicate with each other. All POSIX systems, as well as Windows operating systems use shared memory.
+			2. Message passing:
+	IPC Mechanisms supported by MS:
+		Clipboard
+		COM:
+			Read COM Section
+		Data Copy
+		DDE
+		File Mapping
+		Mailslots
+		Pipes:
+			Read Pipes Section
+		RPC:
+			Read RPC Section
+		Windows Sockets
+		https://www.geeksforgeeks.org/inter-process-communication-ipc/
+Understanding COM:(Component Object Model)
+	DCOM:(Distributed Component Object Model)
+		Its a Protocol which is an extension of the COM(Component Object Model) Protocol and is built on top of Remote Procedure Call Protocol.
+		High-Level applications use the DCOM client to obtain object references and make ORPC calls on the object.
+			RPC -> DCOM -> High-Level Application
+		Activation:
+			Activation means creating or finding an existing DCOM application
+			Activation mechanism requires a client to provide the CLSID of an object class to obtain an object, either from that object class or a class factory that is able to create such objects.
+		ORPC Calls:
+			An ORPC Call is made When a COM object gets activated over the network
+			An ORPC Call differentiates itself from RPC by the contents of the Object UUID as the UUID field contains an IPID which specifies interface targeted by an ORCP call on a COM Object.
+	serial port
+	parallel port
+Understanding Mircosoft Protocols in Depth:
+	W32Time:(aka Windows Time service)
+		Basics:
+			It utlizies NTP(Network Time Protocol) to synchronize date and time for all computers running in an AD DS domain.
+	LLMNR:(Link-Local Multicast Name Resolution)
+		Basics:
+			Ports:
+				UDP/5355
+				TCP/5355
+		Its used to resolve local host names for both IPv4 and IPv6 when DNS lookup fails
+		To check if LLMNR is open:
+			nmap --script llmnr-resolve --script-args 'llmnr-resolve.hostname=marvel.local' -e interface
+		Note:
+			It is enabled by default on windows vista and above
+	RPC:(Remote Procedure Call)
+		Basics:
+			Terms:
+				Client:
+					A client is a computer or process that accesses the services or resources of another process or computer on the network.
+				Server:
+					A server is a computer that provides services and resources, and that implements network services.
+				Network Service:
+					A network service is a collection of remote programs.
+				Remote Program:
+					A remote program implements remote procedures.
+				Subroutine:(aka Routine/Subprogram/Function/Method)
+					A subroutine is a sequence of program instructions that performs a specific task, packaged as a unit. This unit can then be used in programs wherever that particular task should be performed.
+				Procedure:
+					A Procedure is a subroutine that returns no value or returns a null value.
+				Call:
+				Calling Convention:
+					A calling convention is a low-level scheme for how subroutines receive parameters from their caller and how they return a result
+				Address Space:
+					Address Space defines a range of discrete addresses, each of which may correspond to a network host, peripheral device, disk sector, a memory cell or other logical or physical entity.
+				Distributed System:
+					A distributed system is a system whose components are located on different networked computers, which communicate and coordinate their actions by passing messages to one another from any system.
+				DCE:(Distributed Computing Environment)
+					Its a software system was developed in the early 1990s from the work of OSF(Open Software Foundation)
+					DCE supplies a framework and a toolkit for developing client/server applications which includes RPC
+				Stub:
+					A stub is a piece of code that converts parameters passed between client and server during a remote procedure call (RPC).
+				Endpoint:(aka RPC)
+					An endpoint is a network-specific address of a RPC server process for remote procedure calls. The actual name and type of endpoint depends upon RPC protocol sequence, for example:
+						If protocol sequence is 'ncacn_ip_tcp', then endpoint maybe 'TCP/1025'
+				Interface:
+					RPC interface enables programmers to write distributed applications using high-level RPCs rather than lower-level calls based on sockets.
+					https://www.ibm.com/docs/en/zos/2.2.0?topic=environment-rpc-interface
+				System Service:
+					System services are programs that load automatically as part of an application/OS's startup process
+					Each system service has a friendly service name and a service name
+						friendly service name is the name that appears in graphical management tools
+						service name is the name that is used with command-line tools and with many scripting languages	
+				Application Protocol:
+					Application protocol refers to a high-level network protocol that uses one or more TCP/IP protocols and ports
+						Examples => HTTP/SMB/SMTP
+				OpNum:(Operation Number)
+					Read Windows Internals Sheet.
+			RPC Protocol:
+				RPC Overview:
+					RPC enables applications to call functions remotely.
+					RPC is an IPC mechanism used for constructing distributed, client-server based applications and their communication
+					The main idea of an RPC is to allow a Client(local computer) to remotely call Procedures in a different address space(Server(same device or another computer on a shared network).
+					The Remote Procedure Call is coded as if it were a normal(local) procedure call, without the programmer explicitly coding the details for the remote interaction.
+				RPC Working:
+					1. The client calls the client stub. The call is a local procedure call, with parameters pushed on to the stack in the normal way.
+					2. The client stub packs the parameters into a message and makes a system call to send the message. Packing the parameters is called Marshalling(Process of formatting COM parameters for tranmission over RPC is called Marshalling)
+					3. The client's local operating system sends the message from the client machine to the server machine.
+					4. The local operating system on the server machine passes the incoming packets to the server stub.
+					5. The server stub unpacks the parameters from the message. Unpacking the parameters is called Unmarshalling.
+					6. The server stub calls the server procedure. The reply traces the same steps in the reverse direction.
+		RPC-Based Protocols:
+			DCE/RPC:(aka Distributed Computing Environment / RPC)
+				RPC system developed for DCE(Distributed Computing Environment)
+				This system allows programmers to write distributed software as if it were all working on the same computer, without having to worry about the underlying network code.
+			ONC-RPC:(Open Network Computing RPC)(aka Sun-RPC)
+				ONC-RPC is a remote procedure call system developed by Sun Microsystems in the 1980s as part of their NFS project
+				Unix implements ONC-RPC
+			Microsoft Version:
+				MS-RPCE:(MS-Remote Procedure Call Protocol Extensions)(aka MSRPC)
+					Basics:
+						MSRPC is developed by Microsoft and is a modified version of DCE/RPC, .
+						MSRPC is Transport-Independent, ie, it can package its data structures on top of a variety of underlying RPC protocols(see RPC Protocol for Communication Section).
+						MSRPC works together with the DCOM(Distributed Component Object Model). DCOM provides a mechanism for exposing application objects and it consists of a set of RPC interfaces that can be implemented over any RPC Transport.
+						Ports:
+							RPC Endpoint Mapper => TCP/135
+							DCOM => TCP/135
+						Working:
+							1. The MSRPC process begins on the client side, with the client application calling a local stub procedure instead of code implementing the procedure.
+							2. The client stub code retrieves the required parameters from the client address space and delivers them to the client runtime library, which then translates the parameters into a standard Network Data Representation format to transmit to the server.
+							3. The client stub then calls functions in the RPC client runtime library to send the request and parameters to the server.
+							4. If the server is located remotely, the runtime library specifies an appropriate transport protocol and engine and passes the RPC to the network stack for transport to the server.			
+					RPC Applications:
+						Basics:
+							RPC applications are constructed by developing a server that exports a number of procedures clients can call
+							Each server program has a unique program number handed off to a special process known as portmap.
+						RPC Network Protocols:
+							MS-SAMR:(SAM Remote Protocol)(aka SAMR)
+								It provides management functionality for an account store or directory containing users and groups.
+								It is based on RPC.
+							MS-LSAD:(LSA Remote Protocol)(aka LSARPC)
+								LSARPC is a set of calls, transmitted with RPC, to LSA.
+								It is based on RPC.
+							MS-SRVS:(Server Service Remote Protocol)(aka SRVSVC)
+								It remotely enables file and printer sharing and named pipe access to the server through SMB
+								It is based on RPC.
+							MS-RPRN:(Print System Remote Protocol)(aka SPOOLSS(Spool Subsystem))
+								It defines the communication of print job processing and print system management between a print client and a print server.
+								It is based on RPC.
+							MS-NRPC:(Netlogon Remote Protocol)(aka Netlogon)
+								Its an RPC interface that is used for user and machine authentication on domain-based networks; to replicate the user account database for operating systems earlier than Windows 2000 backup domain controllers; to maintain domain relationships from the members of a domain to the domain controller, among domain controllers for a domain, and between domain controllers across domains; and to discover and manage these relationships.
+							MS-FSRVP:(File Server Remote VSS(Volume Shadow Copy Service) Protocol)
+								Its an RPC-based protocol used for creating shadow copies of file shares on a remote computer, and for facilitating backup applications in performing application-consistent backup and restore of data on SMB2 shares.
+					RPC Connections:(aka Binding)(aka Binding-String)
+						A binding is an application-level connection between the client and server. Before a client can call a remote procedure, it needs to create a binding to the destination.
+						It contains connection details, including the authentication state, and is expressed structurally in RPC programs through binding handles.
+						Binding handles are used to subsequently perform operations such as calling procedures, establishing authentication, and so on.
+						Format:
+							RPC_protcol_for_communication:<host>[port]
+					RPC Transport:(aka RPC Sequences)(aka Protocol Sequence)
+						Basics:
+							A protocol sequence is the language that a network operating system uses to talk over the network to other computers.
+							A protocol sequence is used to transport RPC data between two endpoints.
+						RPC applications must specify a string that represents a combination of:
+							A. RPC Protocol for Communication:(3)
+								1. NCACN:(Network Computing Architecture Connection-Oriented Protocol)
+									Its used for RPC applications that need to communicate remotely across a network.
+									Protocols in this category are connection oriented, meaning they provide reliable, two-way, end-to-end connections for the duration of a session.
+								2. NCADG:(Network Computing Architecture Datagram Protocol)
+									Its used for RPC applications that need to communicate with remote nodes across a network.
+									Unlike NCACN protocols, however, the NCADG protocols provide a connectionless transport.
+								3. NCALRPC:(Network Computing Architecture Local Remote Procedure Call)
+									Its used for RPC applications in which the client and server reside on the same machine.
+									LPC(Local RPC Calls) are a function of OS and do not require support of any other protocols or IPC mechanisms to be used to send RPC data between the client and the server.
+							B. Transport Protocol:()
+								A. TCP:
+								B. UDP:
+								C. HTTP:
+								D. Named pipes:
+								E. IPX
+								F. SPX
+								NSP
+								DSP
+								SPP
+								MQ
+						Sequences:
+							Format:
+								(RPC_protcol_for_communication)_(Binding_network_address_format)_(Transport_protocol)
+							Types based on RPC Protcol used for communication:(3)
+								A. Based on NCACN:
+									1. ncacn_ip_tcp:(tcp)
+										Connection-oriented transmission to TCP/135
+									2. ncacn_ip_udp:(udp)
+										Connection-oriented transmission to UDP/135
+									3. ncacn_np:
+										Connection-oriented named pipes
+										It basically refers to RPC over SMB
+									4. ncacn_http:
+										RPC over HTTP on TCP/80 or TCP/593
+										Microsoft Windows RPC over HTTP 1.0 on TCP/49157(HTB::Mantis)
+										Connection-oriented TCP/IP using MS IIS as HTTP proxy
+									5. ncacn_nb_tcp:
+										Connection-oriented NetBIOS over TCP
+									6. ncacn_nb_ipx:
+										Connection-oriented NetBIOS over IPX(Internetwork Packet Exchange)
+									7. ncacn_nb_nb:
+										Connection-oriented NetBIOS Enhanced User Interface (NetBEUI)
+									8. ncacn_spx:
+										Connection-oriented SPX(Sequenced Packet Exchange)
+									9. ncacn_dnet_nsp:
+										Connection-oriented DECnet
+									10. ncacn_at_dsp:
+										Connection-oriented AppleTalk DSP
+									11. ncacn_vns_spp:
+										Connection-oriented Vines SSP(scalable parallel processing)
+										Note:
+											This is obsolete and should not be used in new applications.
+								B. Based on NCADG:
+									1. ncadg_ip_udp:
+										Datagram(connectionless) over UDP/IP
+									2. ncadg_ipx:
+										Datagram(connectionless) IPX(Internetwork Packet Exchange)
+									3. ncadg_mq:
+										Datagram(connectionless) over MSQM(Microsoft Message Queue Server)
+								C. Based on NCALRPC:
+									1. ncalrpc:
+										Local procedure call
+					RPC Interface:
+						Basics:
+							IDL:(Interface Definition Language)
+								IDL is a language used to specify an interface to remote procedures, once an interface is created. It is an ISO(International Standards Organization) language.
+								In basic terms, MIDL is used for programming/defining RPC Interfaces.
+							MIDL:(Micosoft IDL)
+						Known Interfaces:
+							MGMT Interface:
+						Creating Interfaces:
+							Step-1: Coding Interface:
+								An interface exsists of 2 files:
+									A. IDL File:(.idl)
+										It is created via MIDL
+										Every IDL File has 2 parts:
+											A. Interface Header:
+											B. Interface Body:
+									B. ACF File:(Application Configuration File)
+							Step-2: Registering Interface
+							Step-3: Binding Interface to an Endpoint
+					RPC Endpoint Mapper:(aka DCE Locator Service)
+						Basics:
+							It resolves RPC interface identifiers to transport endpoints.
+							It maintains the database of endpoints that clients use to map an interface to endpoints.
+						Accessing it:
+							A. Via its designated ports:
+								TCP/135
+								UDP/135
+							B. Via SMB with a null or authenticated session (TCP/139 and TCP/445)
+							C. As a web service listening on TCP/593
+							http://etutorials.org/Networking/network+security+assessment/Chapter+9.+Assessing+Windows+Networking+Services/9.2+Microsoft+RPC+Services/
+				MS-RPCH:(RPC over HTTP)
+					Basics:
+						RPC over HTTP Protocol tunnels RPC network traffic from an RPC client to an RPC server through a network agent referred to as an RPC over HTTP proxy.
+						The protocol is applicable to network topologies where the use of an HTTP-based or HTTPS-based transport is necessary and the application or computer systems communicating over the topology require the use of the RPC Protocol.
+						Port => TCP/593
+					Types:
+						MSRPC over HTTPv1:
+						MSRPC over HTTPv2:
+		RPC Components:
+			A. IDL/MIDL Compiler:
+				This compiler generates the stubs that translate local procedure calls into remote procedure calls.
+				MIDL: Read RPC Interface Section in MS-RPCE Section
+			B. Run-time libraries and header files
+			C. Name service provider:(aka RPC Locator)
+			D. Endpoint Mapper:(aka PortMapper)
+				Basics:
+					An Endpoint Mapper is an RPC component used to establish bindings
+					Terms:
+						Mapping:
+						Mapper:
+				RPCBind:(aka RPC PortMapper)
+					Basics:
+						RPCBind is an ONC RPC program that maps RPC to transport-specific port numbers. The port mapper program makes dynamic binding of remote programs possible. This is desirable because the range of reserved port numbers is small and the number of potential remote programs large. When running only the port mapper on a reserved port, the port numbers of other remote programs can be determined by querying the port mapper.
+						Port:
+							TCP/111
+							UDP/111
+							TCP/32771 in Oracle Solaris
+				RPC Endpoint Mapper: Read MS-RPCE Section
+				Sun RPC PortMapper:
+	SMB:(Server Message Block)
+		Basics:
+			SMB is the modern dialect of Common Internet File System (CIFS), It’s used for sharing resources like files on both windows/linux.
+			Ports:
+				TCP/445 => Microsoft-ds (raw SMB over TCP)
+			Versions:
+				CIFS => NT 4.0
+				SMB 1.0 => win 2000/xp and win server 2k03/2k03 R2
+				SMB 2.0 => win vista and win server 2k08
+				SMB 2.1 => win 7 and win server 2k08 R2
+				SMB 3.0 => win 8 and win server 2k12
+				SMB 3.0.2 => win 8.1 and win server 2k12 R2
+				SMB 3.1.1 => win 10 and win server 2k16
+			Shares:
+				Basics:
+				Hidden Shares:
+					Basics:
+					Naming:
+						Hidden shares have a '$' appended to their name.
+				Default Shares:
+					Default Non-Hidden Shares:
+					Default Hidden Shares:
+						IPC$:(Inter-Process Communications)
+						C$:
+						ADMIN$:
+	NetBIOS:(Network Basic Input Output System)
+		Basics:
+			Terms:
+				NetBIOS Name:
+					NetBIOS Name is same as Host Name.
+					Naming Convention:
+						Length => 16
+						Charset:
+							Alphanumeric
+							Not permitted:
+								\/:*?"<>| .
+						Rules:
+							NetBIOS name cant exist entirely of digits.
+							Hyphen ("-") can not appear as the first or last character
+						15 chars are hostname and last char is reserved for NetBIOS Suffix
+				NetBIOS Suffix:
+					It refers to 16th octect of NetBIOS Name.
+				NS => Name Service
+				DGM => Datagram Distribution Service
+				SSN => Session Service
+			NetBIOS Protocol:
+				Basics:
+					It was created in 1983 by Sytek as an API for software communication over IBM PC Network LAN technology. NetBIOS relied on proprietary Sytek networking protocols for communication over the wire and supported maximum of 80 PCs in a LAN.
+					It provides three different services for communication of files and printers through the Session Layer(Layer 5) of the OSI Model in a LAN as explained in "NetBIOS Services" Section below.
+				Modes:(2)
+					A. Datagram Mode:
+					B. Session Mode:
+						When client sends a command to "call" another client (the server) over TCP port 139, the NetBIOS Session starts, this is referred to as the session mode, where both sides issue "send" and "receive" commands to deliver messages in both directions.
+				Difference between NetBIOS and DNS:
+					An internet connection is required to use DNS, but NetBIOS is available to all machines on a LAN.
+		NetBIOS Services:(3)
+			A. NBNS:(aka NBT-NS)(aka NetBIOS-NS)(aka NetBIOS Name Service)
+				Basics:
+					It is used to map PC NetBIOS Names to IP addresses. Its like a DNS for NetBIOS.
+					NBNS can be used to access NBT(NetBIOS Name Table). This can be used to enumerate system details such as hostname, domain information, etc.
+					Ports:
+						TCP/137
+						UDP/137
+					Note:
+						Microsoft dont support NetBIOS-NS over IPv6
+				Types:
+					A. NetBIOS Name Registration Service:
+					B. NetBIOS Name Resolution Service:
+						Basics:
+							NetBIOS Name Resolution is the process by which the NetBIOS name of a computer is resolved to its IP address.
+							NetBIOS Name Resolution service enables NetBIOS hosts to communicate with each other using TCP/IP.
+				NBNS Services:
+					NBNS Service:
+						Basics:
+							Its used to resolve local host names when LLMNR fails
+						Note:
+							Its enabled by default on windows 2000 and above
+					WINS:(Windows Internet Name Service)
+						Basics:
+							Its Microsoft's implementation of NBNS
+							Its a legacy computer name registration and resolution service that maps computer NetBIOS names to IP addresses. It provides a distributed DB for registering and querying the NetBIOS mappings.
+						Note:
+							This is the predecessor to DNS and yet has not been deprecated according by Microsoft
+			B. NBDS:(aka NetBIOS-DGM)(aka NetBIOS Datagram Service)
+				Basics:
+					It allows one computer to communicate with several other computers at the same time. It works without a session, ie, its not connection-oriented.
+					Issues:
+						It lacks error detection/correction.
+						Message size is limited.
+					Ports:
+						TCP/138
+						UDP/138
+			C. NBSS:(aka NetBIOS-SSN)(aka NetBIOS Session Services)
+				Basics:
+					It's a connection-oriented communication protocol that facilitates authentication across a windows workgroup or domain, and provides access to resources (such as files and printers).
+					In terms of security, it can be used to enumerate user details, shared folders, domain information, etc.
+					Ports:
+						TCP/139
+						UDP/139
+				NBSS Services:
+					NetBT:(NetBIOS over TCP/IP)
+						Basics:
+							NetBT is the NetBIOS session-layer protocol and API running on top of the TCP/IP network protocol.
+			Note:
+				SMB runs on top of NetBIOS-SSN and NetBIOS-DGM.(https://en.wikipedia.org/wiki/NetBIOS)
+		NetBIOS-Based Protocols:
+			NBF:(NetBEUI Frame Protocol)
+				It was produced to allow NetBEUI to provide its services over IBM's Token Ring Network Scheme at the IEEE 802.2 Logical Link Control layer.
+			NBX:(NetBIOS-over-IPX/SPX)			
+			NetBEUI:(NetBIOS Enhanced User Interface)(by IBM)
+				In 1985, IBM created a NetBIOS emulator called NetBEUI to allow NetBIOS-aware applications from the PC-Network era to work over IBM's Token Ring Network Scheme.
+				NetBEUI extended the first implementations of NetBIOS with additional networking capabilities.
+			NetBEUI:(NetBIOS Enhanced User Interface)(by Mircosoft)
+				Basics:
+				Note:
+					Microsoft elected to name its implementation of the NBF protocol as "NetBEUI", literally naming its implementation of the transport protocol after IBM’s second version of the API.
+	LDAP:
+		provides communication b/w applications and directory services
+		stores information such as usernames, which can help in password cracking attacks
+		DC uses ldap to query AD
+		LDAP is an Active Directory Service Interfaces (ADSI) provider (essentially an API) that supports search functionality against an Active Directory
+		LDAP://HostName[:port][/DN]
+			DN => Distinguished Name
+	WinRM:(Windows Remote Management)
+		Basics:
+			aka Microsoft HTTPAPI httpd 2.0
+			Ports:
+				TCP/5985
+				TCP/5986
+		How to access it:	
+			By default WinRM HTTP uses port 80. On Windows 7 and higher, the default port is 5985.
+			By default WinRM HTTPS uses port 443. On Windows 7 and higher, the default port is 5986.
+		It can be used to connect to powershell remoting on a windows host
+		Only users who are a part of "Remote Management Users" group can be accesed via winrm.
+			net localgroup "Remote Management Users"
+	MS-SHLLINK:
+		Protocol for creating windows file shortcuts
+		https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-shllink/16cb4ca1-9339-4d0c-a68d-bf1d6cc0f943
+	Authentication Protocols:
+		LM:(LANMAN)(aka LAN Manager)
+			Basics:
+				LM is a discontinued authenciation protocol developed by both IBM and Microsoft.
+		NTLM:(NT LAN Manager)(aka New Technology LAN Manager)
+			Basics:
+				NTLM is an Challenge-Response Autheniciation protocol developed by Microsoft as an alternative of LM authentication protocol.
+				Versions:(3)
+					A. NTLMv1: 
+					B. NTLMv2:
+					C. NTLMv2 Session:
+			Working:
+
+			NTLM Hashes:(3)
+				A. NTLM Hash:(aka NT Hash)(aka NTLM)
+					We get NTLM hashes by dumping SAM/NTDS/From memory
+					Encryption Algorithm:
+						MD4(UTF-16-LE(password))
+					Format:(2)
+						A. LH Hash:NT Hash
+							This is used in windows os before vista and windows sever 2008
+							Example:
+								aad3b435b51404eeaad3b435b51404ee:e19ccf75ee54e06b06a5907af13cef42
+						B. :NT_Hash
+							This format is used from Windows Vista and Windows Server 2008 onwards
+							Example:
+								:e19ccf75ee54e06b06a5907af13cef42
+					Note:
+						We NTLM Hash for PTH 
+				B. Net-NTLM Hash:(Network NTLM)
+					Basics:
+						Net-NTLM Hashes are NTLM hashes used specifically for Network Authenciation in AD
+						We get Net-NTLM hashes from using tools such as Responder
+					Types:(2)
+						A. NTLMv1:(aka Net-NTLMv1)
+							Working:
+								1. A user signs in to a client computer with a domain name, user name, and password.
+								2. The client computer creates a cryptographic hash (either NT or LM hash) of the password.
+								3. The client computer sends the targeted server the user name in plain text.
+								4. The targeted server generates a 16-byte random number and sends it to the client computer – the challenge.
+								5. The client computer responds and sends the challenge with the hash of the user’s password – the response.
+								6. The server sends the user name, the challenge, and the response to DC.
+								7. The DC gets the user password’s hash from the Security Account Manager by using the user name.
+								8. The DC encrypts the challenge using DES algorithm.
+								9. The DC compares the challenge it encrypted and the client’s encrypted response. If they are identical, then the authentication is approved.
+							Example:
+								u4-netntlm::kNS:338d08f8e26de93300000000000000000000000000000000:9526fb8c23a90751cdd619b6cea564742e1e4bf33006ba41:cb8086049ec4736c
+						B. NTLMv2:(aka Net-NTLMv2)
+							Working:
+								1. A user signs in to a client computer with a domain name, user name, and password.
+								2. The client computer creates a cryptographic hash (either NT or LM hash) of the password.
+								3. The client computer sends the targeted server the user name in plain text.
+								4. The targeted server generates a <random>-byte random number and sends it to the client computer – the challenge.
+								5. The client computer responds and sends the challenge with the hash of the user’s password and username and timestamp – the response.
+								6. The server sends the user name, the challenge, and the response to DC.
+								7. The DC gets the user password’s hash from the Security Account Manager by using the user name.
+								8. The DC encrypts the challenge using HMAC-MD5 alogorithm.
+								9. The DC compares the challenge it encrypted and the client’s encrypted response. If they are identical, then the authentication is approved.
+							Example:
+								admin::N46iSNekpT:08ca45b7d7ea58ee:88dcbe4446168966a153a0064958dac6:5c7830315c7830310000000000000b45c67103d07d7b95acd12ffa11230e0000000052920b85f78d013c31cdb3b92f5d765c783030
+							Note:
+								NTLMv2 does not allow Pass-the-hash attacks
+				C. NTLM-SSP Hash:(NTLM Security Support Provider)
+					NTLMSSP is a binary messaging protocol used by the SSPI(Security Support Provider Interface) to facilitate NTLM challenge-response authentication and to negotiate integrity and confidentiality options.
+		Kerberos 5:
+			Basics:
+				Terms:
+				Kerberos Protocol:
+					Kerberos is a stateless network authentication protocol, designed to provide strong authentication for client and AS by using symmetric key cryptography(single key used to encrypt and to decrypt) created by MIT(Not Microsoft).
+					Microsoft implements version 5 of Kerberos Protocol. This version was created in 1993.
+					Features of Kerberos Protocol:
+						Kerberos is a Stateless Protocol:
+							It means each request is executed independently, without any knowledge of the requests that were executed before it, which means once the transaction ends the connection between the browser and the server is also lost.
+							Instead of a session-id, kerberos implements usage of symmetric keys to track the connection to make it secure.
+						Mutual Authenciation:
+							A party at either end of a network connection can verify that the party on the other end is the entity it claims to be.
+							NTLM does not enable clients to verify a server's identity or enable one server to verify the identity of another.
+					Features of Version 5:
+						1. Ticket lifetime is specified with the freedom of arbitrary time
+						2. It can use any encryption algorithm
+						3. Tickets can be forwarded, renewed, and postdated.
+					Wokring:		
+			Microsoft Kerberos:
+				Basics:
+					Microsoft Kerberos is microsoft's implementation of kerberos5 protocol.
+					Terms:
+						Principal:(aka Security Principals)
+							A principal is some entity that can prove its own identity and verify the identity of other principals. Each user, service, and server registered with Kerberos is a principal.
+						Account Database:
+							KDC uses "Active Directory Database" as its Account Database to obtain information about Principals
+							Note:
+								To read about "Active Directory Database" => Read AD Exploitation Sheet
+						Authenciator:
+							An authenticator is some known data that can be shown to have been recently generated by using a secret key that is known only by a client and server.
+						Realm:
+							Kerberos Realm is a group of principals that represents an administrative sphere or domain.
+					Windows Sever implements Kerberos 5 protocol for:
+						A. Public-Key Authentication:
+						B. Transporting Authorization Data:
+						C. Delegated Authenciation:
+							Delegation:
+								Delegation refers to assigning authority to another system/service to carry out specific activities
+							When a client computer authenticates to a service, then the authenciation protocol(Kerberos or NTLM) provide the authorization information that a service needs to impersonate the client computer locally.
+							Kerberos authentication supports a delegation mechanism that enables a service to act on behalf of its client when connecting to other services
+				Components:(Who all are part of the Authentication Process)
+					A. Client:
+						The Client who wants to be authenciated.
+					B. AP:(Application Server)(aka Verifier)
+						AP is a server that offers a Keberos-protected service which client wants to access.
+					C. KDC:(key Distribution Center)(aka Keberos Server)
+						Basics:
+							KDC is a trusted Third Party(Third Party refers an entity besides the two primarily involved in a situation) hosted on every DC in an AD
+							KDC runs Kerberos Service on it, thats why its also known as a Kerberos Server
+							KDC has Secret Keys for all the principals in a realm(domain). It uses the domain's Active Directory Domain Services database as its security account database.(https://docs.microsoft.com/en-us/windows-server/security/kerberos/kerberos-authentication-overview)
+						KDC provides 2 Services:
+							A. AS:(Authentication Service)(aka SS(Service Server))
+								It authenticates the client by confirming that the Client is known to KDC.
+								Once a client is authenticated, AS generates a TGT(Ticket Granting Ticket) to proves the client is authentic.
+							B. TGS:(Ticket-Granting Service)
+								It provides Tickets to authenticated clients to access a service.
+								TGS verifies if a client is authenticated on basis of whether the client has a TGT.
+				Kerberos-related Accounts:
+					KRBTGT Account:
+						Basics:
+							KRBTGT Account is a service account which is created automatically when a new domain is created
+							KRB => Kerberos
+							TGT => Ticket Granting Ticket
+						Usage:				
+							The KRBTGT account is used to encrypt and sign all Kerberos tickets within a domain, and domain controllers use the account password to decrypt Kerberos tickets for validation.
+							In other words, KRBTGT Hash is KDC's Secret Key
+				Kerberos Creds:
+					Kerberos Keys:
+						Secret Keys:
+							Basics:
+								Secret Key is made using password of principal and is used to authenticate the user.
+								Secret Key is stored in AD DS, but the actual password is never stored.
+							Types:	
+								A. Client Secret Key:(aka User Secret Key)
+									Client's secret key is client's password hash.
+								B. KDC Secret Key:(aka AS Secret Key)(aka TGS Secret Key)(aka KRBTGT Secret Key)
+									Hash of KRBTGT Account is KDC Secret Key
+						Session Key:(aka Encryption Key)
+							A session key is a temporary encryption key used by Client and Server to keep their communication private
+							It is a Symmetric key
+						Service-Session Key:
+							It is a session key created by TGS and is used by client to communicate with AS
+					Kerberos Tickets:
+						Basics:	
+							A Ticket is a block of encoded data, a few hundred bytes long, used by the Kerberos server to identify one principal to another.
+							Tickets are stored and handled by LSASS process.
+						Types:
+							TGT:(Ticket Granting Ticket)
+								Once the client is authenticated, AS generates a TGT to proves the client is authentic.
+								This ticket allows the Client to communicate with TGS.
+								It contains:
+									Client Principal Name
+									KDC Principal Name(Domain Name)
+									Timestamp
+									Session key
+								TGT is encrypted using Secret Key of KDC
+								Life Time => 8 Hours
+							TGS Ticket:
+								It allows client to contact with service
+							ST:(Service Ticket)
+								It is given by AS to a client. It allows the client to access services.
+					PAC:(Privilege Attribute Certificate)
+						Its present in Service Ticket. It contains information about the client, such as:
+							Group Memberships
+							Credential Information(Not Credential)
+							Profile Information
+							Policy Information
+							Security Metadata
+						AS(KDC) uses PAC to validate a user and its service ticket.
+					CCACHE:(Credential Cache)
+						Basics:
+							CCACHE file contains Kerberos Credentials(which remain valid while the user’s session lasts) only.
+							It helps in saving system resources and time as it helps in authenticating to a service multiple times (e.g., connecting to a web or mail server more than once) doesn’t require contacting the KDC every time.
+							Contents of a CCACHE File:
+								1. One initial ticket which is obtained using a password or another form of identity verification.
+									If this ticket is TGT:
+										it can be used to obtain additional credentials without the password.
+								2. Default Client Principal Name
+								3. Client Principal Name(In some types of ccache, It might not be same as the Default Client Principal Name)
+								4. SPN(Service Principal Name)
+								5. Lifetime
+								6. Flags
+								7. Kerberos Credential
+						File Types:
+							1. API CCACHE:
+								Implemented on Windows only.
+								It communicates with a server process that holds the credentials in memory.
+							2. FILE CCACHE:(Default)
+								Its the simplest and most portable file format that is used to store one credential after another.
+							3. DIR CCACHE:
+								It points to the storage location of the collection of the credential caches in FILE Format.
+								It is most useful when dealing with multiple Kerberos realms and KDCs.
+							4. KEYRING CCACHE:
+								Implemented in Linux only.
+								It uses the kernel keyring support to store credential data in unswappable kernel memory where only the current user should be able to access it.
+							5. MEMORY CCACHE:
+								It is used for storage of credentials that don’t need to be made available outside of the current process.
+								Memory CCACHEs are faster than File CCACHEs and are automatically destroyed when the process exits.
+							6. MSLSA CCACHE:
+								Implemented in Windows only.
+								It is used to access windows credential store.
+						CCACHE Collections:
+				Messages:
+					A. Requests:
+						KRB_AS_REQ => user sends REQ to AS for TGT
+						KRB_AP_REQ => user sends REQ to authenticate against service
+						KRB_TGS_REQ => user sends REQ to TGS using TGT
+					B. Responses:
+						KRB_AS_REP => user recieves TGT from AS
+						KRB_TGS_REP => user recieves client-server ticket from TGS
+						KRB_AP_REP:
+							optional
+							used by service to identify itself against user
+					C. Error:
+						KRB_ERROR: Some ERROR
+				Working:(Kerberos Authentication Flow)
+					Steps:(6)
+						Section-1: Obtaining a TGT from AS:
+							Step-1: Initial Client Authentication Request:
+								The protocol flow starts when the client enter login credentials into the domain to access a service provided by AS.
+								Client sends the following to AS:
+									A. A request(KRB_AS_REQ) to ask for a TGT
+									B. Client's ID
+								This request is sent to KDC, as AS is a part of KDC
+							Step-2: Verification of Client Credentials:(4 Mini-steps)
+								1. AS checks for availablity of Client and TGS in KDC's Account Database. If found, the following are generated by AS:
+									1. Client's Secret Key using client's password from KDC's Account Database
+									2. TGS Secret Key
+									3. Session Key(SK1) encrypted using client's secret key
+									4. TGT
+								2. AS sends a Message(KRB_AS_REP) encrypted with client's secret key which contains:
+									1. Session Key(SK1)
+									2. TGT encrypted with Secret Key of KDC
+						Section-2: Obtaining a Service Ticket:
+							Step-3: Message Decryption and Requesting Access using TGT:(2 Mini-steps)
+								1. Client decypts the Message using Client's Secret Key(Client's Hash) to extract the Encrypted TGT(TGT encrypted with Secret Key of KDC) and SK1. 
+								2. Client sends a request(KRB_TGS_REQ) TGS to get a Service Ticket:
+									A. SK1-Encrypted Authenciator containing:
+										Client ID
+										Client IP
+										Client Timestamp
+									B. Encrypted TGT(TGT encrypted with Secret Key of KDC)
+							Step-4: Creation of Service Ticket by TGS:(4 Mini-steps)
+								1. TGS decrypts:
+									A. Encrypted TGT(TGT encrypted with Secret Key of KDC) sent by the client using Secret Key of KDC to get TGT
+									B. Authenciator using SK1 to get Timestamp
+								2. TGS validates the following:
+									A. Expiration of TGT based on client's timestamp and lifetime of TGT
+									B. Matching of information from TGT and Authenticator
+								3. If validation is successful, TGS creates a Service Ticket encrypted with Secret Key of KDC which contains:
+									A. Client ID
+									B. Client IP
+									C. Timestamp
+									D. Service-Session Key(SK2)
+								4. TGS sends a Message(KRB_TGS_REP) encrypted with SK1 to the client. This Message contains:
+									A. SK2
+									B. Service Ticket encrypted with Secret Key of KDC
+						Section-3: Completing Authentication:
+							Step-5: Authentication Using Service Ticket:(2 Mini-steps)
+								1. Client decypts the Message using SK1 to extract:
+									A. SK2
+									B. Service Ticket encrypted with Secret Key of KDC
+								2. Client sends a SK2-Encrypted request(KRB_AP_REQ) to AS which contains:
+									A. SK2-Encrypted Authenciator containing:
+										Client ID
+										Client IP
+										Client Timestamp
+									B. Service Ticket encrypted with Secret Key of KDC
+							Step-6: Decryption and Authentication of the Target Server:(4 Mini-steps)
+								1. AS decrypts:
+									Service Ticket using Secret Key of KDC
+									Authenciator using SK2
+								2. AS Validates the following:
+									A. Service Ticket by extracting PAC from ST and verifying contents of PAC.
+									B. Matching of information from Service Ticket and Authenticator
+								3. If validation is successful, AS sends a SK2-Encrypted Message(KRB_AP_REP) containing a timestamp.
+								4. If client can decrypt the SK2-Encrypted Message using SK2, then AS is also validated as only a legitimate AS can have SK2.
+				Kerberos Utilities:
+					klist:
+						Basics:
+							It displays a list of currently cached Kerberos tickets and enteries of key table
+						Usage:
+							Flags:
+								-A =>  If a cache collection is available, displays the contents of all of the caches in the collection.
+Windows Tools:
+	RSAT:(Remote Server Administration Tools)
+	Sysinternal Tools:
+		Read Sysinternal Tools Sheet.
+	Process Hacker:
+	Dumpbin:
+Mircosoft IE:(Internet Explorer)
+Microsoft Hyper-V:
+Microsoft Exchange:
+	MAPI:(Messaging Application Programming Interface)
+Windows SYSCalls:
+	Basics:
+		Read OS Concepts Sheet for basics.
+Windows ABI:
+	Basics:
+		Read OS Concepts Sheet for basics.
+Win32 API:
+	Read Win32 API For Pentesting Sheet.

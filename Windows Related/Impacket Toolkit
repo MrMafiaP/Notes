@@ -1,0 +1,155 @@
+Impacket Toolkit:
+================
+Goal => try every script to know its working
+Remote Execution:
+	psexec.py:
+		Covered in AD Exploitation Sheet
+	smbexec.py:
+		Covered in AD Exploitation Sheet
+	atexec.py:
+		Covered in AD Exploitation Sheet
+	wmiexec.py:
+		Covered in AD Exploitation Sheet
+	dcomexec.py:
+		Covered in AD Exploitation Sheet
+Known Vulnerabilities:
+	goldenPac.py:
+		Covered in MS14-068 Section of AD Exploitation Sheet
+	sambaPipe.py:
+		This script will exploit CVE-2017-7494, uploading and executing the shared library specified by the user through the -so parameter.
+File Formats:
+	esentutl.py:
+		An Extensibe Storage Engine format implementation. Allows dumping catalog, pages and tables of ESE databases (e.g. NTDS.dit)
+	ntfs-read.py:
+		NTFS format implementation. This script provides a mini shell for browsing and extracting an NTFS volume, including hidden/locked contents.
+	registry-read.py:
+		A Windwows Registry file format implementation. It allows to parse offline registry hives.
+Credential Mining:
+	secretsdump.py:
+		Covered in AD Exploitation Sheet
+	mimikatz.py:
+		Covered in AD Exploitation Sheet
+MiTM/Relay Attacks:
+	ntlmrelayx.py:
+		Covered in AD Exploitation Sheet
+	smbrelayx.py:
+		Covered in AD Exploitation Sheet
+	karmaSMB.py:
+		A SMB Server that answers specific file contents regardless of the SMB share and pathname specified.
+	smbserver.py:
+		Covered in SMB Server For Pentesting Sheet
+MSSQL:
+	mssqlinstance.py:
+		Retrieves the MSSQL instances names from the target host.
+	mssqlclient.py:
+		Covered in Active Information Gathering Sheet
+WMI:
+	wmiquery.py:
+		wmiquery.py is used to issue WQL queries and get description of WMI objects at the target system
+		Usage:
+			wmiquery.py [[domain/] username [: password] @] [Target IP Address]
+			wmiquery.py SERVER/Administrator:T00r@192.168.1.140
+				This will open a shell, where you can run WQL queries like:
+					SELECT * FROM Win32_LogicalDisk WHERE FreeSpace < 209152
+	wmipersist.py:
+		This script creates/removes a WMI Event Consumer/Filter and link between both to execute Visual Basic based on the WQL filter or timer specified.
+SMB/MSRPC:
+	smbclient.py:
+		A SMB client that allows you to list shares and files, rename, upload and download files and create and delete directories, all using either username and password or username and hash.
+		Usage:
+			smbclient.py [domain]/[user]:[password/password hash]@[Target IP Address]
+	addcomputer.py:
+		Allows to add a computer to a domain using LDAP or SAMR (SMB).
+	getArch.py:
+		getArch.py tries to gather the OS architecture type installed by (ab)using a documented MSRPC feature
+		Usage:
+			getArch.py -target ip
+			getArch.py -targets targets.list
+	exchanger.py: 
+		A tool for connecting to MS Exchange via RPC over HTTP v2.
+	ifmap.py:
+		Ifmap.py scripts initially bind to the MGMT interface of the Target machine. Then it fetches a list of interface IDs. Then it adds those IDs to another large list of UUIDs it already has in its database. Then it tries to bind each of the interfaces and reports the status of the interface. The list of UUIDs which are running endpoint-mapper can be mapped to the unique services. After getting these services, an attacker can search on the internet to find if any of these services are vulnerable to Overflow over RPC.
+		Usage:
+			ifmap.py [Target IP Address] [Target Port]
+			ifmap.py 192.168.1.105 135
+	lookupsid.py:
+		Covered in AD Exploitation Sheet
+	netview.py:
+		netview.py requires the domain name to enumerate hosts or It can be provided with a list of hosts or targets.
+		Once a list is gathered then netview checks IP addresses/Shares/Sessions/Logged On Users, Once finding the information it doesn’t stop. It keeps looping over the hosts found and keeps a detailed track of who logged in/out from remote servers. It keeps the connections with the target systems and it is very stealthy as it just sends few DCERPC packets.
+		This script requires that the attacker machine is able to resolve the domain machine’s NetBIOS names. This can be achieved by setting the DNS on the attacker machine to the domain DNS.
+		Usage:
+			netview.py [domain]/[User] -target [Target IP Address] -users [User List]
+			netview.py [domain]/[User] -targets [Target List] -users [User List]
+	reg.py:
+		reg.py is based on reg.exe of the Windows OS. Reg.exe is a service that can read, modify and delete registry values.
+		Usage:
+			reg.py [domain]/[user]:[password:password hash]@[Target IP Address] [action] [action parameter]
+			reg.py ignite/Administrator:pass@192.168.1.105 query -keyName HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows -s
+			reg.py --hashes hash domain.local/username query -KeyName HKU\\
+				lists HKU keys
+			reg.py --hashes hash domain.local/username@query -KeyName HKU\\abcd\\
+	rpcdump.py:
+		Covered in AD Exploitation Sheet
+	rpcmap.py:
+		Covered in AD Exploitation Sheet
+	samrdump.py:
+		Covered in AD Exploitation Sheet
+	services.py:
+		services.py is used to manipulate Windows services through the [MS-SCMR] MSRPC Interface.
+		It can start, stop, delete, read status, config, list, create and change any service.
+		Usage:
+			services.py [domain]/[user]:[Password/Password Hash]@[Target IP Address] [Action]
+			services.py ignite/Administrator:pass@192.168.1.105 list
+	opdump.py:
+		Usage:
+			opdump.py [Target IP Address] [Port Interface Version]
+			opdump.py 192.168.1.105 135 99FCFEC4-5260-101B-BBCB-00AA0021347A 0.0
+Kerberos:
+	GetTGT.py:
+		Covered in AD Exploitation Sheet
+	GetUserSPNs.py: 
+		Covered in Kerberoasting Section of AD Exploitation Sheet
+	GetNPUsers.py: 
+		Covered in AS-REPRoasting Section of AD Exploitation Sheet
+	kerbrute.py: Covered in AD Exploitation Sheet
+	GetST.py:
+		Given a password, hash, aesKey or TGT in ccache, this script will request a Service Ticket and save it as ccache. If the account has constrained delegation (with protocol transition) privileges you will be able to use the -impersonate switch to request the ticket on behalf another user.
+	GetPac.py:
+		This script will get the PAC (Privilege Attribute Certificate) structure of the specified target user just having a normal authenticated user credentials. It does so by using a mix of [MS-SFU]’s S4USelf + User to User Kerberos Authentication.
+	ticketConverter.py:
+		This script will convert kirbi files, commonly used by mimikatz, into ccache files used by Impacket, and vice versa.
+		Usage:
+			ticketConverter.py raj.ccache ticket.kirbi
+	ticketer.py:
+		This script will create Golden/Silver tickets from scratch or based on a template (legally requested from the KDC) allowing you to customize some of the parameters set inside the PAC_LOGON_INFO structure, in particular the groups, ExtraSids, duration, etc.
+		This script can be helpful for abusing Kerberos against GOLDEN TICKET ATTACK.
+		Usage:
+			ticketer.py -nthash f3bc61e97fb14d18c42bcbf6c3a9055f -domain-sid S-1-5-21-3523557010-2506964455-2614950430 -domain ignite.local raj
+	raiseChild.py:
+		This script implements a child-domain to forest privilege escalation by (ab)using the concept of Golden Tickets and ExtraSids.
+ICMP:
+	ping.py:
+		Simple ICMP ping that uses the ICMP echo and echo-reply packets to check the status of a host. If the remote host is up, it should reply to the echo probe with an echo-reply packet.
+		Usage:
+			ping.py [Source IP] [Destination IP]
+			ping.py 192.168.1.135 192.168.1.140
+	ping6.py:
+		Simple IPv6 ICMP ping that uses the ICMP echo and echo-reply packets to check the status of a host.
+Other:
+	findDelegation.py:
+		Simple script to quickly list all delegation relationships (unconstrained, constrained, resource-based constrained) in an AD environment.
+	GetADUsers.py:
+		Covered in AD Exploitation Sheet
+	mqtt_check.py:
+		Simple MQTT example aimed at playing with different login options. Can be converted into a account/password brute forcer quite easily.
+	rdp_check.py:
+		[MS-RDPBCGR] and [MS-CREDSSP] partial implementation just to reach CredSSP auth. This example tests whether an account is valid on the target host.
+	sniff.py:
+		Simple packet sniffer that uses the pcapy library to listen for packets in transit over the specified interface.
+		Usage:
+			sniff.py
+	sniffer.py:
+		Simple packet sniffer that uses a raw socket to listen for packets in transit corresponding to the specified protocols.
+		Usage:
+			sniffer.py

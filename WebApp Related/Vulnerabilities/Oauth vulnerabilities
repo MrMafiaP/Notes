@@ -1,0 +1,9 @@
+Oauth vulnerabilities:
+=====================
+Basics:
+	OAuth is an open protocol that simplifies and standardizes secure authorization on web, mobile, and desktop applications. It allows users to create accounts on websites without having to create a username or password. It’s commonly seen on websites as the Sign in with platform button like "sign in with google/yahoo/apple/etc"
+	The OAuth process:(complex)
+	Three actors are involved in the most basic OAuth flow:
+		1.The resource owner is the user attempting to log in via OAuth.
+		2.The resource server is a third-party API that authenticates the resource owner. Any site can be a resource server like Facebook, Google, LinkedIn, and so on.
+		3.The client is the third-party application that the resource owner visits. The client is allowed to access data on the resource server.

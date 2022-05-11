@@ -1,0 +1,10 @@
+Server-Side Request Forgery:(SSRF)
+===========================
+allows the attacker to induce the server-side application to make HTTP requests to server itself, or to other web-based services within the organization's infrastructure, or to external third-party systems
+A successful SSRF attack can often result in unauthorized actions or access to data within the organization, either in the vulnerable application itself or on other back-end systems that the application can communicate with. In some situations, the SSRF vulnerability might allow an attacker to perform arbitrary command execution.
+SSRF attacks against the server itself:
+	attacker induces the application to make an HTTP request back to the server that is hosting the application, via its loopback network interface.
+	supplying a URL with a hostname like 127.0.0.1 or localhost
+
+https://medium.com/techfenix/ssrf-server-side-request-forgery-worth-4913-my-highest-bounty-ever-7d733bb368cb
+https://nechudav.blogspot.com/2020/11/31k-ssrf-in-google-cloud-monitoring.html?m=1

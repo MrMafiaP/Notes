@@ -1,0 +1,46 @@
+IDOR:
+====
+occurs when a webapp provides direct access to objects based on some parameter which may or may not be controlled by user input
+	Examples:
+		parameter which is not controlled by user input:
+			/myaccount?user_id=12
+		parameter which is controlled by user input:
+			/myaccount?search=13
+	testing for normal IDOR:
+		burp intruder:
+			if a site is always returning 403 message and all content lengths are the same, then, the site is not vulnerable to IDOR
+Complex IDOR:
+	when the parameter is buried in POST body or is having complex values
+	GUID/UUID:
+		In some cases, the vulnerable parameter doesnt have a predictable value, instead, it can use GUID/UUID
+			GUID => Globally Unique Identifiers
+			UUID => Universally Unique Identifiers
+		testing for complex IDOR:
+			make 2 accounts and switch UUID/GUID to test for IDOR
+			ISSUE:
+				a site might not consider this a vulnerability as UUIDs are unguessable.
+				Solution:
+					look for oppurtunities where the site is disclosing UUIDs
+					Look in reviews/comments/profiles on website, we may find UUID of other users
+					review HTML page source code 
+					read JS/JSON files
+	hashed/randomized value:
+		To bypass this issue:
+			1. Most common hashing => base64
+			2. Create 2 or 3 different accounts and understand how these id's are being made.
+Accessing resources as a unprivileged user using IDOR:
+	resource => webpage/file
+	lets say, we have 2 accounts admin and user
+	using admin account, we visited URLs that only admin can visit
+		site.com/secret?customer_id=<admin>
+	now, we try to access the same url using user account:
+		if we succeed => vulnerable to IDOR
+Blind IDOR:
+	sometimes endpoints are vuln to IDOR, but doesnt reveal any information
+	1. Try changing the HTTP method
+	2. Try changing the requested file type to 'json'
+Accesing Static files with IDOR:(MFLAC)
+	static files => files which are stored on server
+	example:
+		hospital.com/emp_record?id=10555
+		hospital.com/emp_record?id=10556

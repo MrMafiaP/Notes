@@ -1,0 +1,55 @@
+Carriage Return Line Feed Injection:(CRLF)
+===================================
+Basics:
+	URL Encoding:
+		Capatilization doesnt matter
+		\n => Line Feed => %0A or %0a
+		\r => Carriage Return => %0D or %0d
+		other encoding:
+			%20 => encoded space
+		meyerweb.com/eric/tools/dencoder/ => site for URL encoding/decoding
+	servers and broswers depend on CRLFs to identify parts of HTTP Requests and Reponses
+	It results in Two types of attacks:
+HTTP Request Smuggling:
+	It occurs when attacker injects CRLF to append a 2nd HTTP Request (malicious) into the Orginal HTTP Request.
+	Consider the follwing WebApp Model:
+		Attacker -> Front End (WebApp) -> Proxy Sever /FireWall -> Back End (Application Server)
+	WebApp treats both requests as single request which is then passes through a Proxy server and finaly gets executed by Application Server.
+	It can result in 3 Attacks:
+	Cache Poisoing:
+		Attacher changes enteries in site's cache amd serve malicious pages instead of proper page
+	Firewall Evasion:
+		Attacker can craft the 2nd request to bypass security checks
+	Request Hijacking:
+		Attcaker can steal HTTPonly cookies
+HTTP Reponse Splitting:
+	Attacker splits a single HTTP Response by injecting new HEADERS.
+	It has 2 methods
+	Adding a new response:
+		Attacker adds CRLFs to complte initial response and adds new headers to gnerate a new response
+		Example:
+			orignal:
+				site.com?p=12345
+			malicious:
+				site.com?p=%0d%0aContent-Length:%200%0d%0a%0d%0aHTTP/1.1%20200%20OK%0d%0aContentType:%20text/html%0d%0aContent-Length:%2019%0d%0a%0d%0a<html>deface</html>
+			explanation:
+				it will generate a new reponse for broswer as follows:
+					1.Content-Length: 0 
+					2.HTTP/1.1 200 OK
+					3.Content-Type: text/html
+					4.Content-Length: 19
+					5.<html>deface</html>
+				Explanation:
+					1.Content-Length: 0
+						it ended the 1st HTTP reponse (orignal one)
+						also tells broswer that no content is in reponse body
+					From 2. to 4.:
+						they built the frame of 2nd response
+					5.<html>deface</html>
+						This is the malicous content which will be rendered by broswer
+	Method-2:
+		Attacker inserts 'Location' Header allowing attacker to chain CRLF vuln with a redirect or XSS
+	How to test this Vuln:
+		add %0d%0a in value of some parameter to check if there is any protection against it
+	How to find this vuln:
+		Many sites inlcude cookies in parameter, they can be easily used to exploit this vuln.

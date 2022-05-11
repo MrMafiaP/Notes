@@ -1,0 +1,406 @@
+AD 101:
+======
+Basics:
+	Terms:
+		Entity:
+Server Roles:
+	Terms:
+		Directory Service:(aka Name Service)
+			A directory service acts as a database in which we store and manage information about objects. 
+		Directory Server:
+			A sever that provides a directory service.
+	AD DS:(Active Directory Domain Services)
+		Basics:
+			AD DS is foundation stone of every windows domain network.
+			AD DS is a directory service that provides methods for storing directory data(information about user accounts, such as names, passwords, phone numbers, etc.) and making this data available to network users and administrators.
+			AD DS is used to manage network infrastructure, including branch office, Microsoft Exchange Server, and multiple forest environments.
+			Feautures:
+				1. Centralized, delegated administrative model:
+				2. SSO:(Single Sign-On)
+		Components:
+			Data Store:(aka Directory)
+				Its a hierarchical structure that stores information about AD objects on the network. It is used by AD as the basis for a logical, hierarchical organization of directory information.
+			AD DS Schema:
+				Schema is a set of rules that defines the classes of objects and attributes contained in the Directory.
+			GC:(Global Catalog)
+				GC is the Container that contains information about every object in the Directory.
+				Example:
+					Assume we have a forest with two different domains in it => mail.local and hail.local
+					Both of these domains have different DC, which host different ntds.dit file(DB of every object in a domain)
+					So, GC of that forest is basically collection of all unique ntds.dit files in a forest.
+				Advantages:
+					OutLook is based on GC
+			Query & Index Mechanism:
+				It is used by network users and applications to find objects and their properties.
+			Replication Service:
+				It is used to distribute directory data across a network so that all DC's in a domain can participate in replication and contain a complete copy of all directory information for their domain. Any change to directory data is replicated to all domain controllers in the domain.
+		ADAC:(Active Directory Administrative Center)
+			ADAC is a user interface tool built on top of Windows PowerShell that contains enhanced management experience features which ease managing Active Directory Domain Services.
+			Features:
+				1. Active Directory Recycle Bin:
+					Basics:
+						It allows to recover deleted Directory objects.
+						When Active Directory Recycle Bin is enabled, all link-valued and non-link-valued attributes of a deleted Directory object are preserved and the object is restored in its entirety to the same consistent logical state that it was in immediately before deletion.
+					Note:
+						Active Directory Recycle Bin was introduced Windows Server 2008 R2.
+						GUI panel for Active Directory Recycle Bin was introduced in Windows Server 2012.
+				2. FGPP:(Fine-Grained Password Policy)
+					This feature allows to specify multiple password policies within a single domain and apply different restrictions for password and account lockout policies to different sets of users in a domain.
+					For example, you can apply stricter settings to privileged accounts and less strict settings to the accounts of other users.
+					Note:
+						FGPP was introduced after Windows Server 2008.
+				3. Windows PowerShell History Viewer:
+					ADAC shows equivalent Windows PowerShell command to the user in Windows PowerShell History Viewer for every action that ADAC performs. This feature allows administrators to create automated scripts and reduce repetitive tasks, thus increasing IT productivity. Also, this feature reduces the time to learn Windows PowerShell for Active Directory and increases the users' confidence in the correctness of their automation scripts. 
+		AD DS Database:
+			Ntds.dit is AD DS database.
+			Note:
+				Read Windows Internals Sheet to know more about Ntds.dit file.
+		Services provided by AD DS:
+			Default Services:
+				DNS:
+				DHCP:
+					Basics:
+						Local security groups:
+							DHCP Administrators:
+								Full control over DHCP service
+							DHCP Users:
+								Read-Only control over DHCP service
+						Components:
+							DHCP Scope:
+								Properties:
+									Name:(Mandatory)
+									IP Address Range:(Mandatory)
+									Subnet Mask:(Mandatory)
+									Exclusions:
+									Delay:
+									Lease Duration:
+									Options:
+										Option Codes:
+											3 => Router
+											6 => DNS Server
+											15 => DNS Domain Name
+									Activation:
+					Configuring DHCP:
+				Kerberos:
+					Note:
+						Read Windows Internals Sheet to know more about Kerberos.
+		Note:
+			AD DS was known as "Active Directory directory service" till windows server untill windows server 2012. These 2 articles are same word to word:
+				https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/get-started/virtual-dc/active-directory-domain-services-overview
+				https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc758535(v=ws.10)
+	AD LDS:(Active Directory Lightweight Directory Services)
+		Basics:
+			AD LDS provides only a subset of AD DS, thus it is 'light-weight'.
+			AD LDS is LDAP implementation of AD DS.
+		Note:
+			In versions earlier than Windows Server 2008, AD LDS was known as ADAM(Active Directory Application Mode)
+	ADWS:(Active Directory Web Services)
+		Basics:
+			ADWS provides a Web Service interface to instances of the Directory Service (AD DS and AD LDS) that are running locally on a server.
+	AD CS:(Active Directory Certificate Services)
+		Note:(To self)
+			Read certified pre-owned document for AD CS
+		Basics:
+			AD CS is mircosoft's implementation of PKI(Public Key Infrastructure).
+			Usage:
+				It provides asymmetric cryptography, digital signatures and digital certificate capabilities for the domain.
+				It provides services for issuing and managing digital certificates. These digital certificates prvoided by AD CS can be used for:
+					Encyrpting documents and messages.
+					Providing integrity through digital signatures
+					Authenciation by associating certificate keys with computer, user, or device accounts on the network.
+				It supports the following applications:
+					SSL/TLS
+					VPN
+					IPsec
+					S/MIME(Secure/Multipurpose Internet Mail Extensions)
+					EFS(Encrypting File System)
+					Smart card logon
+					Secure wireless networks
+		Roles/Services performed by AD CS:(6)
+			1. CA:(Certification Authority)
+				CA is responsible for attesting to the identity of users, computers, and organizations. CA also issue digitally signed certificates to users, computers, and services to authenticate them. 
+				CA also manage, revoke and renew certificates.
+			2. CA Web Enrollment Role Service:(aka Web Enrollment)
+				It allows users to connect to a CA by means of a Web browser in order to request certificates and retrieve certificate revocation lists (CRLs).
+			3. Online Responder Service
+				It decodes revocation status requests for specific certificates, evaluates the status of these certificates, and sends back a signed response containing the requested certificate status information.
+			4. NDES:(Network Device Enrollment Service)
+				It allows routers and other network devices that do not have domain accounts to obtain certificates.
+			5. Certificate Enrollment Policy Web Service:
+				It enables users and computers to obtain certificate enrollment policy information.
+			6. Certificate Enrollment Web Service:
+				It enables users and computers to perform certificate enrollment by using the HTTPS protocol.
+				It allows online certificate requests to come from untrusted domains or even from computers that are not joined to a domain. It also automatically renew the certificates for computers that are part of untrusted domains or not joined to a domain.
+		Features:
+		Note:
+			It requires AD DS to operate.
+	AD FS:(Active Directory Federation Service)
+		Basics:
+			Terms:
+				Federation:
+		Note:
+			It requires AD DS to operate.
+	AD RMS:(Active Directory Rights Management Services)
+		Basics:
+			AD RMS is a 
+		Note:
+			AD RMS was known as RMS before Windows Server 2008
+	Device Health Attestation:
+	DHCP Server:(aka Dynamic Host Configuration Protocol Server)
+		Note:
+			Read Networking Sheet to know about DHCP Protocol.
+	DNS Server:(Domain Name System Server)
+	File and Storage Services:
+		File and iSCSI Services:
+AD Structure:(AD Components)
+	Physical Structure:(aka Physical Components)
+		1. DC:(Domain Controller)
+			Basics:
+				DC is a server that runs AD DS. It implies that a DC runs all default services provided by AD DS atleast.
+				DC is responsible for providing authenciation and authorization in a domain.
+			Roles:
+				1. DC holds ntds.dit file.
+				2. DC hosts SYSVOL:
+					SYSVOL is name of a share that contains group policies, etc.
+				3. DC hosts KDC:(Key Distribution Center)
+					Read Windows Internals Sheet to know more about Kerberos and KDC.
+			Types:(2)
+				1. Primary DC:
+					It has "PdcRoleOwner" property
+					It has most updated information about user login and authenciation
+				2. Secondary DC:
+			DSRM:
+			Replication:
+			FSMO Roles:(Flexible Single Master Operations)
+				1. Primary domain controller emulator:
+					DC with PdcRoleOwner property will always have the most updated information about user login and authentication, thats why its called the Primary domain controller emulator.
+		2. RODC:(Read-Only Domain Controller)
+			Basics:
+	Logical Structure:(aka Logical Components)(AD Database?)
+		Functional Levels:
+			Hiearchy:
+				Objects -> Domain -> OUs (Optional) -> Tree -> Forest
+			Tiers:
+				1. Objects:
+					Basics:
+						Objects in AD are entities that represent resources that are present in the network.
+						Object Attributes refers set of attributes defined by AD Schema for the object.
+					Classifications:
+						Types:
+							A. Resource:
+								Example => Printer
+							B. Security Principal:
+								Security Principals are any entity that can be authenticated by the operating system, such as a user account, a computer account, or a thread or process that runs in the security context of a user or computer account, or the security groups for these accounts.
+								Each security principal is represented in the operating system by a unique SID
+								Example => Computers, users, and printers
+						Types:
+							A. Container Object:
+								Objects that store other objects.
+								Example => OUs
+							B. Leaf Object:(aka Terminal Object)
+								Objects that cannot store other objects.
+						Types:
+							A. User Objects:
+								User Objects provide authentication for user at logon.
+							B. Group Objects:
+								Group Objects simplify assigning permissions.
+							C. Computer Objects:
+								Computer Objects provide authentication of the computer at startup.
+					Object Class:
+						It refers to the object attribute that defines the "type" of object.
+						Types:
+							A. Abstract Class:
+								This class is a mere template that is used to derive a new object.
+								One abstract class can be a subclass of another abstract class.
+							B. Structural Class:
+								The objects of the structural class are usually those that form the logical framework of AD.
+								Structural classes can be a subclass of an abstract or structural class.
+							C. Auxiliary Class:
+								An auxiliary class is used to store sets of attributes that other classes can inherit.
+								Auxiliary classes can be a subclass of an abstract or auxiliary class.
+					An object can be accessed via:
+						A. ADSI:(Active Directory Service Interfaces)
+						B. LDAP:
+						C. Messaging API:
+						D. SAM Services:
+					AD Users and Groups:
+						AD Users:
+							Types:
+								Default Local Accounts:(4)
+									A. Administrator Account:
+										Read Windows Accounts Section of Windows Internals Sheet
+									B. Guest Account:
+										Read Windows Accounts Section of Windows Internals Sheet
+									C. Helpassistant Account:
+										Read Windows Accounts Section of Windows Internals Sheet
+									D. KRBTGT Account:
+										Read Kerberos Section of Windows Internals Sheet
+						AD Groups:
+							Types:(3)
+								A. Distribution Groups:
+									They used to specify email distribution lists
+									As an attacker these groups are less beneficial to us and are only useful for enumeration
+								B. Security Groups:
+									They used to specify permissions for a large number of users
+									Types:
+										Default Security Groups:(16)
+											1. Domain Controller:
+												All domain controllers are a part of this group
+											2. Read-Only Domain Controllers:
+												Members of this group are read-only domain controllers in the domain
+											3. Enterprise Read-Only Domain Controllers:
+												Members of this group are read-only domain controllers in the Enterprise(Forest)
+											4. Domain Guests:
+												All domain guests are a part of this group
+											5. Domain Users:
+												All domain users are a part of this group
+											6. Protected Users:
+												Members of this group have additional protections for authentication
+											7. Domain Computers:
+												All workstations and servers are a part of this group
+											8. Domain Admins:
+												Members of this group are designated administrators of the domain
+											9. Enterprise Admins:
+												Members of this group are designated administrators of the Enterprise(Forest)
+											10. Schema Admins:
+												Members of this group are designated administrators of the schema
+											11. Key Admins:
+												Members of this group can perform administrative actions on key objects within the domain
+											12. Enterprise Key Admins:
+												Members of this group can perform administrative actions on key objects within the Enterprise(Forest)
+											13. DNS Admins:
+												DNS Administrators are a part of this group
+											14. DNS Update Proxy:
+												DNS clients who are permitted to perform dynamic updates on behalf of some other clients are a part of this group
+											15. Group Policy Creator Owners:
+												Members in this group can modify group policy for the domain
+											16. Cert Publishers:
+												Members of this group are permitted to publish certificates
+								B. Nested Group:
+									Nested Group is a group added as a member in a group
+									We can not use net.exe to see members inside a nested group
+				2. Domain:
+					Basics:
+						A domain is defined as a logical group of network objects (computers, users, devices) that share the same AD database.
+						Terms:
+							FQDN:(Fully Qualified Domain Name)(aka Domain Name)
+								Anatomy of FQDN:
+									<child-domain(optional)>.<domain_name>.<TLD>
+									Parts:(Atleast 2)
+										1. Domain Name:
+											It refers to company name usually
+										2. TLD:(Top Level Domain)
+											It can be anything example .local, etc.
+											Note:
+												If i want to integrate AD on a cloud(like Azure, AWS, etc), then TLD needs to be internet compatible, example: .com, .net, etc. It means i cannot use ".local" as TLD for a cloud based AD.
+								Example:
+									mycorp.local
+									student-01.net
+									old.domain.local
+									old.west.ranger.sites
+							Domain Policies:
+								Domain Policies are like domain groups, except instead of permissions they contain rules, and instead of only applying to a group of users, the policies apply to a domain as a whole.
+								They simply act as a rulebook for AD that only a domain admin can modify.
+					Domain is a replication boundary:
+					Domain is an administrative boundary:
+						Domain admins have full control over all user accounts in the domain.
+				3. Containers:
+					Containers are used to group system objects "within a Domain" and it is the default location for new objects.
+					Note:
+						GPOs cannot be applied to containers.
+				4. OUs:(Organizational Units)
+					Basics:
+						OUs are used to group objects "within a Domain". OUs can contain other OUs too.
+						Terms:
+							Sub-OU:(aka Child OU)
+								Sub-OU refers to an OU which is contained inside another OU.
+						Advantages:
+							OUs provide ease in administration as OUs helps to delegate administrative permissions.
+							OUs help to resemble organization's structure in managerial or geographical terms.	
+					Objects contained within OUs are not automatically assigned access privileges based on their containing OU.
+					OUs are used to delegate administrative permissions:
+					Difference between OUs and Containers:
+						GPOs can only be applied to GPOs.
+				5. Tree:(aka Domain Trees)
+					Basics:
+						A tree is a group of one or more domains within an AD network, such that a tree has one parent domain at top level in hiearchy and one or more child-domains of that parent domain.
+					Example:
+						A tree could be a group of yahoo.com and west.yahoo.com and east.yahoo.com 
+				6. Forest:
+					Basics:
+						A forest is a group of one or more trees that share a common GC, directory schema, logical structure, and directory configuration.
+					Forest is a security boundary:
+					Example:
+						A forest could be a group of tree-1 and tree-2
+							Where:
+								Tree-1 is a group of rts.com and its child domain india.rts.com
+								Tree-2 is a group of atlantis.com and its child domains us.atlantis.com and ca.atlantis.com
+		Site:(aka AD Site)
+			A Site is represented by one or more IP networks.
+			GPOs can be applies over sites.
+		Shadow Groups:
+		Partitions:
+		Zones:
+		Delegation:
+		Group Policy:
+			Basics:
+				For Basics Read Group Policy Section of Windows Internals Sheet.
+			GPE:(Group Policy Editor)
+				For GPE Read Group Policy Section of Windows Internals Sheet.
+			GPOs:
+				Basics:
+					Deafult Policies:
+						In DC:
+							1. Default Domain Policy
+							2. Default Domain Controllers Policy
+						In non-DC:
+							Default Domain Policy
+				GPO Hiearchy:
+					A. Local GPOs
+					B. Site-Level GPOs
+					C. Domain-Level GPOs
+					D. OU GPOs:
+				Inheritance:
+				Forced:
+				Security Filtering:
+			GPPs:(Group Policy Preferences)
+				Basics:
+					Terms:
+						CSE:(Client-Side Extension)
+				GPP is windows feature that was released in Windows Sever 2008 and it is a collection of Group Policy CSEs that deliver preference settings to domain-joined Windows-based computers.
+				Note:
+					GPP is different from GPO because users have a choice to alter the administrative configuration in GPP whereas GPO settings administratively enforce setting, which restricts user choice.
+		Trust Relationships:(aka Trusts)
+			Basics:
+				By default, a trust relationship refers to a relationship between multiple domains that allow access to resources in other domains within the same forest.
+			Types:	
+				A. Transitive trust:
+					It is extended beyond 2 domains
+					Example:
+						Domain_A trusts Domain_B and all the domains domain_B is trusting
+				B. Directional trust:
+					It flows from trusting domain to trusted domain
+				One-way trust
+					One domain allows access to users on another domain, but the other domain does not allow access to users on the first domain.
+				Two-way trust
+					Two domains allow access to users on both domains.
+				Trusted domain
+					The domain that is trusted; whose users have access to the trusting domain.
+				Transitive trust
+					A trust that can extend beyond two domains to other trusted domains in the forest.
+				Intransitive trust
+					A one way trust that does not extend beyond two domains.
+				Explicit trust
+					A trust that an admin creates. It is not transitive and is one way only.
+				Cross-link trust
+					An explicit trust between domains in different trees or in the same tree when a descendant/ancestor (child/parent) relationship does not exist between the two domains.
+				Shortcut
+					Joins two domains in different trees, transitive, one- or two-way.
+				Forest trust
+					Applies to the entire forest. Transitive, one- or two-way.
+				Realm
+					Can be transitive or nontransitive (intransitive), one- or two-way.
+				External
+					Connect to other forests or non-AD domains. Nontransitive, one- or two-way.[50]
+				PAM trust
+					A one-way trust used by Microsoft Identity Manager from a (possibly low-level) production forest to a (Windows Server 2016 functionality level) 'bastion' forest, which issues time-limited group memberships.

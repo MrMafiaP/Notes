@@ -1,0 +1,523 @@
+Recon Methodology For Bug Hunting:
+=================================
+Basics:
+	Why do we do Recon:(Read this:: Important)
+		1.Leaked credentials
+		2.Misconfigured systems
+		3.Outdated patch
+		Recon is NOT about exploring the scope, its about DOING the above mentioned points.
+	AIM:
+		To spend months on a particular program
+Step Based Recon Methodology:
+	Step-1: Choosing a program based on parameters:
+		Program launch date:
+			more age => more dupes
+		Program responsiveness:
+			average time to resolve/fix a security issue
+			more time => more chance of dupes
+		The scope of the bug bounty program:
+			bigger scopes: 
+				low competition
+				big companies have different teams, it means differnt jobs which means more number of mistakes being made
+		Bug bounty rewards
+	Step-2: Once a program is chosen:
+		Finding already diclosed bugs in that program:
+			Read hacktivity for that program
+			google: site.com XSS vulnerability
+		Doing the Recon:
+			A. Finding Domains:(root/TLC/seeds)
+				copy them from BB page
+				if a bb program has line like "Everything owned by company is allowed":
+					to find all of its assets
+					Acquisitions:
+						some sites are owned by company but' are not presnt on BB page, these sites are mostly not in use, but still online
+						crunchbase.com
+							lets say company A owns company X,Y,Z and has all scope BB program. company Z owns comapany P,Q,R. so, if i find a bug in company P, then, its a valid finding to report to company A
+					ASN:(Autonomus System Number)
+						Basics:
+							An ASN is a unique number assigned to an AS(Autonomous System)(An Autonomous System is a set of routers, or IP ranges, under a single technical administration.)
+							These ASN’s helps us to picture the entity’s IT infrastructure.
+						Enumeration:
+							Manually:
+								bgp.he.net
+									search for "company name"
+									Issue:
+										doesnt represent cloud spaces owned by company
+							Automated Tools:
+								metabigor:(github)
+									uses bgp.he.net and asnlookup.com
+									echo "comp_name" | metabigor --org -v
+								asnlookup:(github)
+									python asnlookup.py -o <comp_name>
+								Amass:(best)
+									amass intel -asn <number>
+					Reverse Whois:
+						Basics:
+							It tells all domains registered to company.com
+						Note:
+							some domains are made to prevent phishing or for market campaign
+						Manual:
+							whoxy.com
+						Automated:
+							amass:
+								amass intel -whois -d domain.com -o out.txt
+							Domlink:
+								Basics:
+								Usage:
+									domlink.py -d site.com -o site.txt
+									Flags:
+										-d => 
+										-o => 
+					Ad Analytics and relationships:
+						Basics:
+							site.com and all its owned domains have same google analytics code and this way, we can find other domains attached with a site
+						Manual:
+							builtwith.com/relationships/
+								search "site.com"
+								goto "tag historry and relationships" => other domains
+						Automated way:
+							getrelationship.py:(https://github.com/m4ll0k/BBTz/blob/master/getrelationship.py)
+								Basics:
+								Usage:
+									echo "site.com" | python3 getrelationship.py
+			B. Subdomain Enumeration:
+				Linked discovery:
+					Basics:
+						finding links of our target using a SPIDER such as burp
+					Manual:
+						Burp-Suite Pro:
+							Configuration:
+								target -> scope -> enable "advanced Scope Control"
+								target-> scope -> include in scope -> Add -> host: site_name -> ok
+									site_name is our keyword here
+								target -> sitemap -> filter -> enable "show only in-scope items"
+							spidering:
+								select all targets in sitemap -> right click -> spider these targets
+									Note:
+										do this recursively, until there is nothing left to find
+								this will show us newly found subdomains and even new seed domains and it will higlight them
+							to get the data out:
+								target -> sitemap -> select all targets -> right-click -> engagement tools -> analyze target -> save report as file.html file
+								open file.html -> go to target section => copy all targets from there
+					Automated:
+						Gospider:(apt-get install gospider)
+							Basics:
+							Usage:
+								gospider -q -s "https://google.com/"
+								Flags:
+									-q => quiet => only show urls
+									-s "site"
+									-S sites.txt
+										Note:
+											sites.txt should have http://site.com, not site.com
+									-o output.txt 
+								to get only subdomains:(https://github.com/harsh-kk/one_liner)
+									gospider -d 0 -s "https://site.com" -c 5 -t 100 -d 5 --blacklist jpg,jpeg,gif,css,tif,tiff,png,ttf,woff,woff2,ico,pdf,svg,txt | grep -Eo '(http|https)://[^/"]+' | anew
+						Hakrawler:(go get github.com/hakluke/hakrawler)
+							Basics:
+							Usage:
+								hakrawler -url bugcrowd.com -depth 1
+								Flags:
+					Note:
+						We will go with Burp Pro as:
+							best way to do linked discovery is by using BURP PRO
+							my methodology requires me to map the webapp manually and i will use burp via proxy too.
+				JS analysis:
+					looking in JS files for subdomains
+					Subdomainizer:
+						Basics:
+							Its used to find subdomains & read JS files for sensitive info such as private API keys/creds.
+							Note:
+								Its a valid vuln if we get private API keysor creds embedded in JS files. (sensitive data exposure)
+						Usage:
+							Flags:
+								-u url => 
+								-l list_of_urls => 
+								-o output.txt => 
+					subscrapper:(github)
+						Basics:
+							It looks for ONLY subdomains.
+						Usage:
+							Flags:
+					NOTE:
+						wanna look in JS files for sensitive info + subdomains => subdomainizer
+						wanna look in JS files only for subdomains => subscrapper
+				Subdomain Scrapping:
+					using google-fu/crt.sh/censys/etc to find subdomains
+					Amass:
+						amass enum -df domains.txt -o out.txt
+					Shosubgo:
+						go script for Scrapping subdomains using SHODAN and it requires API key. we can also use AMASS for same by providing it with API key of shodan.
+					scanning cloud ranges:
+						tls.bufferover.run:(i think service is down)
+							Basics:
+								This site scans whole cloud ranges for AWS,GCP,AZURE using masscan for their SSL certs (port 443) and parse their SSL certs to domains name. This site do the scanning once every week, so it preety up-to date
+							Usage:
+								curl 'https://tls.bufferover.run?q=site.com' 2>/dev/null
+							Note:
+								This site is also included in AMASS
+				Subdomain bruteforcing:
+					Note:
+						all the subdomains found via 'Subdomain bruteforcing' are LIVE/ONLINE, so no need to use httprobe with them.
+						we have a lot of tools to do subdomain bruteforcing, but issue with most tools is that they only use 1 'DNS RESOLVER' to do it, thus making the whole process very slow. So, we use AMASS
+					Amass:
+						by default, it uses 8 DNS RESOLVERS, but we can also specify our own resolvers.txt:
+							amass enum -brute -df domains.txt -w wordlist.txt -rf resolvers.txt -o out.txt
+							resolver.txt:
+								https://raw.githubusercontent.com/janmasarik/resolvers/master/resolvers.txt
+								the owner of above repo updates the resolvers.txt periodically
+						wordlist.txt:
+							all.txt:
+								https://gist.githubusercontent.com/jhaddix/86a06c5dc309d08580a018c66354a056/raw/96f4e51d96b2203f19f6381c8c545b278eaa0837/all.txt
+				Once, we are done with finding all the subdomains:
+					merge all subdomains found except from those of "subdomain bruteforcing" into domains.txt
+						reason: all the subdomains found via 'Subdomain bruteforcing' are LIVE/ONLINE, so no need to use httprobe with them.
+					send that domains.txt to "httprobe":
+						Httprobe:(apt-get install httprobe)
+							Basics:
+							Usage:	
+								echo domains.txt | httprobe > final_domains.txt
+					merge subdomains from subdomain bruteforcing into final_domains.txt
+					cat final_domains.txt | uniq > final_domains.txt
+					final_domains.txt should only have site.com not http://site.com or https://site.com
+				Send final_domains.txt to "eyewitness":
+					Eyewitness(apt-get install eyewitness):
+						Basics:
+							It looks for both http and https
+						Usage:
+							./eyewitness.py -f final_domains.txt
+							Flags:
+								-t timeout_in_seconds
+									timeout means time taken by tool to render the site and take a screenshot
+									-t 15 => toll will only take a screenshot if time to render is less than 15 seconds
+								-d directory
+									where to save all the screenshots
+									by default: inside eyewitness directory
+				Favicon Analysis:
+					we make hash of favicon of site and search thi hash at shodan
+					FavFreak:(github)
+						Basics:
+							It searches favicon hash on shodan
+							It has an in-built db of common admin_page/login_framework such as wordpress favicon's hash and it uses this db to identify admin login pages/CMS on given list of URLs
+						Usage:
+							cat urls.txt | python3 favfreak.py -o output
+							Flags:
+							Note: 
+								URLs must begin with either http or https
+				what subdomains we are interested in:
+					*testsite
+					*dev
+					*corp
+					*stage
+					*dasboard
+				Note:
+					www.site.com is correct
+					ww2.site.com is ALSO CORRECT
+			C. Github Dorking for Recon:(imp)(youtube.com/watch?v=l0YsEk_59fQ)
+				Note:
+					Read Github Sheet for basics.
+				Finding Sensitive Information Leaks:
+					final_domainsto find sensitive files such as secret HTTP endpoints, session id, user info, passwords, API keys
+				Manual:
+					Login into github -> search bar
+					company.com or company => show repo owned by a company (1000s of results)
+					clearly, we cant see all 1000s of results, so:
+						1. use keywords in search bar:
+							"company.com" ssh
+							"company.com" config
+							keywords:
+								https://github.com/random-robbie/keywords/blob/master/keywords.txt
+								security_credentials => LDAP (AD)
+								connectionstring => DB Creds
+								jdbc => DB Creds(oracle)
+								ssh2_auth_password => unauthorized access to servers
+								send_keys => password
+							Note:
+								we need to utilize intelligence here, example, lets say a company uses apache server (we got to know via wappalyzer), then we only need to look for sensitive files which belong to an apache server, not an IIS server.
+								So, always look for services used/products offered by a site.
+							Note:
+								if our scope is big, then using keywords such as password,etc will give many many results, so use words such as "jdbc"/"vsphere" instead
+						2. many search results dont belong to company or its developers, so no use of checking them
+						3. sort by: "recently indexed" => better chances of finding unreported data exposure. Look for files as old as 1 week/month
+						4. NOT <string> filter:
+							lets say, we have a subdomain out-of-scope and it has a lot of search results, so to save time:
+								"company.com" ssh NOT subdomain.company.com
+							NOT removes every result which includes <string> in it.
+						6. org:company_name => looks for official repo of that company.
+							NOTE:
+								we should not look in official repo of company/registered emloyees as its a waste of time.
+						7. NOT Looking in only "legitimate employee" code:
+							Once, we find code from unregistered employee, visit his profile, look for him on linkedin, it will tell us if he is ex-employee or current employee.
+							Once, we know he is a current employee:
+								user:<username> password => to look if he sharerd his creds anywhere related to company or maybe he uses same password everywhere
+					Note:
+						if we find sensitive data related to internal server and we cant create a POC for that, submit only written report to company and its upto them, whether to accept it or not.
+				Automated:
+					Note:
+						These tools are not recommended as:
+							tools go to the main page of an organization, search through their code/repo and then it goes to "people" tab (list of people who are "joined to that company on github"), Issue with this is, that, there are many developers of company who are not joined formally on github, so these tools dont search their profile, so most of the vulnerable scope is not even touched.
+					Gitrob:(go get github.com/michenriksen/gitrob)
+						Basics:
+						Usage:
+							./gitrob --configure
+							user:<my_github_username>
+							password:<my_github_password>
+							gitrob -o <company_name>
+							go to http://127.0.0.1:9393/ => reports
+			D. Wayback Machine for Recon:
+				Waybackurls:(go get github.com/tomnomnom/waybackurls)
+					Basics:
+					Usage:
+						cat domains.txt | waybackurls > urls
+			E. Shodan.io for Recon:
+				Note:
+					Shodan.io Recon is based on using filters to find "Hidden Assets" and to use FILTERS, we need to PAY.
+				Common filters:(no use)
+					os:"linux 2.6.x"
+					product:"apache tomcat" version:"1.16.2"
+					port:
+				Useful Filters:
+					org:"tesla motors"
+					ssl:"target" => it looks in SSL for "target" string
+					-"AkamaiGhost" => removes results having "AkamaiGhost" string in them
+					html:"jenkins" => "html:" Searches full HTML content of the returned page and look for string(paid)		
+				Choosing a subdomain to take first:
+					first target those subdomains whose user interface is of common monitoring tools/CMS
+					in case of custom webapp, target those subdomains whose user interface deviates from the common company’s theme.
+						we get to know how a site looks using eyewitness tool
+	Step-3: Testing the selected subdomain:
+		A. SSL testing:(for weak ssl ciphers)
+			Nmap:
+				nmap -p 443 --script=ssl-enum-ciphers site.com
+				Note:
+					Read Active Information Gathering Sheet to read more.
+		B. Port Scanning:
+			Scanning single Subdomain:
+				nmap:
+					nmap -sC -sV <ip> -oA site_name
+					Note:
+						Read Active Information Gathering Sheet to read more.
+			Scanning mutiple Subdomains:
+				Masscan:
+					masscan -p1-65535 -iL ip_list --max-rate 18-- -oG out.log
+					Note:
+						Read Active Information Gathering Sheet to read more.
+				dnsmasscan:(https://github.com/rastating/dnmasscan)
+					dnsmasscan domains.txt dns.log -p1-65535 -oG masscan.log
+					Note:
+						Read Active Information Gathering Sheet to read more.
+			Brutespray:(apt-get install brutespray)
+				Basics:
+					It takes input as (-oG) file and it runs default password spray against open ssh/ftp/telnet/vnc/mssql/mysql/postgresql/rsh/imap/nntp/pcanywhere/pop3/rexec/rlogin/smbnt/smtp/svn/vmauthd/snmp
+				Usage:
+					brutespray --file results.gnmap -U user.txt -P pass.txt --threads 5 --hosts 5
+					Flags:
+						--file
+						--hosts
+						--threads
+						--service
+		C. Finding CVE's:
+			Nuclei:(apt-get install nuclei)
+				Basics:
+					Its configurable scanner based on templates that allows complete extensibility with a very simple templating syntax.
+				Usage:
+					nuclei -l urls.txt -t template.yaml
+					Flags:
+		D. Mapping features of webapp:
+			First, use webapp as normal unauthenciated user.
+			Then, if there is a signup feature, ceate an account and login and visit every tab, click on every link, fill up every form.
+			If it’s an e-commerce website, test both:
+				1. Customer Side:
+					create an order using a fake credit card. 
+				2. Vendor/Seller Side:
+					This side has better chances of having a bug as front facing side of a webapp is mostly customer side, not vendor side.
+			Look out for webapp features and make notes of interesting ones, example file uploads/data export/rich text editors/etc.
+			Note:
+				while doing it capture all the traffic with Burp.
+			Note:
+				It’s always tempting to switch between browser and Burp and ITS DISTRACTING.
+				So, ONLY LOOK AT BROWSER DURING THIS STEP.	
+		E. looking in comments and discovering "Disabled Functionality":
+			Comments:
+				open source-code -> search "<!--"
+			Disabled Functionality:(reveals either previous or future section os site)
+				is it really disabled or is there anywhere to invoke it?
+		F. Directory Bruteforcing:
+			Ffuf:
+				Note:
+					Read Ffuf section below to read about it.
+		G. Understanding architecture and defense mechanism of webapp:
+			Go to Burp and look out for following questions:
+				How authentication is made?
+				Does the application use a third-party for that?
+				Is there any OAuth flow?
+				Is there any CSRF protection?
+					If yes, how is it implemented?
+				Are there any resources referenced using numerical identifiers?
+					If yes, is there any protection against IDOR vulnerabilities?
+				Does the application use any API?
+				How does the application fetch data?
+				Does it use a front-end Framework?
+				What JavaScript files contain calls to the API?
+				Does it use a back-end Framework?
+					If yes, what is it and which version is being used?
+		H. Focusing on one feature at a time:
+			Goal is to learn the flow in detail, tinker with every user input based on my assumptions.
+			Note:
+				If you quit before this phase and jump to another asset or another totally different program, you will have lost all the time you have invested learning how the application works.
+		I. Testing "authenciation mechanism":(login pages)
+			Bruteforcing:
+				We try to test authenciation mechanism by bruteforcing users. For that we need to know valid users on a site.
+				Harvesting usernames:
+					Test pairs of username:password and keep an eye on:
+						Different HTML response
+						Different Repspnse Variable:
+							logon.php?reason=0 => wrong passwordd
+							logon.php?reason=1 => wrong username
+						Forms may repeat a valid username on refersh
+			Authenciation flow bypas:
+				make an account on site and visit all urls, then logout.
+				visit every url which we visited with an authenciated account
+					if we are able to see it => flaw.
+		J. Testing Get parameters for available injection:
+			sit.php?param=value
+			always try these 3 values:
+				1
+				0
+				-1
+		K. Testing sessionid/cookie:
+			base64/hash value
+			if we remove the sessionid/cookie, do the site prompt us to login again? 
+		L. In Case of CMS:(gitlab/webmin/etc)
+			Read WebApp Pentesting For CTF Sheet
+		M. Exploiting WebApp:
+			if (age<48 hours)
+				look for low hanging
+		N. Other Important Stuff:
+			Avoid Duplicates in Bug Bounty:
+				Duplicates are also known as dupes
+				When to look for low hanging fruit:
+					For only first 48 hours after program went out public
+					XSS in an input on the Contact Us page of a web app
+					Reflected XSS in 'Search' input
+					Open Redirect in URL
+					hardcoded credentials in HTML or JavaScript source
+					SQL Injection on ID parameter in URL
+					LFI in something like index.php?include=about/careers.ph
+				Avoid low hanging fruit:
+					IT IS NOT A PART OF OWASP TOP 10
+					If a low hanging bug is reported and if it’s hard to resolve, company will ignore it and it will be still there and the next hacker hacking on there will find it and report them and end up with duplicates and demotivation.
+					SO ONLY FOCUS ON OWASP TOP 10 and find them
+					SSRF IS NOT A LOW HANGING FRUIT
+					CSRF IS NOT A LOW HANGING FRUIT
+					SSTI IS NOT A LOW HANGING FRUIT
+					SQLi IS NOT A LOW HANGING FRUIT
+				What bugs to look for then?:
+					XSS in a really obscure part of the applciation, or on another in-scope system which is hard to find
+					The more obscure the location the better
+					The goal here is to look in places the other hunters probably haven’t looked yet. Bugs like these often come as result of HTML source review for clues which point to unlinked pages.
+					So, dont look at make profile, edit profile, contact us, comment, search bar
+				Avoid reporting bugs from automated tools:
+					Burp Suite
+					Almost every hunter uses Burp and other common automated tools, it means that he also has found same issues, and probably reported them earlier.
+			Avoid out of scope issues:
+				CSRF on logout
+				self XSS with no security impact
+				reports, which are defined as 'Out of scope' or 'Duplicate', those reports likely will end up as 'Not applicable' or 'N/A' , which has consequences including loosing reputation points or even disqualification from the program.
+			Hacktivity:
+				allows to see all resolved reports
+				sort them by popularity or age
+				filter them by company or bug_name
+				search through them using keywords
+				It helps to answer questions such as:
+					what types of bugs are the most popular?
+					Which services are most attacked?
+					How many bugs were resolved so far?
+					How many researchers were revarded?
+					When the last bugs were disclosed?
+			Low Hanging Fruits:
+				IT IS NOT A PART OF OWASP TOP 10
+				If a low hanging bug is reported and if it’s hard to resolve, company will ignore it and it will be still there and the next hacker hacking on there will find it and report them and end up with duplicates and demotivation.
+				Examples:	
+					XSS in an input on the Contact Us page of a web app
+					Reflected XSS in 'Search' input
+					Open Redirect in URL
+					hardcoded credentials in HTML or JavaScript source
+					SQL Injection on ID parameter in URL
+					LFI in something like index.php?include=about/careers.ph
+Amass:(apt-get install amass)
+	Basics:
+		Modes:(5)
+			1. intel => Discover targets for enumerations
+			2. enum => Perform enumerations and network mapping
+			3. viz	=> Visualize enumeration results
+			4. track => Track differences between enumerations
+			5. db => Manipulate the Amass graph database
+		Config file:($HOME/.config/amass/config.ini)
+			It stores all API keys
+	Usage:
+		amass intel -whois -d domain.com -asn <number>
+		amass enum -d domain.com -asn <number>
+		amass enum -brute -w word.txt -d domain.com -asn <number>
+		intel:
+			amass intel -whois -d domain.com
+			-whois => reverse whois
+		enum:
+			-brute => subdomain bruteforcing
+			-w wordlist.txt
+			-nf names.txt => names.txt includes those subdoamin which we already have found from using other tools
+		Flags:
+			-d domain.com
+			-df domains.txt
+				note:
+					domains.txt should have site.com, not https://site.com 
+			-asn asn_number
+			-o output.txt
+			-p port,port
+			-ip => show ip of assets found
+			-config config.ini => include config file
+			-active => go active
+				amass sends traffic to assets to get TLS cert
+			-pasive => go passive
+			NOTE:
+				sometimes, we dont use either -passive or -active, then, it uses DNS request traffic to send to resolvers
+Ffuf:(apt-get install ffuf)
+	Read WebApp Pentesting For CTF Sheet
+SSL cert:(CTF)
+	we need to see ssl cert, as it may tell us emails/names/subdomains/domains
+/etc/hosts:(CTF)
+	sometimes, we need to put ip and domain_name to see actual site
+		IP domain1 domain2
+Using VPS:(Virtual Private Server)
+	Basics:
+		VPS is a shared server
+		benfits:
+			More bandwidth
+			Keep it running 24/7!
+			conduct scans from a separate IP without switching VPN bcoz of IP bans.
+			host various services vital to testing, example: if testing for XSS or SSRF vulnerabilities it is nice to have a VPS that the target server can call back to.
+			receive reverse shell callbacks or host web content for proof-of-concepts.
+		choices:
+			https://cloud.google.com/free
+				https://medium.com/bugbountywriteup/beginners-guide-vps-setup-for-bug-bounty-recon-automation-6b0ba1e051ef
+			https://www.genesishosting.com/genesis_vms_pricing_table.html
+		To install tools:
+			https://github.com/pizza-power/bug-bounty-box-setup/blob/master/setup.sh
+	Free VPS:(Using Google Collab)
+		Go-To https://colab.research.google.com/github/hackingguy/Bug-Hunting-Colab/blob/master/Bug_Hunting_Colab.ipynb:
+			Edit -> NoteBook Settings -> Hardware Accelerator: GPU
+			Runtime -> Factory reset runtime
+			Click Here to Install Tools And Create SSH Tunnel:
+				enable "CREATE_VNC" 
+				run
+				Note: ssh wont work like that
+			clicl on Reconftw:(this will install all tools)
+				run
+			Click on Wetty:(this provides terminal over http or https)
+				enable "USE_FREE_TOKEN"
+				run
+			click on mount GDrive:
+				this will mount drive at /content/drive
+		Benefits:
+			If You Use GPU Instance ,You will get 32 GB RAM and 70 GB Storage with combination of Nvidia Tesla K8 GPU (Hashcat will be Extremely Fast).
+			A Normal Instance will provide 16 GB RAM and 100 GB of Storage

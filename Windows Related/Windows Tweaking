@@ -1,0 +1,25 @@
+Windows Tweaking:
+================
+Permanently disable Windows Defender Real Time Protection:
+	In newer versions of Windows, Group Policy settings for Microsoft Defender are reverted back.
+	To prevent this, before changing them:
+		Open Resource Monitor (type resmon.exe in the search box)
+		Overview
+		Find MsMpEng.exe in the list
+		Right-click > Suspend Process
+	In newer versions of Windows, Tamper Protection was added.
+	Tamper Protection must be disabled before changing Group Policy settings, otherwise these are ignored.
+		Open Windows Security (type Windows Security in the search box)
+		Virus & threat protection > Virus & threat protection settings > Manage settings
+		Switch Tamper Protection to Off
+	To permanently disable real-time protection:
+		Open Local Group Policy Editor (type gpedit.msc in the search box)
+		Computer Configuration > Administrative Templates > Windows Components > Microsoft Defender Antivirus > Real-time Protection
+		Enable Turn off real-time protection
+		Restart the computer
+	To permanently disable Microsoft Defender:
+		Open Local Group Policy Editor (type gpedit.msc in the search box)
+		Computer Configuration > Administrative Templates > Windows Components > Microsoft Defender Antivirus
+		Enable Turn off Microsoft Defender Antivirus
+		Restart the computer
+Disable Windows Updates:

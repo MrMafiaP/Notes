@@ -1,0 +1,38 @@
+JSON Web Tokens:
+	used for authorization and in its compact form, it consists of three elements:
+		Header:
+			Its a JSON object filetype 
+			stores metadata of token such as its type, algorithm’s name
+		Payload:
+			This is also a JSON object
+			stores the user’s info like id, username, role, token generation time, etc.
+		Signature:(most important)
+			decides the integrity of the token by signing the Base64-URL encoded Header and Payload separated by a period(.) with the secret key.
+			For example, to generate a token with HS256 algorithm, pseudo-code would be like this:
+				data = (base64urlEncode(header) + '.' + base64urlEncode(payload))
+				signature = HMACSHA256(data , SECRET_KEY)
+				JWT = data + "." + base64UrlEncode(signature)
+			Secret Key used in Signature:
+				Symmetric:
+					requires a single key to create and verify the JWT.
+					For example, if Bob has generated a JWT with “h1dden_messag3” as a secret key, then any person who knows the key (i.e h1dden_messag3) can modify the token using that key and the token would still be valid.
+					This way they can impersonate as any user.
+					The most common algorithm for this type is HS256.
+				Asymmetric:
+					This mechanism requires a Public key for verification and a Private key for signing the Signature.
+					For example, if Bob has used this encryption, then he is the only one who can create a new token using the private key, whereas Alice can only verify the token using public key, but cannot modify it.
+					The most common algorithm for this type is RS256.
+Attacks:
+	None algorithm:
+		If an application fails to verify the value of “alg” header, then we can change its value to “none” and this way it omits the need of a valid Signature for verification.
+			{
+			  "alg": "none",
+			  "typ": "JWT"
+			}
+		python3 jwt_tool.py <JWT> -X a
+	Change algorithm from RS256 to HS256:
+		python3 jwt_tool.py <JWT> -S hs256 -k public.pem
+	Signature not being checked:
+		Sometimes while fuzzing the data in the Header and Payload section, if the Application returned no error, then it means Signature is not being verified after it has been signed by the Authorization server. This way we can inject any payload in the claim and the token will always be valid.
+			python3 jwt_tool.py <JWT> -I -pc name -pv admin
+				temper the “name” claim present in the Payload section and can become the “admin”

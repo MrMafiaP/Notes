@@ -1,0 +1,13 @@
+File Inclusion:
+==============
+File Inclusion can be exploited in many programming languages!
+PHP File Inclusion: Read PHP Vulnerabilites sheet
+ASP.net File Inclusion:
+	Response.WriteFile() => can be used to include file, no code execution
+	Server.Execute() => can be used to include file, do code execution. But it is limited to webroot only. (webroot means the base directory where webapp is installed)
+JSP File Inclusion:
+	<jsp:include page="" /> => can be used to include file, do code execution. But it is limited to webroot only. (webroot means the base directory where webapp is installed)
+Somtimes, webapp automatically appeneds .ext:
+	Bypass:(for JSP)
+		By using a '?' => .ext gets interpreted as a parameter and therefore excluded.
+		file=/etc/passwd?

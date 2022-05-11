@@ -1,0 +1,239 @@
+AD Labs:
+=======
+Self-Made:
+	Medium Blog:
+		Structure:
+			Two Forests with a bidirectional forest trust and an intra-forest parent-child domain trust:
+				1 domain controller (root DC — Forest A)
+				1 domain controller (child DC — Forest A)
+				1 domain controller (Forest B)
+				1 member server (web, file, SQL, application) (parent — Forest A)
+				1 workstation (child — Forest A)
+				1 workstation (Forest B)
+			Domain Name scheme:
+				octagon.local (root domain — Forest A)
+				dev.octagon.local (child domain — Forest A)
+				elysium.local (root domain — Forest B)
+			Requirements:
+				4 Windows Server 2016/2019:(Standard-Desktop Experience Variant)
+					DC01(192.168.88.5)
+					DC02 (192.168.88.6)
+					DC03 (192.168.88.7)
+					MS01 (192.168.88.150)
+				2 Windows 10:
+					WS01 (192.168.88.100)
+					WS02 (192.168.88.101)
+		Building it:
+			Name:
+				Login to the vm -> control panel -> System & Security -> Security -> Change Comp name
+			IP:		
+		Automation:
+			BadBlood:
+				Tools to add objects & major Active Directory misconfigurations
+	JOe Helle:
+		NATs:
+			External => 192.168.3.0/24 
+			INternal => 192.168.16.0/24
+			Secure => 10.120.116.0/24
+		Machines:
+			UbuntuMail => 
+			Server 2019
+			Windows 10 Pro
+		Structure:
+			DC01 => Server 2019 @secure
+			WS-01 => Windows 10 Pro @intneral,external & secure
+			WS-02 => Windows 10 Pro @internal & secure
+		Tools:
+			ADGenerator:
+				Built by Joe Helle.
+		Steps:
+			1. First create VMs acc to structure
+			2. ADGenerator@DC01:
+				.\invoke-ForestDeploy.ps1
+				invoke-ForestDeploy.ps1 -DomainName mayorsec.local => to download ADDS 
+				.\invoke-adgenerator.ps1
+				invoke-adgenerator.ps1 -DomainName mayorsec.local => to populate domain
+			3. Joining WS-01 & WS-02 to DC01:
+				Networking:
+					Step-1: In DC01:
+						Network & internet settings -> Change adapter settings -> double click @ethernet -> properties -> double click IPv4 -> 
+							IP => 10.120.116.75
+							Subnet => 255.255.255.0
+							Gateway => 10.120.116.1
+							Preffered DNS => 127.0.0.1
+							Alternate DNS => 8.8.8.8
+					Step-2: In WS-01:
+						CMD> ipconfig => identify 10.120.116.0/24 IP and Ethernet adapter name 
+						Network & internet settings -> Change adapter settings -> double click @<ethernet adapter name> -> properties -> double click IPv4 -> 
+							IP => 10.120.116.10
+							Subnet => 255.255.255.0
+							Gateway => 10.120.116.1
+							Preffered DNS => 10.120.116.75
+							Alternate DNS => 8.8.8.8
+					Step-3: In WS-02:
+						CMD> ipconfig => identify 10.120.116.0/24 IP and Ethernet adapter name 
+						Network & internet settings -> Change adapter settings -> double click @<ethernet adapter name> -> properties -> double click IPv4 -> 
+							IP => 10.120.116.20
+							Subnet => 255.255.255.0
+							Gateway => 10.120.116.1
+							Preffered DNS => 10.120.116.75
+							Alternate DNS => 8.8.8.8
+				Users:
+					In WS-01:
+						Settings -> Search "Work" -> Access work or school -> Connect -> Join this device to a local active directory domain -> Enter "mayorsec.local" as domain name
+							Username => s.chisholm 
+							Password => FallOutBoy1!
+							User type => Administrator 
+							Click "Restart now"
+					In WS-02:
+						Settings -> Search "Work" -> Access work or school -> Connect -> Join this device to a local active directory domain -> Enter "mayorsec.local" as domain name
+							Username => m .seitz
+							Password => Phi11i35@44
+							User type => Administrator 
+							Click "Restart now"
+					In DC01:
+						Server Manager -> Tools -> Active Directory Users and Computers
+	Vonnie Hudson:
+		Security Onion 2:(CentOS)
+			Basics:
+				Used for threat hunting. To catch the attacks i put against AD
+			Features:
+				ELK Stack:
+					Elasticsearch:
+						Its a search and analytics engine.
+					Logstash:
+						Its a log aggregator that collects data from various input sources, executes different transformations and enhancements and then ships the data to Elasticsearch.
+					Kibana:
+						Kibana lets users visualize data with charts and graphs in Elasticsearch.
+				Suricata:
+					Feautures:
+						HIDS => Host IDS
+						IPS
+				Zeek => Metadata analysis
+				Wazuh => EDR
+				Yara:
+					A language to creates rules to catch malware. Using yara, i define patterns. Its kind off like regex.
+				OSQuery:
+					Osquery uses SQL tables to represent abstract concepts such as running processes, loaded kernel modules, open network connections, browser plugins, hardware events, and file hashes. So, i can collect data using sql queries via osquery.
+				Fleet:
+					Provides frontend to osquery.
+			Requirements:(Min)
+				CPU Cores => 4
+				RAM => 16 GB
+				Storage => 200 GB
+Pre-Made:
+	HTB:
+		Endgames:(Free)
+			Endgames can't be normally accessed without achieving at least "Guru rank" in Hack The Box, which is only achievable after finishing at least 90% of the challenges in Hack The Box. This includes both machines and side CTF challenges. This can be a bit hard because Hack The Box keeps adding new machines and challenges every single week. However, once you're Guru, you're always going to be Guru even if you stopped doing any machine/challenge forever.
+		Prolabs:(Paid)
+			Isolated Network
+			A. Dante:(Begineer)
+				Hosts => 14
+				Topics:
+					OSCP-level BOF
+					Pivoting
+			B. OffShore:(intermediate)
+				Begineer friendly
+				Description:
+					You are an agent tasked with exposing money laundering operations in an offshore international bank. Breach the DMZ and pivot through the internal network to locate the bank’s protected databases and a shocking list of international clients. OFFSHORE is designed to simulate a real-world penetration test, starting from an external position on the internet and gaining a foothold inside a simulated corporate Windows Active Directory network. Users will have to pivot and jump across trust boundaries to complete the lab. This lab is intended to expose participants to:
+				Prerequisite:
+					Networking
+					Webapp
+					AD
+					Lateral movement and crossing trust boundaries
+					Reverse Engineering
+					Evading endpoint protections
+				Hosts => 21
+				Topics:
+					Pivoting
+					C2
+				Ease of reset: The lab gets a reset automatically every day
+				Support:
+					Discord community
+			C. Rastalabs:(Hard)
+				RastaLabs is designed to simulate a typical corporate environment, based on Microsoft Windows systems. Elements include Active Directory (with a Server 2016 functional domain level), Exchange, Internet Information Services, SQL Server, and Windows 10 workstations. Machines are also segregated across multiple subnets.
+				Prerequisite:
+					1. Solid understanding of red teaming/penetration testing or blue teaming/security administration of AD environment.
+					2. Solid formality with Active directory and PowerShell scripts.
+					2. All machines are AV Patched and your exploit won’t save you :(
+				Hosts:
+					Amount => 15
+					AV Patched Server 2016 and Windows 10
+				Topics:
+					OSINT and Phishing
+					Token Impersonation
+					Lateral movement and Pivoting
+					Attacking kerberos
+					Persistence techniques
+					Patience & perseverance + Creative thinking
+				Ease of reset: The lab does NOT get a reset unless if there is a problem! The reason being is that RastaLabs relies on persistence!
+				Support:
+					Contact rastamouse on discord. 
+				Synopsis:
+					Rastalabs is not a begineer-friendly lab
+
+			D. Cybernetics:(Advanced)
+				Includes linux AD too
+				Hosts => 28
+				Topics:
+					Active Directory enumeration and exploitation
+					Breakout
+					Evading endpoint protections
+					Kerberos abuse
+					Lateral movement
+					Phishing
+					Privilege escalation
+					Web application attacks
+			E. APTLabs:(Advanced)
+				Hosts => 18
+	Vulnhub:
+		WINTERMUTE-1:
+			It involves 2 vulnerable machines
+			This lab makes use of pivoting and post exploitation
+			any necessary password cracking can be done with small wordlist
+			Virtual Box Lab setup instructions are included in the zip download, but here's a quick brief:
+				Straylight - simulates a public facing server with 2 NICS. Cap this first, then pivot to the final machine. Neuromancer - is within a non-public network with 1 NIC. Your Kali box should ONLY be on the same virtual network as Straylight.
+			Note:
+				This works better with VirtualBox rather than VMware
+			Magnet:
+				magnet:?xt=urn:btih:7F9E533F49D82DC4E849E6F936BEAF3362CDE955&dn=Wintermute-v1.zip&tr=http%3A%2F%2Ftracker.vulnhub.com%3A6969/announce&tr=udp%3A%2F%2Ftracker.vulnhub.com%3A6969/announce&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80/announce&tr=udp%3A%2F%2Ftracker.publicbt.com%3A80/announce&tr=udp%3A%2F%2Ftracker.istole.it%3A6969
+		BOREDHACKERBLOG_SOCIAL-NETWORK:(v1)
+			Leave a message is a new anonymous social networking site where users can post messages for each other. They've assigned you to test their set up. They do utilize docker containers. You can conduct attacks against those too. Try to see if you can get root on the host though.
+			Difficulty: Med
+			Tasks involved:
+				port scanning
+				webapp attacks
+				code injection
+				pivoting
+				exploitation
+				password cracking
+				brute forcing
+			Note:
+				This works better with VirtualBox rather than VMware.
+			Magnet:
+				magnet:?xt=urn:btih:813CEBAF076DA528A27C08223F11C7274A995544&dn=medium_socnet.ova&tr=http%3A%2F%2Ftracker.vulnhub.com%3A6969/announce&tr=udp%3A%2F%2Ftracker.vulnhub.com%3A6969/announce&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80/announce&tr=udp%3A%2F%2Ftracker.publicbt.com%3A80/announce&tr=udp%3A%2F%2Ftracker.istole.it%3A6969
+		BOREDHACKERBLOG_MORIARTY-CORP:(v2)
+			Web panel is on port 8000 (not in scope. Don’t attack)
+			Flags are stored in #_flag.txt format. Flags are entered in flag{} format. They're usually stored in / directory but can be in different locations.
+			To temporarily stop playing, pause the VM. Do not shut it down.
+			The webapp starts docker containers in the background when you add flags. Shutting down and rebooting will mess it up.
+			(the story is bad. sorry for the lack of creativity)
+			Difficulty: Med-Hard
+			Tasks involved:
+				port scanning
+				webapp attacks and bug hunting
+				pivoting (meterpreter is highly recommended)
+				password guessing/bruteforcing
+			Note:
+				This works better with VirtualBox rather than VMware.
+			Magnet:
+				magnet:?xt=urn:btih:6C9A0908848575B7E753258666D518E7C772759D&dn=MoriartyCorp.ova&tr=http%3A%2F%2Ftracker.vulnhub.com%3A6969/announce&tr=udp%3A%2F%2Ftracker.vulnhub.com%3A6969/announce&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80/announce&tr=udp%3A%2F%2Ftracker.publicbt.com%3A80/announce&tr=udp%3A%2F%2Ftracker.istole.it%3A6969
+		NULLY CYBERSECURITY_1:
+			This is an easy-intermediate realistic machine.
+			While working with the machine, you will need to brute force, pivoting (using metasploit, via portfwd), exploitation web app, and using searchsploit.
+			Hints: 'cat rockyou.txt | grep bobby > wordlist' for generating wordlist.
+			Difficulty: Easy-intermediate
+			Note:
+				This works better with VirtualBox rather than VMware
+			Magnet:
+				magnet:?xt=urn:btih:54E5FD463D5F6EC0EF26994E652A00CB4DC30100&dn=NullyCybersecurityCTF.zip&tr=http%3A%2F%2Ftracker.vulnhub.com%3A6969/announce&tr=udp%3A%2F%2Ftracker.vulnhub.com%3A6969/announce&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80/announce&tr=udp%3A%2F%2Ftracker.publicbt.com%3A80/announce&tr=udp%3A%2F%2Ftracker.istole.it%3A6969

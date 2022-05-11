@@ -1,0 +1,6 @@
+Subdomain Takeover:
+==================
+Subover:
+	./Subover -l targets.txt -v
+Nuclei:
+	Nuclei is better than Subover

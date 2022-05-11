@@ -1,0 +1,18 @@
+Command Injection:
+=================
+Basics:
+	commands sent can have 2 types of result:
+		local results:(aka visible results)
+			when results are returned to browser
+			example:
+				ls /etc
+				netstat -an
+		remote results:(aka blind results)
+			when results are not returned to browser
+			example:
+				ping ourself
+& => run next command regardless
+&& => run next command if 1st one is succesful
+|| => run next command
+| => run next command
+; => run next command

