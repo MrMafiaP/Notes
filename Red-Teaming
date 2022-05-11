@@ -1,0 +1,179 @@
+Red-Teaming:
+===========
+Basics:
+	Red-Teaming is pentesting but with additional stealth and detection evasion.
+	Terms:
+		Threat Actor:
+			An Adversarry.
+			For example:
+				APT-19 => Chinese 
+		Red Team:
+			Practice of looking at a problem or situation from the prespective of an Adversary(opponent). The Adversary role is given to a Red Team by the internal team of an organization via Threat Intelligence
+			We attack:
+				People
+				Process
+				Technology
+			In Penetration Testing, we only attack "Technology"
+		Adversary Emulation:
+			Its a type of Red Team exercise where the red team emulates(acts) like an Adversary(opponent) following the same TTPs(Tactics, Techniques and Procedures) with an objective similiar to those of realistic threats. 
+		ATT&CK:(Adversary Tactics Techniques & Common Knowledge)
+			Made by MITRE
+			A red-team framework/methodology
+		Intelligence:
+			Process of Collecting and processing information about an entity and its agents by a group
+		Threat Intelligence:
+			It is evidence-based knowledge including context, mechanism, indicators, implications and actionable advice about an existing or emerging hazard to assets that can be used to inform decisions regarding the subject's response to that hazard.
+Red Team Infrastructure:
+	Basics:
+		Basic Terminology:
+			Agent:
+				aka Implant/BackDoor
+				Connection made when a Torjan is executed on victim's system
+		Graphical Overview:
+			       -> SMTP Server
+			Hacker -> C2 Server      <-> C2 Redirector      <-> Target
+			       -> Payload Server <-> Payload Redirector <-> Target
+		SMTP Server:
+			To send Phishing Mails
+			During a Red-Team assesment, we can send a mail by either of the following ways:
+				1. Self-Setup:
+					Setting up our own server to send the phishing emails
+					Options:
+						Sendmail:
+						Postfix:
+							Advantages:
+								Postfix provides an easier alternative to sendmail with wider compatiblity.
+								Postfix also offers full IMAP support with Dovecot. This allows testers to correspond in real-time with phishing targets who respond to the original message, rather than relying on the catch-all address and having to create a new message using your phishing tool.
+							Setup:	
+								https://blog.inspired-sec.com/archive/2017/02/14/Mail-Server-Setup.html
+					Obtaining Reputation to be allowed to mail and not go to spam:
+						Plan around 30 days to gain reputation and be able to send email from your server to the target
+						Every self-setup SMTP server should be configured with DKIM, SPF, and PTR records:
+							DKIM:(DomainKeys Identified Mail)
+								Its an email authentication method designed to detect forged sender addresses in emails (email spoofing), a technique used in phishing and spam. DKIM allows the receiver to check that an email claiming to come from a specific domain was indeed authorized by the domain owner.
+							SPF:(Sender Policy Framework)
+								Its an email authentication method designed to detect forged sender addresses in emails.
+								SPF allows the receiver to check that an email claiming to come from a specific domain comes from an IP address authorized by that domain's administrators. The list of authorized sending hosts and IP addresses for a domain is published in the DNS records for that domain.
+							PTR:(Pointer DNS record)
+								Pointer to a canonical name. Unlike a CNAME, DNS processing stops and just the name isreturned. The most common use is for implementing reverse DNS lookups, but other uses include such things as DNS-SD.
+				2. Third Party:
+					Example => gmail
+				3. Open Relay:
+		C2 Server:(Command and Control)
+			Read in C2 Frameworks Section below
+		Payload Server:(Domain)
+			It hosts payloads(Agents/RATs)
+			Its mostly a webserver
+			Getting a Domain:
+				Buying a Domain:
+					We need a domain which has "reputation", so that it dont get blacklisted automatically.
+					Buying an Expired Domains:
+						We can buy expired domains and they also have pre-built repuatation
+						Domain Hunter:
+							Automated tool to find domains based on reputation
+							python3 ./domainhunter.py -r 1000 -c
+							python3 ./domainhunter.py -r 1000 -k dog -c
+								Flags:
+									-r => show top 1000 expired domains	
+									-k => domains having the particular keyword
+									-c => perform domain reputation checks
+					Buying a new Domain:
+						Chameleon:(https://github.com/mdsecactivebreach/Chameleon)
+							Usage:
+								Flags:
+									--domain => domain to validate
+									--check => peform check on current category
+									--proxy x:
+										a => all
+										b => bluecoat
+										m => mcafee
+										i => IBM Xforce
+					Note:
+						Consider choosing a domain categorized as Finance or Healthcare as Many organizations will not perform SSL middling on those categories due to the possibility of legal or data sensitivity issues.
+						It is also important to ensure your chosen domain is not associated with any previous malware or phishing campaigns.
+				TLS Certificate:
+					Why:
+						1. To encrypt all C2 communication
+						2. Some organizations only allow HTTPS
+					Free:
+						LetsEncrypt:
+			Phishing Setup:		
+		Redirector Server:(aka Redirectors)
+			Basics:
+				The Agents talk directly to Redirectors.
+				Redirectors are used to forward traffic to back-end infrastructure(C2 server and Payload Server), basically acting like a proxy.
+				Why do we use a Redirector?
+					The goal is to always have a host between our target and our backend servers. So, if blue team blocks our ip, we can again set up a Redirector instead of a C2 server or a Payload server.
+			We use two different Redirectors:
+				1. Redirector for C2 Server:(C2 redirection)
+					They are used in front of every C2 server (backend server) to obfuscate the backend C2 servers and confuse the blue
+				2. Redirector for Payload Server:(Payload redirection)(Web Redirectors)
+					Payload redirectors should be used in front of all servers hosting your social engineering payloads
+					Types:
+						Dumb Pipe:
+							They take traffic from one port and proxy it to another ip and port
+							No filering takes place
+							Example => socat/iptables/netsh
+						Filtering:
+							It redirects each request based on filters
+							Examples => Apache mod_rewrite/nginx
+	Hosting infrastructure on cloud:
+		Hacker-Friendly Clouds:
+			Amazon EC2:
+			Digital Ocean:
+				https://www.blackhillsinfosec.com/build-c2-infrastructure-digital-ocean-part-1/
+			Google Cloud platform:
+			Microsoft Azure:
+			Linode
+		Advantages:
+			We can change ip quickly
+Social Engineering and Client Side Attacks: Read Social Engineering and Client Side Attacks sheet
+Weaponization of Payload and its Delivery:(aka Packaging of Payload) =>  Read Social Engineering and Client Side Attacks sheet
+C2 Frameworks:(aka Command and Control)(aka CnC)
+	Basics:
+		It is where we actually interact with the agent
+		www.thec2matrix.com
+		Types of C2:
+			Short-Haul:
+				Callback in 1-24hr range
+			Long-Haul:
+				Callback in  12-24hr range
+				Add Jitter to avoid patterns
+				Its used to avoid detection by blue-team
+	Most used C2 Frameworks:
+		Metasploit Pro:
+			Read Metasploit Sheet
+		Empire:
+			Read Empire Sheet
+		Cobalt Strike:
+			Basics:
+		Innuendo:
+		PoshC2:
+		Covenant:
+		Ninja:
+		Nuages:
+Lateral Movement and Persistence:
+	Bypassing Deception:
+		Many organizations set up the following to catch avdversaries:
+			HoneyPots:
+			Trap Servers:
+			HoneyTokens:
+			HoneyUsers:
+	Defense Evasion:
+		In real-world, a red-teamer encounters extreme detection:
+			Anti-Exploit(Next-gen AV)
+			Application Whitelisting
+			EDR(Endpoint Detetction and Response)
+			Powershell Control:
+				AMSI
+				Constrained Language Mode
+				Powershell v5 only (v2.0 disabled)
+				Centralized logging with full transcript mode
+			Threat Hunting Teams
+			Blue Team
+		Bypassing:
+			LOLBAS: Read in Windows Privesc Sheet
+			Encrypted Payloads instead of normal payloads
+			Building Custom Code in C#:
+			Bypassing AV: See windows privesc sheet
+	Persistence: Read Persistence Sheet
