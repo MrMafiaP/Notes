@@ -1,0 +1,88 @@
+Wordlists:
+=========
+Basics:
+	Wordlist is the most important part in HASH Cracking and Bruteforcing.
+	Note:
+		A big misassumption is that we assume "wordlist" as a "password list". A word list can be either a password list or a user list or even a directory list(dirb/gobuster), etc.
+Pre-built Wordlists:
+	In-Built Wordlists:
+		Password Wordlists:
+			Read Password Cracking & Cryptography Sheet
+		Username Wordlists:
+		Webdir Wordlists:
+			Read WebApp Testing Sheet for this.
+		Subdomain Wordlists:
+			Read WebApp Testing Sheet for this.
+	Additional Wordlists:
+		Password Wordlists:
+			seclists:(apt-get install seclists)
+				seclists/passwords/10k-most-common.txt => smaller than rockyou.txt
+			crackstation-human-only:
+				crackstation.net/crackstation-wordlist-password-cracking-dictionary.htm
+				64 Million real passwords leaked from a lot of databases
+			m3g9tr0n_Passwords_WordList_CLEANED:
+				forums.pirate-server.com/data/m3g9tr0n_Passwords_WordList_CLEANED.zip
+				122 Million Passwords
+			Leaked Password Dumps:
+				https://weakpass.com/wordlist
+		Username Wordlists:
+		Webdir Wordlists:
+			Read WebApp Testing Sheet for this.
+		Subdomain Wordlists:
+			Read WebApp Testing Sheet for this.
+Creating Wordlist:
+	CeWL:
+		Basics:
+			Its used to create wordlist by analysing the specified website.
+		Usage:
+			cewl -m 6 -d 7 --with-numbers -w file.txt http://ip/index.html
+			Flags:
+				-m => minimum length
+				--with-numbers => include numbers in words
+				-d => depth
+					We should use "-d 7" as it covers mostly the whole site
+				-w => location of wordlist.txt
+	Crunch:
+		Basics:
+			Its used to create wordlist based on the given charset.
+		Usage:
+			Using Charset:(/usr/share/crunch/charset.lst)
+				crunch min max /usr/share/crunch/charset.lst mixalpha -o abcd.txt
+			Using Placeholders:
+				crunch min_len max_len -t ,@@^^%%% -o wordlist.txt
+				crunch min_len max_len 01234abCD -0 wordlist.txt
+					here 01234abCD is my charset
+			Flags:
+				-t => placeholders
+					@ => lowercase
+					, => uppercase
+					% => numbers
+					^ => spl char (including space)
+	CUPP:(apt-get install cupp)
+		Basics:
+			Its used to create wordlist targeted towards a single human target based on osint.
+		Usage:
+			cupp.py -i
+			Flags:
+				-i => 
+Editing Wordlist:
+	General:
+		Using Bash:	
+			for i in $(cat initial_list); do echo $i; echo ${i}2019; echo ${i}2020; done > final_list.txt
+		PW-Inspector:
+			Basics:
+			Usage:
+				cat wordlist.txt | pw-inspector -m 6 -n -l -u > dict.txt
+				Flags:
+					-i => input file
+					-o => output file
+					-m x => minimum length
+					-M x => maximum length
+					-l => lowercase
+					-u => uppercase
+					-n => numbers
+					-s => special chars		
+	Editing Password Wordlist:
+		Read Password Cracking & Cryptography Sheet
+Note:
+	Always sort and uniq any wordlist before using it to optimize the process

@@ -1,0 +1,42 @@
+Markdown:
+========
+Headers:
+	# => h1
+	## => h2
+	###### => h6
+Empashis:
+	Italic:
+		*ital tic*
+		_ital tic_
+	Bold:
+		**BO LD**
+		__BO LD__
+	Bold & Italic:
+		**Bo _ld_ Ital _tic_**
+Lists:
+	Unordered:
+		* Item 1
+		* Item 2
+			* Item 2a
+			* Item 2b
+	Ordered:
+		1. Item 1
+		1. Item 2
+		1. Item 3
+			1. Item 3a
+			1. Item 3b
+Blockquotes:("")
+	> hahah => "hahha"
+	> ji => "ji"
+Images:
+	![Image Name/Title](/images/logo.png)
+Links:
+	[Link Name](https://google.com)
+Tables:
+	Example:
+		Name | Age
+		---- | ---
+		Name_name | age_age
+		Name_name_name | age_age_age
+	Note:
+		It automatically resizes the table

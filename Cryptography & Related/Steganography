@@ -1,0 +1,62 @@
+Steganography:
+=============
+Basics:
+	Steganography is the art and science of hiding a message, image, or file within another message, image, or file
+	Types:
+		LSB Steganography:
+	Note:
+		This sheet is for performing Steganography. Read Forensics Sheet for revealing Steganography.
+Image-Based Steganography:
+	Steghide:(apt-get install steghide)
+		Basics:
+			Steghide supports JPEG, BMP, WAV and AU file formats.
+			Use this tool when there is a passphrase to hide or extract data
+			Modes:
+				A. embed => to embed data (to hide data)
+				B. extract => to extract hidden data
+		Usage:
+			steghide embed -ef pass.txt -cf image.jpeg
+			steghide extract -sf image.jpg -xf data.txt
+			steghide info image.jpeg => to see if a file contains hidden data or not
+			Flags:
+				-ef => file to be embedded
+				-cf => file to embed into 
+				-sf => stegofile => file containing hidden data
+				-xf => extractfile => file in which to extract data
+				-p => passphrase
+				-z x => compression 
+					used when hiding text files
+					x=1 => fastest compression
+					x=9 => best compression
+				-Z => dont compress
+				-e => algorithm name, example des
+				--encinfo => to list all available algorithms
+	StegoVeritas:(https://github.com/bannsec/stegoVeritas)
+		Basics:
+			It Supports GIF, JPEG, PNG, TIFF, BMP file formats and will attempt to run on any file.
+		Installation:
+			pip3 install stegoveritas
+			stegoveritas_install_deps
+		Usage:
+			stegoveritas file.ext -out /tmp => To extract data(images) from an unprotected file
+			stegoveritas -password pass1234 file.ext => To extract data from a protected file using password
+			stegoveritas -wordlist pass.txt file.ext => To bruteforce password of a protected file
+			Flags:
+				-password <pass>
+				-wordlist pass.txt
+				-out /output_dir
+	Zsteg:(gem install zsteg)
+		Basics:
+			used for PNG and BMP
+			imagedata:
+				example: b1,rgb,msb,xy (a.k.a payload used to encrpyt data)
+		Usage:
+			zsteg image.png => identifies hidden file and gives image_data
+			zsteg -E "image_data" file.png > hidden.txt
+			Flags:
+Audio-Based Steganography:(aka Spectrogram Stegonography)
+	Sonic Visualizer:
+		Basics:
+			Spectrogram stegonography is the art of hiding hidden an image inside in an audio file's spectogram. Therefore when ever dealing with audio stego it is always worth analyzing the spectrogram of the audio. To do this task we use sonic Visualizer.
+		Usage:
+			open a file and then layer -> add spectogram

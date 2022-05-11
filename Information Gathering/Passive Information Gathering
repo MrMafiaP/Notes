@@ -1,0 +1,196 @@
+Passive Information Gathering:
+=============================
+Basics:
+	Passive Information Gathering is also known as OSINT(Open Source Intelligence Techniques)
+	Goals:
+		To build trust maps and exploit them.
+General OSINT:
+	Search Engine OSINT:
+		Google:
+			Google Dorks:
+				Basics:
+				Structure:
+					Keywords:
+						Basics:
+						Syntax:
+							<keyword>:<query>
+						Types:
+							To gather website data:
+								Cache:
+									Basics:
+										It shows cached content
+									Example:
+										cache:www.site.com
+								Link:
+									Basics:
+										It show all sites that link to the queried site.
+									Example:
+										link:www.site.com
+								Site:
+									Basics:
+										It narrow down all results to queried site.
+									Example:
+										site:www.site.com
+								FileType:
+									Basics:
+										It searches for files with specified file format.
+										Allowed Input:
+											pdf
+									Example:
+										filetype:<file_type>
+					Operators:
+						Basics:
+						Syntax:
+				Important Dorks:
+	Personal/Company Website OSINT:
+		General OSINT:
+			About Us page of site:
+				Can tell name/username/social_media/email/etc of employee
+		Cached & Archived OSINT:
+			Basics:
+			Cached OSINT:
+				Using 'cache:' google dork
+			Archived OSINT:
+				archive.org:
+	Phone-Number OSINT:
+		Basics:
+		Truecaller:
+		Whatsapp:
+		Signal:
+	Social Media OSINT:
+		Basics:
+			Requiements:
+				Make fake accounts on all Social Media:
+					LinkedIn
+					Twitter
+					Google+
+					Facebook
+					Instagram
+					Snapchat
+					MySpace
+					Glassdoor
+		All Social Media:
+			Basics:
+				We have some ways to query all social media for a given person.
+			Manual:
+				pipl.com:
+				spokeo.com:
+				peoplefinders.com:
+				crunchbase.com:
+					Its useful if the individual is an investor/inventor/innovator.
+			Automated:
+		LinkedIn:
+			Basics:
+				It helps with professional/corporate osint and to build relation maps between cowokers and colleaguees/friends.
+			Manual:
+			Automated:
+				Linkedin2username:(https://github.com/initstring/linkedin2username)		
+		Twitter:
+			Basics:
+				It helps to see how good a 'relation' between two people is. When used with linkedin osint, it can help us to figure out more detailed relation maps.
+		Facebook:
+		Instagram:
+		SnapChat:
+		Reddit:
+	Data OSINT:
+		Data Harvesting:
+			Manual:
+				Google Dorks:
+					Read 'Filetype:' dork in "Google Dorks" section above.
+			Automated:
+				FOCA:
+	Email OSINT:
+		Basics:
+		Email Harvesting:
+			Basics:
+			Manual:
+			Semi-Automated:
+				Basics:	
+				Hunter.io:
+					Basics:
+						It tells email addresses of all employees present in a company, divide them on basis of which department they work in.
+						In Free verion, only 20 searches per month are allowed.
+						Note:
+							To create an account in it, first make an account on bugcrowdninja.com and then use bugcrowninja's email-id to make an account on hunter.io
+				Apollo.io:
+					Basics:
+						Its an alternative to hunter.io and dont require a work email-id to create account.
+				Automated:	
+						theharvester:
+							Basics:
+								Its updated regularly and is used to gather emails, subdomains, hosts, employee names, open ports and banners.
+								Files:
+									/etc/theHarvester/api-keys.yml:
+										It store API keys for the following:
+											binaryege:
+											bing:
+											github:
+											hunter:
+											intelx:
+											pentesttools:
+											projectdiscovery:
+											rocketreach:
+											securitytrails:
+											shodan:
+											spyse:
+											censys:
+											zoomeye:
+							Usage:
+								theharvester -d abcd.com -l 500 -b google
+								theharvester -d abcd.com -l 500 -b linkedin
+								Flags:
+									-b => data source
+										Note:
+											dont use -b all, it leaves some info
+									-d => domain
+									-l => no of results to work with
+Corporate-Only OSINT:
+	General OSINT:
+		Manual:
+			opencorporates.com:
+				It shows working/contracts/other drails of a company.
+		Automated:
+	Job Posting OSINT:
+		Manual:
+			Job Forums/Sites:
+				Indeed.com
+				LinkedIn
+				Monster
+				Careerbuilder
+				Glassdoor
+				Simplyhired
+				Dice
+	Employee OSINT:
+		It's similar to LinkedIn & Personal Website OSINT as explained above.
+	DUNS/CAGE/NCAGE Based OSINT:
+		Note:
+			This is only applicable if a company is a possible federal contractor of USA. 'Federal Contactor' means that company's buisness is involved with usa's goverment.
+		Basics:
+			This section is for companies that sell data to the us-goverment.
+			Terms:
+				NCAGE:(Not Cage)
+					For non-us businesses.
+		Manual:
+			sam.gov:
+				Basics:
+					Its a website used by the federal government to register businesses who do business with the federal government.
+		Automated:
+	Trade OSINT:
+		Basics:
+			This section is for US-based companies which are involed in trade buisness.
+		Manual:
+			sec.gov:(https://www.sec.gov/edgar.shtml)
+				Basics:
+		Automated:
+	Financial OSINT:
+		Basics:
+			This mainly helps to find buisness assets and services. This also helps in predicting if an organization is gonna merge with some company or invest anything. 
+		Manual:
+			Google Finance:
+			Yahoo Finance:
+			crunchbase.com:
+				Basics:
+					It provides info about compaines/people/investors related to a company and other financial information.
+			inc.com
+			EDGAR:
+		Automated:

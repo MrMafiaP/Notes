@@ -1,0 +1,44 @@
+Information Gathering Basics:
+============================
+Note:
+	"Every 'Target' has two 'Components', and both type of information gathering techniques('Active' & 'Passive') should be used for both components in order to gain maximum information."
+Information Gathering Targets:
+	Basics:
+	Every target has two components:
+		1. Buisness/Individual:
+			Web Presence/Buisness/Personal Websites:
+				What do we try to gain:
+					Work/Purpose of target
+					Physical/Logical(IP) location
+					Contact information
+					Sub-domains/Alternative websits
+					Documents/Opinons/Media/Files
+			Physical Location/Address
+			Company Partners/Mergers/Acquisitions/Assets/Third Parties/Sister Companies/Existing Employees/Family Members
+				Terms:
+					Partner:
+					Merger:
+						A merger is the combination of two firms, which subsequently form a new legal entity under the banner of one corporate name.
+					Acquisition:
+						In an acquisition, one company purchases another outright.
+					Asset:
+					Third Party:
+						It is any entity that a company does business with.
+					Sister Company:
+			Job Postings:
+				Types:
+					Looking for Job:
+					Offering for Job:
+			Emails/Numbers/Social Media presence
+			Documents
+			Financial Information
+		2. Infrastructure:
+			Network Maps/Blocks/Structure/IP Addresses/Subnets
+			Ports/Services/OS/IOTs/Devices
+			DNS
+Information Gathering Techniques:
+	Basics:
+	Types:(2)
+		A. Active Information Gathering:
+			Read Active Information Gathering Sheet.
+		B. Passive Information Gathering:(aka OSINT)

@@ -1,0 +1,55 @@
+Devops For Developing Labs:
+==========================
+Basics:
+	Terms:
+		DevOps:
+			It is the process to build/modify/deploy systems for Development.
+Ansible:
+	Basics:
+Docker:
+	Basics:
+Packer:
+	Basics:
+		Packer allows you to automate the installation of the operating system and can make configuration changes to the operating system as well. 
+		Packer is responsible for taking an operating system ISO and JSON configuration file as input, and generating a .box file as output. "file.box" is essentially a compressed version of a VM.
+Terraform:
+	Basics:
+vagrant:
+	Basics:
+		Vagrant works on top of VMware/VirtualBox and it is sort of a cli client for VMware/VirtualBox.
+		It uses Vagrantfiles, they contain information about VM, such as which os to use, the CPU/memory specifications, networking options, and also any scripts or commands that the VM should execute. Vagrant is also able to automate process of installing softwares on .Box files.
+	Installation:
+		Step-1:
+			Download vagrant from https://www.vagrantup.com/downloads and install it.
+			Note:
+				Make sure that "vagrant" is available via cmd. If it is not, then:
+					https://stackoverflow.com/questions/35655038/vagrant-command-stopped-working-command-not-found-on-windows
+		Step-2:
+			Download Vagrant "Utility"(.msi) for VMware/VirtualBox via https://www.vagrantup.com/vmware/downloads and install it.
+		Step-3:
+			Install the Vagrant "Plugin" for VMware/VirtualBox:
+				CMD> vagrant plugin install vagrant-vmware-desktop
+	Usage:
+		vagrant up –provider=vmware_desktop => Bring up all Detection Lab hosts using VMware
+		vagrant up <hostname> => Bring up a specific host
+		vagrant reload <hostname> => Restart a specific host
+		vagrant reload <hostname> –provision => Restart a specific host and re-run the provision process
+		vagrant destroy <hostname> => Destroy a specific host
+		vagrant destroy -f => Destroy the entire Detection Lab environment
+		 	-f => Force => No prompt
+		vagrant ssh logger => SSH into a host (only works with Logger)
+		vagrant winrm –command hostname –shell powershell <hostname> => Run a WinRM command on a host (only works with DC, WEF, and WIN10)
+		vagrant status => Check the status of each host
+		vagrant suspend => Suspend the lab environment
+		vagrant resume => Resume the lab environment
+		vagrant halt => Shutdown each host
+		Flags:
+		Note:
+			When running Vagrant commands, you must be in a directory containing a Vagrantfile or you will receive the following error:
+				A Vagrant environment or target machine is required to run this command.
+		Note:
+			If you happen to have both Virtualbox and VMware Workstation/Fusion installed, it may be helpful to set the VAGRANT_DEFAULT_PROVIDER environment variable to either vmware_desktop or virtualbox.
+Kubernetes:
+	Basics:
+AWS:
+	Basics:
