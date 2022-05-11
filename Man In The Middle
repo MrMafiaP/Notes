@@ -1,0 +1,108 @@
+Man In The Middle:
+=================
+Note:
+	Read Networking Sheet for basics.
+Basics:
+	In MITM, we intercept communication between 2 systems
+	Types:(2)
+		A. Sniffing:
+			Basics:
+				It is a process of capturing data transfered via packets in network and monitoring that data to steal juicy information
+			Working process:
+				NICs(Network Interface Cards) by default ignore any traffic that is not addressed to them. Sniffing tools turn NICs to promiscous mode, this enables NICs to receive all the traffic on network
+			Types:(2)
+				1. Passive Sniffing:
+					Basics:
+						It involves only listening to network traffic and sniffing
+						Its coducted on a hub.
+				2. Active Sniffing:
+					Basics:
+						It involves injecting ARP packets into a network to flood the Switch's CAM(Content Address Memory) table. This redirects traffic to other ports and from there, we sniff.
+						Its conducted on a switch.
+					Types:(2)
+						A. MAC Flooding:
+							Basics:
+								Flooding the switch with fake MAC addresses so that the CAM table is overflowed. Because of this, Switch starts to act like a hub and now, we can sniff all data
+						B. ARP Poisoning:(aka ARP Spoofing)
+							Basics:
+							Types:(2)
+								1. Host Poisoning:
+									Basics:
+								2. Gateway Poisoning:
+									Basics:
+							Attack Scenario:
+								HOST-1 => ALAN
+								HOST-2 => BRIAN
+								Basically, the attacker tells Alan's box that he has the IP that corresponds to Brian's box and tells Brian's box that he has the IP that corresponds to Alan's box. By doing this the Attacker receives all network traffic going between Alan and Brian. Once Attacker Arpspoofed his way between the two machines he can sniff the connection with whatever tool he may like (TCPDump, Ethereal,  Ngrep, etc.)
+								By arpspoofing between a machine and the LANs GATEWAY he can see all the traffic it's sending out to the Internet.
+							Applications:
+								LLMNR and NBT-NS Poisoning:
+									Read AD Exploitation Sheet
+		B. Spoofing:
+			Basics:
+				Here, a hacker acts an imposter by acting like a legitimate user and then, sniff the data
+MITMB:(Man In The MailBox)
+	Suppose, we have mail.ru.com => mailru.com. We configure SMTP server on mailru.com
+Network Sniffers:
+	Wireshark:
+		Read Packet Capture and Analysis Sheet to know about Wireshark
+	Tcpdump:
+		Read Packet Capture and Analysis Sheet to know about Tcpdump
+MITM Attack:
+	Ettercap:
+		Basics:
+			Ettercap has 2 modes:
+				Unified Sniffing:
+					It sniffs all the packets on cable
+				Bridged Sniffing:
+					It uses 2 network interfaces and forwards traffic from one to the other
+			Attacks:
+				ARP Poisoning: See above
+				ICMP Redirect:
+				Port Stealing:
+				DHCP Spoofing:
+		Usage:
+			GUI:
+				$ ettercap -G => ettercap graphics
+					sniff-> unified sniffing-> select interface
+					hosts-> scan for hosts
+					hosts-> hosts list
+					ur ip-> target-1
+					victim-> target-2
+					mitm-> <Select Attack type> -> start -> sniffing
+			CLI:
+				ettercap -I => list interfaces
+				ettercap -i eth0 => select eth0 interface
+				Flags:
+					-T => text interface
+					-q => quiet mode
+					-M => perform MITM
+				ettercap -TqM drp: remote /10.0.1.1/ /10.0.1.7/
+			Sniffing SSL Traffic:
+				Edit /etc/ettercap/etter.conf:
+					ec_uid = 0
+					ec_gid = 0
+					redir_command_on = "iptables -t nat -A PREROUTING -i %iface -p tcp --dport %port -j REDIRECT --to-port %rport"
+					redir_command_off = "iptables -t nat -D PREROUTING -i %iface -p tcp --dport %port -j REDIRECT --to-port %rport"
+				Using SSLStrip: See below
+				Using SSLStrip+: See below
+	Bettercap:(apt-get install bettercap)
+		Basics:
+			ARP, DNS, NDP and DHCPv6 spoofers for MITM attacks on IPv4 and IPv6 based networks.
+		Usage:
+			Flags:
+				-T => targets(IP or MAC)
+				-I => interface
+				-G => specify gateway address (usually automatic)
+				--no-discovery => don’t search for hosts (use ARP cache)
+				-ignore => ignore ADDRESS1,ADDRESS2
+
+	Evilgnix2:
+	Xerosploit:
+MITM Attacks over SSL:
+	SSLStrip:
+	SSLStrip+:
+Doppleganger Domains:
+	Doppelganger domains are ones that are spelled almost identical to legitimate domains, but differ slightly, such as a missing period separating a subdomain name from a primary domain name, example:
+		us.company.com => uscompany.com
+	If we own Doppelganger domains, we can get some web traffic meant for the actual domain
