@@ -1,0 +1,54 @@
+Forensics:
+=========
+Basics:
+General Forensics:
+	File:
+		Basics:
+		Usage:
+			file file_name.extension => To determine the file type
+	ExifTool:(sudo apt install libimage-exiftool-perl)
+		Basics:
+			Exiftool is used to read and edit metadata of a file.
+		Usage:
+			exiftool file_name => general metadata
+			Flags:
+	Strings:
+		Read Linux Shell Commands Sheet.
+	XXD:(aka hexviewer/hexdump)
+		Read Linux Shell Commands Sheet.
+	Binwalk:
+		Basics:
+			Its used for Signature scanning
+			Its used when we have embedded files into some other file
+			Its also used in Firmware Analysis
+		Usage:
+			binwalk file.extension
+			binwalk -e file.extension => to extract the embedded files
+			binwalk file1 file2 => diff b/w two files
+			binwalk -b file.extension => signature analysis
+			Flags:
+				-b => 
+				-e => 
+Integrity Forensics:
+	md5sum:
+Steganography Forensics:
+	Image-Based Forensics:
+		Read Steganography Sheet for this.
+	Audio-Based Forensics:
+		Read Steganography Sheet for this.
+Memory Forensics:
+	Voltality:
+		Basics:
+			It is used  to anayalze memory dump files(.dmp)
+		Usages:
+			voltality -f abcd.dmp imageinfo
+				it will give some basic info
+				it will also give a list of profiles, we need to chose best one
+			voltality -d abcd.dmp --profile <profile> pstree
+				it will shows all process
+			voltality -d abcd.dmp --profile <profile> hashdump
+				it will give all hashes
+			Flags:
+Log Analysis:
+Network Forensics:
+	PCAP Forensics:
