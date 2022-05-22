@@ -1496,8 +1496,182 @@ PPS:(Port, Protocols & Services)
 											ns
 									-port=<value> => DNS port(default value => 53)
 			LDAP(389/636/3268/3269):(Lightweight Directory Access Protocol)
-				Basics:
-					Read Windows Internals Sheet
+				Understanding LDAP:
+					Basics:
+						Terms:	
+						LDAP is a layer 7(application layer) protocol created in 1993 by Tim Howes
+						LDAP Versions:
+							LDAPv1:
+								It was relased in 1993.
+								No need to study it as its obsolete now.
+							LDAPv2:
+								It was relased in 1995.
+								Although its obsolete since 2003, some systems still use it.
+							LDAPv3:
+								It was relased in 1997.
+					LDAP Operations:
+						Add:
+							It adds a new directory entry.
+						Delete:
+							It deletes a directory entry.
+						Modify:
+							It modifies an existing directory entry.
+						Modify DN:(Modify Distinguished Name)
+							It takes new RDN & optionally new parent's DN, and a flag that indicates whether to delete the value(s) in the entry that match the old RDN.
+						Search:
+							Basics:
+								It used both to search & read directory entries.
+							Parameters:
+								BaseObject:
+									The name of the base object entry (or possibly the root) relative to which the search is to be performed.
+								Scope:
+									It specifies what elements below the baseObject to search.
+									Values:
+										BaseObject:
+											It means search just the named entry.
+										SingleLevel:
+											It means entries immediately below the base DN.
+										WholeSubtree:
+											It means entire subtree starting at the base DN.
+								Filter:
+									Criteria to use in selecting elements within scope. For example, the filter (&(objectClass=person)(|(givenName=John)(mail=john*))) will select "persons" (elements of objectClass person) where the matching rules for givenName and mail determine whether the values for those attributes match the filter assertion. Note that a common misconception is that LDAP data is case-sensitive, whereas in fact matching rules and ordering rules determine matching, comparisons, and relative value relationships. If the example filters were required to match the case of the attribute value, an extensible match filter must be used, for example, (&(objectClass=person)(|(givenName:caseExactMatch:=John)(mail:caseExactSubstringsMatch:=john*)))
+								DerefAliases:
+									It return entries that refer to other entries.
+								Attributes:
+									Which attributes to return in result entries.
+								SizeLimit:
+									It returns maximum number of entries to return
+								TimeLimit:
+									It returns maximum time to allow search to run
+								TypesOnly:
+									It return attribute types only, not attribute values.
+						Compare:
+							It takes DN, attribute name and attribute value, and checks if the named entry contains that attribute with that value.
+						Bind:
+							It authenticates and specifies LDAP version
+							Note:
+								"Bind" means "Authenticate".
+						Unbind:
+							It abandons any outstanding operations and closes the connection. It has no response.
+							Note:
+								Name of this operation is of historical origin, and is not the opposite of the Bind operation.
+						Abandon:
+							It requests server to abort an operation named by a message ID. The server need not honor the request.
+						StartTLS:
+							It basically establishes/starts TLS session over the connection.
+					LDAP Server:(aka DSA(Directory System Agent))
+						Basics:
+							Ports:
+								TCP/389
+								UDP/389
+							Usage:
+								Centralized Credential Store:
+									LDAP provides a centralized place to store usernames and passwords. Allowing applications and services to connect to LDAP server to validate users.
+						Directory Structure:
+							Basics:
+								LDAP Directory is based on LDAP LDIF(Data Interchange Format) Format.
+							LDAP Entries:
+								Basics:
+									LDAP Directory consists of enteries & Every entry consists of DN & a set of attributes.
+								Structure:
+									Attribute:
+										Basics:
+											Every attribute has a name, attribute type & attribute description along with one or more values.
+										Structure:
+											Syntax:
+												Attribute_name/type=Attribute_value
+											Example:
+										Attribute Types:(4)
+											1. DN:(Distinguished Name)
+												This refers to the name which is DN.
+												Note:
+													Rean DN Section below to read more.
+											2. DC:(Domain Component)
+												Basics:
+													This refers to each component of the domain.
+												Example:
+													"www.mydomain.com" can be translated as "DC=www,DC=mydomain,DC=com".
+											3. OU:(Organizational Unit)
+												Basics:
+													This refers to OU which user is a part of. A user can be a part of more than one OU.
+												Example:
+													For a user, OU's can be "OU= Lawyer,OU= Judge".
+											4. CN:(Common Name)
+												This refers to the individual object(person's name; meeting room; recipe name; job title; etc.) for whom/which you are querying.
+									DN:(Distinguished Name)
+										Basics:
+											DN refers to distinguished, ie, unique identifer/name of an entry.
+										Structure:
+											DN consists of its RDN followed by parent entry's DN.
+											RDN:(Relative Distinguished Name)
+												Basics:
+													RDN is first part of a DN.
+												Example:
+													Read Example Section of DN below.
+										Example:
+											dn: cn=John Doe,dc=example,dc=com
+											Where:
+												DN => cn=John Doe,dc=example,dc=com
+												RDN => cn=John Doe
+												Parent entry's DN => dc=example,dc=com
+								Example:
+									dn: cn=John Doe,dc=example,dc=com
+									cn: John Doe
+									givenName: John
+									sn: Doe
+									telephoneNumber: +1 888 555 6789
+									telephoneNumber: +1 888 555 1232
+									mail: john@example.com
+									manager: cn=Barbara Doe,dc=example,dc=com
+									objectClass: inetOrgPerson
+									objectClass: organizationalPerson
+									objectClass: person
+									objectClass: top
+						LDAP URI:(LDAP Unifrom Resource Identifier)
+							Basics:
+							Syntax:
+								ldap://host:port/DN?attributes?scope?filter?extensions
+								Components:
+									Host:
+										It is FQDN or IP of LDAP server.
+									DN:
+										DN here refers to the distinguished name to use as the search base.
+									Attributes:
+										Attributes refer to a comma-seperated string of attributes to retrive.
+									Scope:
+										It specifies scope of search.
+										Values:
+											base:(default)
+											one
+											sub
+									Filter:
+										It refers to search filter.
+									Extensions:
+									Note:
+										All components are optional.
+								Examples:
+									Example-1:
+										ldap://ldap.example.com/cn=John%20Doe,dc=example,dc=com
+										Here,
+											Host => ldap.example.com
+											DN => cn=John%20Doe,dc=example,dc=com
+											Attributes => N/A
+											Scope => N/A
+											Filter => N/A
+											Extensions => N/A
+									Example-2:
+										ldap:///dc=example,dc=com??sub?(givenName=John)
+										Here,
+											Host => N/A
+											DN => dc=example,dc=com
+											Attributes => N/A
+											Scope => sub
+											Filter => (givenName=John)
+											Extensions => N/A
+					LDAP Client:
+					Working:
+						Step-1: Client starts LDAP Session by connecting to DSA.
+						Step-2: Client sends an operation request to server, in response to which, server sends some responses.
 				Enumeration:
 					Read AD Exploitation Sheet
 		Shell PPS:
