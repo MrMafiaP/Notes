@@ -1,0 +1,9 @@
+Session Hijacking:
+=================
+Basics:
+	Read Web Technologies Sheet.
+Using cookies to become authenciated user:(aka Session Hijacking)
+	Lets assume that somehow we got cookie for an authenciated user and now we want to use that cookie to authenciate ourselves.
+	Requirement:
+		We need to install "Cookie Editor" Add-on 
+	Firefox -> go to the victim site -> press on icon of "Cookie Editor" Add-on -> Press "Add" button -> Add the Cookie name and value -> Reload the webpage.
