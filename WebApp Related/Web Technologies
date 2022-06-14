@@ -1,6 +1,75 @@
 Web Technologies:
 ================
-Python Based:
-	Types:
-		Flask-Based:
-		Django-Based:
+Web Protocols:
+	Read Active Information Gathering Sheet.
+VHost:(aka Virtual Host)
+	Basics:	
+		1 server, many sites
+Status Codes:
+	1xx => Informational
+	2xx => succesful request
+	3xx => redirection
+	4xx => request has error in it
+	5xx => server encountered an issue fulfilling the request
+	200 => ok
+	301 => redirects the browser to a new url PERMANENTLY
+	302 => redirects the browser to a new url TEMPORARILY
+	304 => tells browser to use CACHED COPY of requested resource
+	400 => invalid request
+	401 => Authenciation required
+	403 => not allowed to see the resource, even if authorized
+	404 => requested resource does not exist
+	500 => internal server error
+Web Encodings:
+	URL Encoding: Read in Password Cracking and Cryptography Sheet
+	HTML Encoding: Read in Password Cracking and Cryptography Sheet
+	Double Encoding: Read in Password Cracking and Cryptography Sheet
+Formats to show GET Parameters in URL:
+	Normal URL Format:
+		/main?id=123&lang=eng
+	URL Rewrite Format:
+		Rewrite URL Format => /main/id/123/lang/eng
+	Mixed URL Format:
+		/main/id/1223344/isadmin?uid=xxx&gid=yyy
+Web Security Mechanisms:
+	Same Origin Policy:(SOP)
+		It restricts how documents (D in DOM) can interact with resources loaded from another ORIGIN.
+		Example: if a user visited malc.com and it invoked a GET request to site.com/profile, then, SOP would prevent malc.com from reading response of site.com/profile
+		What is origin?
+			Protocol (HTTP or HTTPS)
+			host (www.site.com)
+			port
+			they determine the origin
+Session:
+	A session creates a file in a temporary directory on the server where registered session variables and their values are stored.
+	This data will be available to all pages on the site during that visit.
+	A session ends when:
+		user closes the browser
+		or after leaving the site, the server will terminate the session after a time period of commonly 30 mins
+	Session Tokens:
+		session_variable_nmae:value
+		findig name of session variable:
+			use google
+			example => session-id, phpsessionid
+		value of session token can be:
+			base64 encoded
+			hash => hashcat/JTR/crackstation/google
+			unguessable
+Cookies:
+	Cookies are text files stored on the client computer sent by Server and they are kept of use tracking purpose
+	When next time browser sends any request to web server then it sends those cookies information to the server and server uses that information to identify the user.
+	initial cookie header => set-cookie: <data>
+	subsequent cookie header => cookie: <data>
+	cookie flags:
+		secure:
+			HTTPS-only
+			cookies are encrypted
+		Http-only:
+			JS cant access these cookies
+
+WebApps:
+	Basics:
+	Python Based:
+		Types:
+			Flask-Based:
+			Django-Based:
