@@ -1,0 +1,27 @@
+Amazon S3 Buckects:
+==================
+Finding S3 Buckets:
+	S3 buckets are all reachable via a web interface, whether access is permitted or not.
+	The URL format is:
+		http://<bucketname>.s3.amazonaws.com
+	http://s3.amazonaws.com/<bucketname>
+naming convention for S3 buckets:
+	names must be at least 3 and no more than 63 characters long.
+	Bucket names must be a series of one or more labels. Adjacent labels are separated by a single period '.'
+	Bucket names can contain lowercase letters, numbers, and hyphens. Each label must start and end with a lowercase letter or a number.
+	Bucket names must not be formatted as an IP address (for example, 192.168.5.4)
+code:
+	404 – bucket not found (bucket does not exist)
+	403 – bucket found but access denied via the web(bucket does exist! Make a note of this)
+	200 – bucket found and accessible via the web!
+finding buckets:
+	site:s3.amazonaws.com example
+	site:s3.amazonaws.com example.com
+	site:s3.amazonaws.com example-com
+	site:s3.amazonaws.com com.example
+	site:s3.amazonaws.com com-example
+common misconfiguration:
+	Its to permit ‘Any Authenticated AWS User’ read, write, or read/write access to a bucket. Administrators previously misunderstood this as ‘Any authenticated user within my account’ but it actually means ‘Any authenticated user on any account’. We can use the API with our own valid AWS login to test for this by issuing a LIST request to the root of the bucket. If a response is returned then the next step is to try a GET request for an item listed in the output. The next step is then to try to create a new file. Perform a GET request for a rather random filename that shouldn’t exist, confirm it’s not found, then attempt to PUT a file into that location. If it works the bucket is probably completely open.
+tool:
+	https://github.com/craighays/bucketkicker
+	https://github.com/jordanpotti/AWSBucketDump
